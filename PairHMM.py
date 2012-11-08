@@ -38,7 +38,9 @@ class RepeatState(State):
         #TODO: pridaj aj hashovanie a memoizaciu, nech nekonstruujem tie iste objekty viac krat -- na to by sa mozno hodila nejaka factory       
         
 
-class PairHMM:
+class GeneralizedPairHMM:
+    
+    #TODO: este pridat dalsie restrikcie z anotacie
     
     states = list()
     transitions = dict()
@@ -67,8 +69,14 @@ class PairHMM:
     def setAnnotations(self):
         return
     
-    def getForwardTable(self, X, Y, x, y, dx, dy, memoryPattern = None):
-        return
+    def getForwardTable(self, X, Y, x, y, dx, dy, memoryPattern = None, itemGenerator = None):
+        if itemGenerator == None:
+            itemGenerator = ((i,j) for i in range(dx + 1) for j in range(dy + 1))
+        if memoryPattern == None:
+            #TODO: toto bude cool, este specifikujem aj pociatocny stlpec a mozem robit highlevel
+            # optimalizacie len volanim tejto funkcie.
+            return
+                
     
     def getProbability(self, X, Y, x, y, dx, dy):
         # Zbehne forward algoritmus
