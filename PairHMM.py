@@ -1,10 +1,12 @@
 # TODO: start writing docstring!
 # TODO: start writing unittests!
 
+# TODO: Create single models
+
 import MemoryPatterns
 from collections import defaultdict
 
-class State:
+class PairState:
     def __init__(self):
         return
     
@@ -14,7 +16,7 @@ class State:
     def emission(self, X, Y, x, y, dx, dy):
         return 0.1;
     
-class TableState(State):
+class PairTableState(PairState):
     
     emission = dict()
     
@@ -24,11 +26,11 @@ class TableState(State):
     
     def durationGenerator(self):
         yield((1,1,1))
-    
+
     def emission(self, X, Y, x, y, dx, dy):
         return self.emission[(X[x:x+dx],Y[y:y+dy])]
     
-class RepeatState(State):
+class PairRepeatState(PairState):
     
     def __init__(self):
         return
@@ -36,7 +38,7 @@ class RepeatState(State):
     def durationGenerator(self):
         for i in range(1,10000):
             for j in range(0,i):
-                yield((j,i-j,0.001)) # now for some trivial distribution
+                yield(((j,i-j),0.001)) # now for some trivial distribution
         
     def emission(self, X, Y, x, y, dx, dy):
         self.hmm.getProbability(X, Y, x, y, dx, dy)
@@ -55,7 +57,6 @@ class GeneralizedPairHMM:
     
     def __init__(self):
         self.transitions.setdefault(dict());
-        return
     
     # Pridame stav, vrati sa nam jeho idcko
     def addState(self, state):
@@ -118,7 +119,7 @@ class GeneralizedPairHMM:
                 state = self.states[stateID]
                 for followingID in state.followingIDs():
                     following = self.states[followingID]
-                    for (_sdx, _sdy) in state.durationGenerator():
+                    for ((_sdx, _sdy), dprob) in state.durationGenerator():
                         rows[_x + _dx][_y + _dy][(following, _sdx, _sdy)] += \
                             following.emission(
                                 X, 
@@ -127,7 +128,7 @@ class GeneralizedPairHMM:
                                 y + _y + _dy, 
                                 _sdx, 
                                 _sdy
-                            ) * self.transitions[stateID][followingID]
+                            ) * self.transitions[stateID][followingID] * dprob
             # If rows were changed, remember it
             if _x_prev != _x:
                 if memoryPattern.next():
@@ -183,7 +184,7 @@ class GeneralizedPairHMM:
                 state = self.states[stateID]
                 for previousID in state.previousIDs():
                     previous = self.states[previousID]
-                    for (_sdx, _sdy) in previous.durationGenerator():
+                    for ((_sdx, _sdy), dprob) in previous.durationGenerator():
                         rows[_x - _sdx][_y - _sdy][(previous, _sdx, _sdy)] = \
                             previous.emission(
                                 X,
@@ -192,7 +193,7 @@ class GeneralizedPairHMM:
                                 x + _y,
                                 _dx,
                                 _dy
-                            ) * self.transitions[previousID][stateID]
+                            ) * self.transitions[previousID][stateID] * dprob
             
             # Remember last row if necessary
             if _x_prev != _x:
@@ -224,19 +225,26 @@ class GeneralizedPairHMM:
     
     
     def getPosteriorTable(self, X, Y, x, y, dx, dy, 
-                          forwardTable = None, backwardTable = None):
+                          forwardTable = None, backwardTable = None,
+                          positionGenerator = None):
         # Najskor chcem taku, co predpoklada ze obe tabulky su velke
         # Potom chcem taku, ktora si bude doratavat chybajuce
-        # Potom pridat switch, ktory mi umozni robit 
+        # Potom pridat switch, ktory mi umozni robit optimalizacie.
+        # Ale potom bude treba vediet, ci ist od predu, alebo od zadu
         
+        # Fetch tables if they are not provided
         if forwardTable == None:
-            return
+            forwardTable = self.getForwardTable(X, Y, x, y, dx, dy,
+                positionGenerator=positionGenerator)
         if backwardTable == None:
-            return
-    
+            backwardTable = self.getBackwardTable(X, Y, x, y, dx, dy,
+                positionGenerator=positionGenerator)
+
+        # Sort tables by first element (just in case)    
         sorted(forwardTable,key=lambda (x,_) : x)
         sorted(backwardTable,key=lambda (x,_) : x)
         
+        # Compute posterior probabilities
         retTable = list()
         for (index, column) in forwardTable:
             backward_column = backwardTable[index]
