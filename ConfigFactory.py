@@ -7,11 +7,16 @@ class ConfigObject:
     def getClassname(self):
         return self.classname
     
+    
     def load(self, dictionary):
-        raise "Not implemented"
+        if "__classname__" not in dictionary:
+            raise "Wrong object type"
+        if dictionary["__classname__"] != self.__classname__:
+            raise "Wrong object file"
         
-    def save(self):
+    def toJSON(self):
         return {"__classname__": self.__classname__}
+
 
 class ConfigFactory:
     

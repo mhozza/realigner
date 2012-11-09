@@ -1,7 +1,24 @@
 from collections import defaultdict
 import Graphs
+from ConfigFactory import ConfigObject
 
-class State:
+class State(ConfigObject):
+    
+    __classname__ = "State"
+    
+    def load(self, dictionary):
+        ConfigObject.load(self, dictionary)
+        if "emission" not in dictionary:
+            raise "Emission not found in state"
+        for (key, prob) in dictionary["emission"].iteritems():
+            self.emission[key] = float(prob)
+            
+                    
+    def toJSON(self):
+        ret = ConfigObject.toJSON(self)
+        for (key, prob) in self.emission.iteritems():
+            ret["emission"][key] = float(prob)
+        
     
     def __init__(self):
         self.stateID = -1
@@ -41,21 +58,76 @@ class State:
     def previousIDs(self):
         return self.reverseTransitions
 
-class HMM:
+class HMM(ConfigObject):
+    
+    __classname__ = "HMM"
+    
+    def load(self, dictionary):
+        self.__init__(self)
+        ConfigObject.load(self, dictionary)
+        self.loadStates(dictionary)
+        self.loadEmissions(dictionary)
+            
+    
+    def loadStates(self, dictionary):
+        if "states" not in dictionary:
+            raise "states are missing in HMM object"
+        for state in dictionary["states"]:
+            self.addState(state)
+        
+        
+    def loadEmissions(self, dictionary):
+        if "emissions" not in dictionary:
+            raise "emissions are missing in HMM object"  
+        for emission in dictionary["emissions"]:
+            if "from" not in emission or \
+               "to" not in emission or \
+               "prob" not in emission:
+                raise "emissions are not properly defined"
+            f = self.translateState(emission["from"])
+            t = self.translateState(emission["to"])
+            p = float(emission["prob"])
+            self.addTransition(f, t, p)      
+    
+    
+    def toJSON(self):
+        ret = ConfigObject.toJSON(self)
+        ret = self.statesToJSON(ret)
+        ret = self.transitionsToJSON(ret)
+        return ret
+    
+    
+    def statesToJSON(self, dictionary):
+        ret = list();
+        for state in self.states:
+            ret.append(state.toJSON())
+        dictionary["states"] = ret;
+        return dictionary
+    
+    
+    def transitionsToJSON(self, dictionary):
+        ret = list()
+        # TODO
+        dictionary["emissions"] = ret
+        return dictionary
+    
     
     def __init__(self):
         self.transitions = defaultdict(dict)
         self.states = list()
+        
         
     def addState(self, state):
         state.setID(len(list))
         list.append(state)
         return len(list) - 1
     
+    
     def addTransition(self, stateFrom, stateTo, probability):
         self.transitions[stateFrom][stateTo] = probability
         self.states[stateFrom].addTransition(stateTo)
         self.states[stateTo].addReverseTransition(stateFrom)
+        
         
     def reorderStatesTopologically(self):
         reorder = Graphs.orderToDict(
@@ -70,6 +142,7 @@ class HMM:
         self.transitions = transitions;
         for stateID in range(len(self.states)):
             self.states[stateID].remap(reorder)
+
 
     # This functions transfers dictionaries to lists, so it is a bit faster        
     def optimize(self):
