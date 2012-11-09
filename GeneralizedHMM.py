@@ -1,46 +1,34 @@
 import MemoryPatterns
 from collections import defaultdict
-
-class State:
-    def __init__(self):
-        return
+from HMM import State, HMM
+    
+class SilentState(State):
     
     def durationGenerator(self):
-        yield(-1)
-        
-    def emission(self, X, x, dx):
-        return 0.1;
-
-class TableState(State):
+        yield((0,1.0))
     
-    emission = dict()
+    def emission(self, X, x, dx):
+        if dx > 0:
+            raise "Silent state cannot emit anything"
+        return 1.0
+
+class GeneralizedState(State):
     
     def __init(self):
-        return;
+        State.__init__(self)
+        self.durations = [] 
     
     def durationGenerator(self):
-        yield(1)
+        for x in self.durations:
+            yield(x)
 
     def emission(self, X, x, dx):
         return self.emission[X[x:x+dx]]
     
     
     
-class GeneralizedHMM:
-    states = list()
-    transitions = dict()
-    
-    def __init__(self):
-        self.transitions.setdefault(dict())
-        
-    def addState(self, state):
-        state.setID(len(list))
-        list.append(state)
-        return len(list) - 1
-    
-    def addTransition(self, stateFrom, stateTo, probability):
-        self.transitions[stateFrom][stateTo] = probability
-    
+class GeneralizedHMM(HMM):
+           
     def getForwardTable(self, X, x, dx, memoryPattern=None, initialRow=None):
         
         if memoryPattern == None:

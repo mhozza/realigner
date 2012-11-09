@@ -5,6 +5,7 @@
 
 import MemoryPatterns
 from collections import defaultdict
+import HMM
 
 class PairState:
     def __init__(self):
@@ -48,25 +49,10 @@ class PairRepeatState(PairState):
         # objekty viac krat -- na to by sa mozno hodila nejaka factory       
         
 
-class GeneralizedPairHMM:
+class GeneralizedPairHMM(HMM):
     
     # TODO: este pridat dalsie restrikcie z anotacie
-    
-    states = list()
-    transitions = dict()
-    
-    def __init__(self):
-        self.transitions.setdefault(dict());
-    
-    # Pridame stav, vrati sa nam jeho idcko
-    def addState(self, state):
-        state.setID(len(list))
-        list.append(state)
-        return len(list) - 1
-    
-    def addTransition(self, stateFrom, stateTo, probability):
-        self.transitions[stateFrom][stateTo] = probability
-        
+   
     def optimize(self):
         # Vyrobi potrebne tabulky, aby sme vedeli rychlo pocitat
         self.__transitions = list()
