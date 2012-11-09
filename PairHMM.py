@@ -1,3 +1,6 @@
+# TODO: start writing docstring!
+# TODO: start writing unittests!
+
 import MemoryPatterns
 from collections import defaultdict
 
@@ -74,6 +77,7 @@ class GeneralizedPairHMM:
     
     def setAnnotations(self):
         return
+   
     
     # Returns forward table. We can specify memory pattern, position generator
     # and initial row. Compatible with memory preserving tricks 
@@ -137,6 +141,7 @@ class GeneralizedPairHMM:
         
         # Finally, done:-)
         return retTable
+    
     
     # Basically copy of the getForwardTable. Might share bugs
     # TODO: +- 1
@@ -203,15 +208,43 @@ class GeneralizedPairHMM:
         # Finally, done:-)
         return retTable
     
+    
     def getViterbiTable(self, X, Y, x, y, dx, dy):
         return
+    
     
     def getViterbiAlignment(self, table):
         return
     
-    def getProbability(self, X, Y, x, y, dx, dy, positionGenerator):
+    
+    def getProbability(self, X, Y, x, y, dx, dy, positionGenerator = None):
         table = self.getForwardTable(X, Y, x, y, dx, dy, 
                                      memoryPattern=MemoryPatterns.last(dx))
         return sum([i for (_,i) in table[0][1][dy]])
-            
     
+    
+    def getPosteriorTable(self, X, Y, x, y, dx, dy, 
+                          forwardTable = None, backwardTable = None):
+        # Najskor chcem taku, co predpoklada ze obe tabulky su velke
+        # Potom chcem taku, ktora si bude doratavat chybajuce
+        # Potom pridat switch, ktory mi umozni robit 
+        
+        if forwardTable == None:
+            return
+        if backwardTable == None:
+            return
+    
+        sorted(forwardTable,key=lambda (x,_) : x)
+        sorted(backwardTable,key=lambda (x,_) : x)
+        
+        retTable = list()
+        for (index, column) in forwardTable:
+            backward_column = backwardTable[index]
+            ret = defaultdict(lambda *_:defaultdict(0.0))
+            for (colindex, value) in column:
+                for triple in value:
+                    ret[colindex][triple] = column[colindex][triple] * \
+                        backward_column[colindex][triple]
+            retTable.append((index, ret)) 
+
+        return retTable
