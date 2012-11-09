@@ -113,7 +113,7 @@ class GeneralizedPairHMM:
         _x_prev = -1000000 
         retTable = list()
         for (_x, _y) in positionGenerator:
-            if ignoreFirstRow and _x == 0:
+            if ignoreFirstRow and _x == 0: #BUG: ak ignorujem prvy riadok, pokazi sa mi zapamatavanie
                 continue
             for (stateID, _dx, _dy) in rows[x + _x][y + _y].iteritems():
                 state = self.states[stateID]
@@ -221,7 +221,8 @@ class GeneralizedPairHMM:
     def getProbability(self, X, Y, x, y, dx, dy, positionGenerator = None):
         table = self.getForwardTable(X, Y, x, y, dx, dy, 
                                      memoryPattern=MemoryPatterns.last(dx))
-        return sum([i for (_,i) in table[0][1][dy]])
+        return sum([i * self.states[stateID].getEndProbabilit()
+                    for (stateID, i) in table[0][1][dy]])
     
     
     def getPosteriorTable(self, X, Y, x, y, dx, dy, 
