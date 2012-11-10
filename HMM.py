@@ -10,18 +10,23 @@ class State(ConfigObject):
         ConfigObject.load(self, dictionary)
         if "emission" not in dictionary:
             raise "Emission not found in state"
+        if "name" not in dictionary:
+            raise "Name not found in state"
+        self.stateName = dictionary["name"]
         for (key, prob) in dictionary["emission"].iteritems():
             self.emission[key] = float(prob)
             
                     
     def toJSON(self):
         ret = ConfigObject.toJSON(self)
+        ret["name"] = self.stateName
         for (key, prob) in self.emission.iteritems():
             ret["emission"][key] = float(prob)
         
     
     def __init__(self):
         self.stateID = -1
+        self.stateName = ""
         self.transitions = list()
         self.reverseTransitions = list()
         self.emission = defaultdict(float)
@@ -66,7 +71,7 @@ class HMM(ConfigObject):
         self.__init__(self)
         ConfigObject.load(self, dictionary)
         self.loadStates(dictionary)
-        self.loadEmissions(dictionary)
+        self.loadTransitions(dictionary)
             
     
     def loadStates(self, dictionary):
@@ -76,17 +81,17 @@ class HMM(ConfigObject):
             self.addState(state)
         
         
-    def loadEmissions(self, dictionary):
-        if "emissions" not in dictionary:
-            raise "emissions are missing in HMM object"  
-        for emission in dictionary["emissions"]:
-            if "from" not in emission or \
-               "to" not in emission or \
-               "prob" not in emission:
-                raise "emissions are not properly defined"
-            f = self.translateState(emission["from"])
-            t = self.translateState(emission["to"])
-            p = float(emission["prob"])
+    def loadTransitions(self, dictionary):
+        if "transitions" not in dictionary:
+            raise "transitions are missing in HMM object"  
+        for transition in dictionary["transitions"]:
+            if "from" not in transition or \
+               "to" not in transition or \
+               "prob" not in transition:
+                raise "transitions are not properly defined"
+            f = self.translateState(transition["from"])
+            t = self.translateState(transition["to"])
+            p = float(transition["prob"])
             self.addTransition(f, t, p)      
     
     
@@ -107,8 +112,10 @@ class HMM(ConfigObject):
     
     def transitionsToJSON(self, dictionary):
         ret = list()
-        # TODO
-        dictionary["emissions"] = ret
+        for (src, toDict) in self.transitions.iteritems():
+            for (to, prob) in toDict.iteritems():
+                ret.add({"from": src, "to": to, "prob": prob})
+        dictionary["transitions"] = ret
         return dictionary
     
     

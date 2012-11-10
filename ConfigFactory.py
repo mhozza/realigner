@@ -29,7 +29,9 @@ class ConfigFactory:
             return dictionary
         cn = dictionary["__classname__"]
         if cn in self.objects:
-            return self.objects[cn](dictionary)
+            obj = self.objects[cn]()
+            obj.load(dictionary)
+            return obj
 
 
     def load(self, filename):

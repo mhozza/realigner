@@ -2,25 +2,30 @@ import MemoryPatterns
 from collections import defaultdict
 from HMM import State, HMM
     
-class SilentState(State):
-    
-    def durationGenerator(self):
-        yield((0,1.0))
-    
-    def emission(self, X, x, dx):
-        if dx > 0:
-            raise "Silent state cannot emit anything"
-        return 1.0
-
 class GeneralizedState(State):
     
     def __init(self):
         State.__init__(self)
         self.durations = [] 
+        
+        
+    def load(self, dictionary):
+        State.load(self, dictionary)
+        if "durations" not in dictionary:
+            raise "durations were not found in GeneralizedState"
+        self.durations = list(dictionary["durations"])
+        
+        
+    def toJSON(self):
+        ret = State.toJSON(self)
+        ret["durations"] = self.durations
+        return ret        
+        
     
     def durationGenerator(self):
         for x in self.durations:
             yield(x)
+
 
     def emission(self, X, x, dx):
         return self.emission[X[x:x+dx]]
