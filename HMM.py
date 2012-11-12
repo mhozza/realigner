@@ -1,19 +1,20 @@
 from collections import defaultdict
 import Graphs
 from ConfigFactory import ConfigObject
+from Exceptions import ParseException
 
 class State(ConfigObject):
         
     def load(self, dictionary):
         ConfigObject.load(self, dictionary)
         if "emission" not in dictionary:
-            raise "Emission not found in state"
+            raise ParseException("Emission not found in state")
         if "name" not in dictionary:
-            raise "Name not found in state"
+            raise ParseException("Name not found in state")
         if "startprob" not in dictionary:
-            raise "startprob not found in state"
+            raise ParseException("startprob not found in state")
         if "endprob" not in dictionary:
-            raise "endprob not found in state"
+            raise ParseException("endprob not found in state")
         self.stateName = dictionary["name"]
         self.startProbability = float(dictionary["startprob"])
         self.endProbability = float(dictionary["endprob"])
@@ -96,19 +97,19 @@ class HMM(ConfigObject):
     
     def loadStates(self, dictionary):
         if "states" not in dictionary:
-            raise "states are missing in HMM object"
+            raise ParseException("states are missing in HMM object")
         for state in dictionary["states"]:
             self.addState(state)
         
         
     def loadTransitions(self, dictionary):
         if "transitions" not in dictionary:
-            raise "transitions are missing in HMM object"  
+            raise ParseException("transitions are missing in HMM object")  
         for transition in dictionary["transitions"]:
             if "from" not in transition or \
                "to" not in transition or \
                "prob" not in transition:
-                raise "transitions are not properly defined"
+                raise ParseException("transitions are not properly defined")
             f = self.statenameToID[transition["from"]]
             t = self.statenameToID[transition["to"]]
             p = float(transition["prob"])

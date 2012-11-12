@@ -1,13 +1,14 @@
 import json
+from Exceptions import ParseException
 
 class ConfigObject:
         
     
     def load(self, dictionary):
         if "__name__" not in dictionary:
-            raise "Wrong object type"
+            raise ParseException("Wrong object type")
         if dictionary["__name__"] != self.__class__.__name__:
-            raise "Wrong object file"
+            raise ParseException("Wrong object file")
     
         
     def toJSON(self):

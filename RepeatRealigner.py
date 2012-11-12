@@ -1,6 +1,7 @@
 import AlignmentIterator
 from LogNum import LogNum
 import sys
+from Exceptions import ParseException
 
 class RepeatRealigner:
     
@@ -14,7 +15,8 @@ class RepeatRealigner:
         self.Posterior = None
         if alignment != None:
             if X != None or Y != None:
-                raise "If you provide alignment, do not provide sequences."
+                raise ParseException("If you provide alignment, " + \
+                                     "do not provide sequences.")
             self.setBaseAlignment(alignment)
         else:
             self.setSequences(X, Y)
@@ -23,7 +25,7 @@ class RepeatRealigner:
     def setBaseAlignment(self, alignment):
         self.alignment = alignment
         if len(alignment) < 2:
-            raise "We need alignment of at least two sequences"
+            raise ParseException("We need alignment of at least two sequences")
         if len(alignment) > 2:
             sys.stderr.write("Warning: Provided alignment of more than two " +
                              "sequences. Using only first two, ignoring " +
@@ -36,7 +38,7 @@ class RepeatRealigner:
         
     def setSequences(self, X, Y):
         if X == None or Y == None:
-            raise "Two sequences needed."
+            raise ParseException("Two sequences needed.")
         self.alignment = None
         self.sequenceX = X
         self.sequenceY = Y
@@ -89,8 +91,3 @@ class RepeatRealigner:
         #self.ComputeForward()
         #self.ComputeBackward()
         self.ComputePosterior()
-    
-
-
-if __name__ == "__main__":
-    print("HoHoHo")

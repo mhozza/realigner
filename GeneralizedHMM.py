@@ -1,6 +1,7 @@
 import MemoryPatterns
 from collections import defaultdict
 from HMM import State, HMM
+from Exceptions import ParseException
     
 class GeneralizedState(State):
        
@@ -12,7 +13,7 @@ class GeneralizedState(State):
     def load(self, dictionary):
         State.load(self, dictionary)
         if "durations" not in dictionary:
-            raise "durations were not found in GeneralizedState"
+            raise ParseException("durations were not found in GeneralizedState")
         self.durations = list(dictionary["durations"])
         for d in range(len(self.durations)):
             self.durations[d] = tuple(self.durations[d])
