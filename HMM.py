@@ -11,15 +11,20 @@ class State(ConfigObject):
         if "name" not in dictionary:
             raise "Name not found in state"
         self.stateName = dictionary["name"]
-        for (key, prob) in dictionary["emission"].iteritems():
+        self.emission = dict()
+        for [key, prob] in dictionary["emission"]:
+            if key.__class__.__name__ == "list":
+                key = tuple(key)
             self.emission[key] = float(prob)
             
                     
     def toJSON(self):
         ret = ConfigObject.toJSON(self)
         ret["name"] = self.stateName
+        ret["emission"] = list()
         for (key, prob) in self.emission.iteritems():
-            ret["emission"][key] = float(prob)
+            ret["emission"].append((key, prob))
+        return ret
         
     
     def __init__(self):
@@ -37,11 +42,14 @@ class State(ConfigObject):
     
     def setStateID(self, stateID):
         self.stateID = stateID
+        
+    def getStateID(self):
+        return self.stateID
     
     def addTransition(self, stateID):
         self.transitions.append(stateID)
     
-    def addReverseTransitions(self, stateID):
+    def addReverseTransition(self, stateID):
         self.reverseTransitions.append(stateID)
     
     def clearTransitions(self):
@@ -64,7 +72,7 @@ class State(ConfigObject):
 class HMM(ConfigObject):
         
     def load(self, dictionary):
-        self.__init__(self)
+        ConfigObject.load(self, dictionary)
         ConfigObject.load(self, dictionary)
         self.loadStates(dictionary)
         self.loadTransitions(dictionary)
@@ -85,8 +93,8 @@ class HMM(ConfigObject):
                "to" not in transition or \
                "prob" not in transition:
                 raise "transitions are not properly defined"
-            f = self.translateState(transition["from"])
-            t = self.translateState(transition["to"])
+            f = self.statenameToID[transition["from"]]
+            t = self.statenameToID[transition["to"]]
             p = float(transition["prob"])
             self.addTransition(f, t, p)      
     
@@ -110,7 +118,7 @@ class HMM(ConfigObject):
         ret = list()
         for (src, toDict) in self.transitions.iteritems():
             for (to, prob) in toDict.iteritems():
-                ret.add({"from": src, "to": to, "prob": prob})
+                ret.append({"from": src, "to": to, "prob": prob})
         dictionary["transitions"] = ret
         return dictionary
     
@@ -119,12 +127,14 @@ class HMM(ConfigObject):
         print "HMM.__init__"
         self.transitions = defaultdict(dict)
         self.states = list()
+        self.statenameToID = dict()
         
         
     def addState(self, state):
-        state.setID(len(list))
-        list.append(state)
-        return len(list) - 1
+        state.setStateID(len(self.states))
+        self.statenameToID[state.stateName] = state.getStateID()
+        self.states.append(state)
+        return len(self.states) - 1
     
     
     def addTransition(self, stateFrom, stateTo, probability):
@@ -146,6 +156,7 @@ class HMM(ConfigObject):
         self.transitions = transitions;
         for stateID in range(len(self.states)):
             self.states[stateID].remap(reorder)
+        #TODO: remap statenameToID
 
 
     # This functions transfers dictionaries to lists, so it is a bit faster        

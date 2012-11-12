@@ -13,11 +13,13 @@ class GeneralizedPairState(GeneralizedState):
     def load(self, dictionary):
         GeneralizedState.load(self, dictionary)
         newemi = defaultdict(float)
-        for (key, val) in range(self.emission):
+        for (key, val) in self.emission.iteritems():
             newemi[tuple(key)] = val
         self.emisison = newemi
-        for d in range(self.durations):
-            self.durations[d][0] = tuple(self.durations[d][0])
+        for d in range(len(self.durations)):
+            self.durations[d] = (tuple(self.durations[d][0]),
+                                    self.durations[d][1])
+       
         
     def emission(self, X, Y, x, y, dx, dy):
         return self.emission((X[x : x + dx],Y[y : y + dy]))

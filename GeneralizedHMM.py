@@ -14,7 +14,7 @@ class GeneralizedState(State):
         if "durations" not in dictionary:
             raise "durations were not found in GeneralizedState"
         self.durations = list(dictionary["durations"])
-        for d in range(self.durations):
+        for d in range(len(self.durations)):
             self.durations[d] = tuple(self.durations[d])
         
         

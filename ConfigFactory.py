@@ -9,12 +9,14 @@ class ConfigObject:
     def load(self, dictionary):
         if "__name__" not in dictionary:
             raise "Wrong object type"
-        if dictionary["__name__"] != self.__name__:
+        if dictionary["__name__"] != self.__class__.__name__:
             raise "Wrong object file"
         
     def toJSON(self):
-        return {"__name__": self.__name__}
+        return {"__name__": self.__class__.__name__}
 
+# TODO: moznost pridat aj funkciu, ktora nevrati objekt, ale nieco ine
+# takze by sme vedeli davat aj default loadery na ine veci
 
 class ConfigFactory:
     
