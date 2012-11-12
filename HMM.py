@@ -188,4 +188,8 @@ class HMM(ConfigObject):
         self.__reverse_transitions = list()
         for _ in range(len(self.states)):
             self.__transitions.append(list())
-            self.__reverse_transitions.append(list())    
+            self.__reverse_transitions.append(list())   
+            
+if __name__ == "__main__":
+    
+    return 
