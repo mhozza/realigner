@@ -2,32 +2,33 @@ import json
 
 class ConfigObject:
     
-    __classname__ = "ConfigObject"
-    
     def getClassname(self):
         return self.classname
     
     
     def load(self, dictionary):
-        if "__classname__" not in dictionary:
+        if "__name__" not in dictionary:
             raise "Wrong object type"
-        if dictionary["__classname__"] != self.__classname__:
+        if dictionary["__name__"] != self.__name__:
             raise "Wrong object file"
         
     def toJSON(self):
-        return {"__classname__": self.__classname__}
+        return {"__name__": self.__name__}
 
 
 class ConfigFactory:
     
-    def addObject(self, classname, function):
-        self.objects[classname] = function
+    def __init__(self):
+        self.objects = dict()
+    
+    def addObject(self, obj):
+        self.objects[obj.__name__] = obj
 
 
     def objectHook(self, dictionary):
-        if "__classname__" not in dictionary:
+        if "__name__" not in dictionary:
             return dictionary
-        cn = dictionary["__classname__"]
+        cn = dictionary["__name__"]
         if cn in self.objects:
             obj = self.objects[cn]()
             obj.load(dictionary)

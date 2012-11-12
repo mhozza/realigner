@@ -3,9 +3,7 @@ import Graphs
 from ConfigFactory import ConfigObject
 
 class State(ConfigObject):
-    
-    __classname__ = "State"
-    
+        
     def load(self, dictionary):
         ConfigObject.load(self, dictionary)
         if "emission" not in dictionary:
@@ -64,9 +62,7 @@ class State(ConfigObject):
         return self.reverseTransitions
 
 class HMM(ConfigObject):
-    
-    __classname__ = "HMM"
-    
+        
     def load(self, dictionary):
         self.__init__(self)
         ConfigObject.load(self, dictionary)
@@ -120,6 +116,7 @@ class HMM(ConfigObject):
     
     
     def __init__(self):
+        print "HMM.__init__"
         self.transitions = defaultdict(dict)
         self.states = list()
         

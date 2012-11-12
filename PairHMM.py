@@ -6,52 +6,25 @@
 import MemoryPatterns
 from collections import defaultdict
 from GeneralizedHMM import GeneralizedState
-import HMM
+from HMM import HMM
 
-class PairState:
-    def __init__(self):
-        return
-    
-    def durationGenerator(self):
-        yield((-1,-1))
+class GeneralizedPairState(GeneralizedState):
+        
+    def load(self, dictionary):
+        GeneralizedState.load(self, dictionary)
+        newemi = defaultdict(float)
+        for (key, val) in range(self.emission):
+            newemi[tuple(key)] = val
+        self.emisison = newemi
+        for d in range(self.durations):
+            self.durations[d][0] = tuple(self.durations[d][0])
         
     def emission(self, X, Y, x, y, dx, dy):
-        return 0.1;
-    
-class PairTableState(GeneralizedState):
-    
-    emission = dict()
-    
-    def __init__(self):
-        #TODO: load it from something
-        return
-    
-    def durationGenerator(self):
-        yield((1,1,1))
-
-    def emission(self, X, Y, x, y, dx, dy):
-        return self.emission[(X[x:x+dx],Y[y:y+dy])]
-    
-class PairRepeatState(PairState):
-    
-    def __init__(self):
-        return
-    
-    def durationGenerator(self):
-        for i in range(1,10000):
-            for j in range(0,i):
-                yield(((j,i-j),0.001)) # now for some trivial distribution
-        
-    def emission(self, X, Y, x, y, dx, dy):
-        self.hmm.getProbability(X, Y, x, y, dx, dy)
-        # vyrobime HMM, vypocitame hodnotu a zacachujeme ju, lebo ju budeme 
-        # mozno neskor znova potrebovat
-        # TODO: pridaj aj hashovanie a memoizaciu, nech nekonstruujem tie iste 
-        # objekty viac krat -- na to by sa mozno hodila nejaka factory       
+        return self.emission((X[x : x + dx],Y[y : y + dy]))
         
 
 class GeneralizedPairHMM(HMM):
-    
+
     # TODO: este pridat dalsie restrikcie z anotacie
    
     def optimize(self):

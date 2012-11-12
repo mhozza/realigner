@@ -3,7 +3,7 @@ from collections import defaultdict
 from HMM import State, HMM
     
 class GeneralizedState(State):
-    
+       
     def __init(self):
         State.__init__(self)
         self.durations = [] 
@@ -14,6 +14,8 @@ class GeneralizedState(State):
         if "durations" not in dictionary:
             raise "durations were not found in GeneralizedState"
         self.durations = list(dictionary["durations"])
+        for d in range(self.durations):
+            self.durations[d] = tuple(self.durations[d])
         
         
     def toJSON(self):
@@ -33,7 +35,7 @@ class GeneralizedState(State):
     
     
 class GeneralizedHMM(HMM):
-           
+        
     def getForwardTable(self, X, x, dx, memoryPattern=None, initialRow=None):
         
         if memoryPattern == None:
