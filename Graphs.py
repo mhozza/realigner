@@ -17,8 +17,9 @@ def toposort(graph):
         if visited[v]:
             return
         visited[v] = True
-        for u in graph[v]:
-            __toposort(u)
+        if v in graph:
+            for u in graph[v]:
+                __toposort(u)
         out_order.append(v)
     map(__toposort, states)
     return out_order

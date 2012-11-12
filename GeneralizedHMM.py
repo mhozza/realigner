@@ -5,8 +5,8 @@ from Exceptions import ParseException
     
 class GeneralizedState(State):
        
-    def __init__(self):
-        State.__init__(self)
+    def __init__(self, *p):
+        State.__init__(self, *p)
         self.durations = list()
         
         
@@ -42,7 +42,7 @@ class GeneralizedHMM(HMM):
         if memoryPattern == None:
             memoryPattern = MemoryPatterns.every(dx)
             
-        rows = [defaultdict(float) for x in range(dx)]
+        rows = [defaultdict(self.mathType) for x in range(dx)]
         
         ignoreFirstRow = False
         if initialRow != None:
@@ -78,7 +78,7 @@ class GeneralizedHMM(HMM):
         if memoryPattern == None:
             memoryPattern = MemoryPatterns.every(dx)
             
-        rows = [defaultdict(float) for x in range(dx)]
+        rows = [defaultdict(self.mathType) for x in range(dx)]
         
         ignoreFirstRow = False
         if initialRow != None:

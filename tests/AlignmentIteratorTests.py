@@ -3,7 +3,8 @@ Unittests for AlignmentIterator module
 """
 from AlignmentIterator import TextAlignmentToTupleList, \
                               AlignmentPositionGenerator, \
-                              AlignmentBeamGenerator
+                              AlignmentBeamGenerator, \
+                              AlignmentFullGenerator
 import unittest
 
 class AlignmentIteratorTest(unittest.TestCase):
@@ -13,6 +14,7 @@ class AlignmentIteratorTest(unittest.TestCase):
             "ACG--C-A--CA-C",
             "AC-TGGGAC-CACC")
         return
+    
     
     def test_tupleList(self):
         tests = [(
@@ -24,13 +26,15 @@ class AlignmentIteratorTest(unittest.TestCase):
             Y = test[2]
             self.assertEqual(X, Y, "Wrong conversion to tuple list: " + 
                              str(X) + " != " + str(Y))
+    
             
     def test_positions(self):
-        X = [(0, 0), (1, 1), (2, 1), (2, 2), (2, 3), (3, 4), (3, 5), (4, 6), 
+        X = [(0, 0), (1, 1), (2, 1), (2, 2), (2, 3), (3, 4), (3, 5), (4, 6),
              (4, 7), (4, 7), (5, 8), (6, 9), (6, 10), (7, 11)]
         Y = list(AlignmentPositionGenerator(self.Alignment))
         self.assertEqual(X, Y, "Position generator does not work: " + 
                          str(X) + " != " + str(Y))
+    
     
     def test_beam(self):
         self.assertEqual(self.Alignment, TextAlignmentToTupleList(
@@ -52,6 +56,17 @@ class AlignmentIteratorTest(unittest.TestCase):
                         X.add((x[0] + i, x[1] + j))
             Y = set(AlignmentBeamGenerator(self.Alignment, width))
             self.assertEqual(X, Y, "Beam iterator is not correct")
+     
+            
+    def test_full(self):
+        alignment = TextAlignmentToTupleList("ACTA---", "TCTCTCT")
+        X = list(AlignmentFullGenerator(alignment))
+        Y = list(((i, j)for i in range(4) for j in range(7)))
+        self.assertEqual(X,
+                         Y,
+                         "Full iterator is not correct: " + str(X) + \
+                         " != " + str(Y))
+    
     
 if __name__ == '__main__':
     unittest.main()

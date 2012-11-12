@@ -68,7 +68,7 @@ def AlignmentBeamGenerator(Alignment, width = -1):
             yield((X, i))
         X += 1
         
-def FullAlignmentGenerator(Alignment, _ = -1):
+def AlignmentFullGenerator(Alignment, _ = -1):
     """
     Generate iterator over all possible combination of positions in sequences
     from input alignment.
@@ -91,7 +91,7 @@ def unzipList(List):
     return (X, Y)
         
 if __name__ == "__main__":
-    def main():
+    def visualize():
         """
         Test function
         """
@@ -121,5 +121,5 @@ if __name__ == "__main__":
                     Y.append(x[1]+j)
         ax.plot(X, Y, "o", color="green")
         pyplot.show()
-    main()    
+    visualize()    
     

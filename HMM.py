@@ -16,13 +16,13 @@ class State(ConfigObject):
         if "endprob" not in dictionary:
             raise ParseException("endprob not found in state")
         self.stateName = dictionary["name"]
-        self.startProbability = float(dictionary["startprob"])
-        self.endProbability = float(dictionary["endprob"])
+        self.startProbability = self.mathType(dictionary["startprob"])
+        self.endProbability = self.mathType(dictionary["endprob"])
         self.emissions = dict()
         for [key, prob] in dictionary["emission"]:
             if key.__class__.__name__ == "list":
                 key = tuple(key)
-            self.emissions[key] = float(prob)
+            self.emissions[key] = self.mathType(prob)
             
                     
     def toJSON(self):
@@ -36,17 +36,19 @@ class State(ConfigObject):
         return ret
         
     
-    def __init__(self):
+    def __init__(self, mathType = float):
+        self.mathType = mathType
         self.stateID = -1
         self.stateName = ""
         self.transitions = list()
         self.reverseTransitions = list()
-        self.emissions = defaultdict(float)
-        self.startProbability = 0.0
-        self.endProbability = 0.0
+        self.emissions = defaultdict(self.mathType)
+        self.startProbability = self.mathType(0.0)
+        self.endProbability = self.mathType(0.0)
+        
 
     def durationGenerator(self):
-        yield((1,1.0))
+        yield((1, self.mathType(1.0)))
 
     def emission(self, X, x):
         return self.emissions[X[x]]
@@ -112,7 +114,7 @@ class HMM(ConfigObject):
                 raise ParseException("transitions are not properly defined")
             f = self.statenameToID[transition["from"]]
             t = self.statenameToID[transition["to"]]
-            p = float(transition["prob"])
+            p = self.mathType(transition["prob"])
             self.addTransition(f, t, p)      
     
     
@@ -140,8 +142,8 @@ class HMM(ConfigObject):
         return dictionary
     
     
-    def __init__(self):
-        print "HMM.__init__"
+    def __init__(self, mathType = float):
+        self.mathType = mathType
         self.transitions = defaultdict(dict)
         self.states = list()
         self.statenameToID = dict()

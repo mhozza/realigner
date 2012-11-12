@@ -10,7 +10,7 @@ class GeneralizedPairState(GeneralizedState):
         
     def load(self, dictionary):
         GeneralizedState.load(self, dictionary)
-        newemi = defaultdict(float)
+        newemi = defaultdict(self.mathType)
         for (key, val) in self.emissions.iteritems():
             newemi[tuple(key)] = val
         self.emissions = newemi
@@ -49,7 +49,7 @@ class GeneralizedPairHMM(HMM):
             return
         
         # Initialize table
-        rows = [defaultdict(lambda *_:defaultdict(float)) for _ in range(dx+1)]
+        rows = [defaultdict(lambda *_:defaultdict(self.mathType)) for _ in range(dx+1)]
         
         # Initialize first row
         ignoreFirstRow = False
@@ -114,7 +114,7 @@ class GeneralizedPairHMM(HMM):
             memoryPattern = MemoryPatterns.every(dx)
         
         # Initialize table
-        rows = [defaultdict(lambda *_:defaultdict(float)) for _ in range(dx+1)]
+        rows = [defaultdict(lambda *_:defaultdict(self.mathType)) for _ in range(dx+1)]
         
         # Initialize first row
         ignoreFirstRow = False
@@ -202,7 +202,7 @@ class GeneralizedPairHMM(HMM):
         retTable = list()
         for (index, column) in forwardTable:
             backward_column = backwardTable[index]
-            ret = defaultdict(lambda *_:defaultdict(0.0))
+            ret = defaultdict(lambda *_:defaultdict(self.mathType(0.0)))
             for (colindex, value) in column:
                 for triple in value:
                     ret[colindex][triple] = column[colindex][triple] * \
