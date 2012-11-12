@@ -10,7 +10,13 @@ class State(ConfigObject):
             raise "Emission not found in state"
         if "name" not in dictionary:
             raise "Name not found in state"
+        if "startprob" not in dictionary:
+            raise "startprob not found in state"
+        if "endprob" not in dictionary:
+            raise "endprob not found in state"
         self.stateName = dictionary["name"]
+        self.startProbability = float(dictionary["startprob"])
+        self.endProbability = float(dictionary["endprob"])
         self.emission = dict()
         for [key, prob] in dictionary["emission"]:
             if key.__class__.__name__ == "list":
@@ -22,6 +28,8 @@ class State(ConfigObject):
         ret = ConfigObject.toJSON(self)
         ret["name"] = self.stateName
         ret["emission"] = list()
+        ret["startprob"] = self.startProbability
+        ret["endprob"] = self.endProbability
         for (key, prob) in self.emission.iteritems():
             ret["emission"].append((key, prob))
         return ret
@@ -33,6 +41,8 @@ class State(ConfigObject):
         self.transitions = list()
         self.reverseTransitions = list()
         self.emission = defaultdict(float)
+        self.startProbability = 0.0
+        self.endProbability = 0.0
 
     def durationGenerator(self):
         yield((1,1.0))
@@ -62,6 +72,12 @@ class State(ConfigObject):
         self.stateID = ids[self.stateID]
         self.transitions = map(lambda x:ids[x], self.transitions)
         self.reverseTransitions = map(lambda x:ids[x], self.reverseTransitions)
+        
+    def getStartProbability(self):
+        return self.startProbability
+    
+    def getEndProbability(self):
+        return self.endProbability
     
     def followingIDs(self):
         return self.transitions
@@ -154,10 +170,11 @@ class HMM(ConfigObject):
                 newval[reorder[k]] = v
             transitions[reorder[key]] = newval
         self.transitions = transitions;
+        self.statenameToID = list();
         for stateID in range(len(self.states)):
             self.states[stateID].remap(reorder)
-        #TODO: remap statenameToID
-
+            self.statenameToID[self.states[stateID].stateName] = stateID
+            
 
     # This functions transfers dictionaries to lists, so it is a bit faster        
     def optimize(self):

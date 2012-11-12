@@ -30,5 +30,6 @@ if __name__ == "__main__":
         print(e)
     for r in rr:
         print r
-        print(json.dumps(r.toJSON(), sort_keys=True, indent=4))
+        print r.toJSON()
+        print(json.dumps(r.toJSON(), sort_keys = True))
     

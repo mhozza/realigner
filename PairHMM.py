@@ -2,7 +2,6 @@
 # TODO: start writing unittests!
 
 # TODO: Create single models
-# TODO: default conversion into tuples
 import MemoryPatterns
 from collections import defaultdict
 from GeneralizedHMM import GeneralizedState
