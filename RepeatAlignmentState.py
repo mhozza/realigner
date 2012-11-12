@@ -4,13 +4,12 @@ from HMM import State
 
 class PairRepeatState(State):
     
-    def __init__(self):
-        State.__init__(self)
+    def __init__(self, *p):
+        State.__init__(self, *p)
         self.hmm = None
         
     def load(self, dictionary):
         State.load(self, dictionary)
-        pass        
         
     
     def durationGenerator(self):
