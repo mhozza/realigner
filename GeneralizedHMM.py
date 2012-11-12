@@ -4,9 +4,9 @@ from HMM import State, HMM
     
 class GeneralizedState(State):
        
-    def __init(self):
+    def __init__(self):
         State.__init__(self)
-        self.durations = [] 
+        self.durations = list()
         
         
     def load(self, dictionary):
@@ -30,7 +30,7 @@ class GeneralizedState(State):
 
 
     def emission(self, X, x, dx):
-        return self.emission[X[x:x+dx]]
+        return self.emissions[X[x:x+dx]]
     
     
     
@@ -66,10 +66,11 @@ class GeneralizedHMM(HMM):
                             * self.transitions[stateID][followingID] * dprob
                 
             if memoryPattern.next():
-                retTable.append((_x, rows[_dx]))
-            rows[_dx] = list()
+                retTable.append((x + _x, rows[_x]))
+            rows[_x] = list()
                 
         return retTable
+   
     
     def getBackwardTable(self, X, x, dx, memoryPattern=None, initialRow=None):
         
@@ -101,8 +102,8 @@ class GeneralizedHMM(HMM):
                             * self.transitions[previousID][stateID] * dprob
                 
             if memoryPattern.next():
-                retTable.append((_x, rows[_dx]))
-            rows[_dx] = list()
+                retTable.append((x + _x, rows[_x]))
+            rows[_x] = list()
                 
         return retTable
     

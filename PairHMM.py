@@ -1,7 +1,6 @@
 # TODO: start writing docstring!
 # TODO: start writing unittests!
 
-# TODO: Create single models
 import MemoryPatterns
 from collections import defaultdict
 from GeneralizedHMM import GeneralizedState
@@ -12,29 +11,21 @@ class GeneralizedPairState(GeneralizedState):
     def load(self, dictionary):
         GeneralizedState.load(self, dictionary)
         newemi = defaultdict(float)
-        for (key, val) in self.emission.iteritems():
+        for (key, val) in self.emissions.iteritems():
             newemi[tuple(key)] = val
-        self.emisison = newemi
+        self.emissions = newemi
         for d in range(len(self.durations)):
             self.durations[d] = (tuple(self.durations[d][0]),
                                     self.durations[d][1])
        
         
     def emission(self, X, Y, x, y, dx, dy):
-        return self.emission((X[x : x + dx],Y[y : y + dy]))
+        return self.emissions[(X[x : x + dx], Y[y : y + dy])]
         
 
 class GeneralizedPairHMM(HMM):
 
     # TODO: este pridat dalsie restrikcie z anotacie
-   
-    def optimize(self):
-        # Vyrobi potrebne tabulky, aby sme vedeli rychlo pocitat
-        self.__transitions = list()
-        self.__reverse_transitions = list()
-        for _ in range(len(self.states)):
-            self.__transitions.append(list())
-            self.__reverse_transitions.append(list())    
         
     
     def setAnnotations(self):
@@ -181,7 +172,8 @@ class GeneralizedPairHMM(HMM):
     
     def getProbability(self, X, Y, x, y, dx, dy, positionGenerator = None):
         table = self.getForwardTable(X, Y, x, y, dx, dy, 
-                                     memoryPattern=MemoryPatterns.last(dx))
+                                     memoryPattern=MemoryPatterns.last(dx),
+                                     positionGenerator=positionGenerator)
         return sum([i * self.states[stateID].getEndProbabilit()
                     for (stateID, i) in table[0][1][dy]])
     

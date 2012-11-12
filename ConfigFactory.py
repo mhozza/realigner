@@ -1,16 +1,14 @@
 import json
 
 class ConfigObject:
-    
-    def getClassname(self):
-        return self.classname
-    
+        
     
     def load(self, dictionary):
         if "__name__" not in dictionary:
             raise "Wrong object type"
         if dictionary["__name__"] != self.__class__.__name__:
             raise "Wrong object file"
+    
         
     def toJSON(self):
         return {"__name__": self.__class__.__name__}

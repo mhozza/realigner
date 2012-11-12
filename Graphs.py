@@ -1,27 +1,35 @@
+"""
+This module conatin some basig graph algorithms
+"""
 from collections import defaultdict
-# This module contain some basic graph algorithms
 
-#TODO test this 
 def toposort(graph):
+    """
+    Sort vertices of graph topologically. "graph" is expected to be two nested 
+    dictionaries, where vertices are used as keys. 
+    """
     states = [x for x in graph]
     visited = defaultdict(bool)
     for state in states:
         visited[state] = False
-    order = list()
+    out_order = list()
     def __toposort(v):
         if visited[v]:
             return
         visited[v] = True
         for u in graph[v]:
             __toposort(u)
-        order.append(v)
+        out_order.append(v)
     map(__toposort, states)
-    return order
+    return out_order
 
-def orderToDict(order):
+def orderToDict(permutation):
+    """
+    Change permutation into dictionary.
+    """
     ret = dict()
-    for index in range(len(order)):
-        ret[order[index]] = index
+    for index in range(len(permutation)):
+        ret[permutation[index]] = index
     return ret
 
 if __name__ == "__main__":

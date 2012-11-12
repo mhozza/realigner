@@ -17,11 +17,11 @@ class State(ConfigObject):
         self.stateName = dictionary["name"]
         self.startProbability = float(dictionary["startprob"])
         self.endProbability = float(dictionary["endprob"])
-        self.emission = dict()
+        self.emissions = dict()
         for [key, prob] in dictionary["emission"]:
             if key.__class__.__name__ == "list":
                 key = tuple(key)
-            self.emission[key] = float(prob)
+            self.emissions[key] = float(prob)
             
                     
     def toJSON(self):
@@ -30,7 +30,7 @@ class State(ConfigObject):
         ret["emission"] = list()
         ret["startprob"] = self.startProbability
         ret["endprob"] = self.endProbability
-        for (key, prob) in self.emission.iteritems():
+        for (key, prob) in self.emissions.iteritems():
             ret["emission"].append((key, prob))
         return ret
         
@@ -40,7 +40,7 @@ class State(ConfigObject):
         self.stateName = ""
         self.transitions = list()
         self.reverseTransitions = list()
-        self.emission = defaultdict(float)
+        self.emissions = defaultdict(float)
         self.startProbability = 0.0
         self.endProbability = 0.0
 
@@ -48,7 +48,7 @@ class State(ConfigObject):
         yield((1,1.0))
 
     def emission(self, X, x):
-        return self.emission[X[x]]
+        return self.emissions[X[x]]
     
     def setStateID(self, stateID):
         self.stateID = stateID
@@ -123,10 +123,10 @@ class HMM(ConfigObject):
     
     
     def statesToJSON(self, dictionary):
-        ret = list();
+        ret = list()
         for state in self.states:
             ret.append(state.toJSON())
-        dictionary["states"] = ret;
+        dictionary["states"] = ret
         return dictionary
     
     
@@ -144,6 +144,8 @@ class HMM(ConfigObject):
         self.transitions = defaultdict(dict)
         self.states = list()
         self.statenameToID = dict()
+        self.__transitions = list()
+        self.__reverse_transitions = list()
         
         
     def addState(self, state):
@@ -169,14 +171,18 @@ class HMM(ConfigObject):
             for (k, v) in value:
                 newval[reorder[k]] = v
             transitions[reorder[key]] = newval
-        self.transitions = transitions;
-        self.statenameToID = list();
+        self.transitions = transitions
+        self.statenameToID = list()
         for stateID in range(len(self.states)):
             self.states[stateID].remap(reorder)
             self.statenameToID[self.states[stateID].stateName] = stateID
             
 
-    # This functions transfers dictionaries to lists, so it is a bit faster        
+    # This functions transfers dictionaries to lists, so it is a bit faster
     def optimize(self):
-        return
-    
+        # Vyrobi potrebne tabulky, aby sme vedeli rychlo pocitat
+        self.__transitions = list()
+        self.__reverse_transitions = list()
+        for _ in range(len(self.states)):
+            self.__transitions.append(list())
+            self.__reverse_transitions.append(list())    

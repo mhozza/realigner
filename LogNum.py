@@ -3,7 +3,7 @@ import math
 class LogNum:
     value = float("-inf")
         
-    def __init__(self,value = float(0),log = True):
+    def __init__(self, value = float(0), log = True):
         if type(value) == LogNum:
             self.value = LogNum.value
         elif log:
@@ -47,7 +47,7 @@ class LogNum:
     def __ge__(self, other):
         return self.value >= other.value
     
-    def __float(self, exp = True):
+    def __float__(self, exp = True):
         if exp:
             return float(math.exp(self.value))
         else:
@@ -55,18 +55,17 @@ class LogNum:
         
     def __str__(self, exp = True):
         if exp:
-                return str(math.exp(self.value))
+            return str(math.exp(self.value))
         else:
             return str(self.value)
     
         
-def main():
-    print("Lol")
-    a = LogNum(2, True);
-    b = LogNum(3, True);
-    print(a+b);
-    c = float(a)
-    print(c)
-
 if __name__ == "__main__":
+    def main():
+        print("Lol")
+        a = LogNum(2, True)
+        b = LogNum(3, True)
+        print(a+b)
+        c = float(a)
+        print(c)
     main()

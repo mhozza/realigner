@@ -7,10 +7,12 @@ def every(N = None):
     return itertools.repeat(True, N)
 
 def last(N, k=1):
-    return itertools.chain(itertools.repeat(False, N - k), itertools.repeat(True, k))
+    return itertools.chain(itertools.repeat(False, N - k), 
+                           itertools.repeat(True, k))
 
 def first(N, k=1):
-    return itertools.chain(itertools.repeat(True, k), itertools.repeat(False, N - k))
+    return itertools.chain(itertools.repeat(True, k),
+                           itertools.repeat(False, N - k))
 
 def sqrt(N):
     sqrtN = int(math.sqrt(N))

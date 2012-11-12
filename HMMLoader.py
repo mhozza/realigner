@@ -14,7 +14,7 @@ class HMMLoader(ConfigFactory):
             State, 
             GeneralizedHMM, 
             GeneralizedState, 
-            GeneralizedPairHMM,
+            GeneralizedPairHMM, 
             GeneralizedPairState
         ]:
 
