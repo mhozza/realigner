@@ -50,43 +50,58 @@ class State(ConfigObject):
     def durationGenerator(self):
         yield((1, self.mathType(1.0)))
 
+
     def emission(self, X, x):
         return self.emissions[X[x]]
+
     
     def setStateID(self, stateID):
         self.stateID = stateID
+
         
     def getStateID(self):
         return self.stateID
+
     
     def addTransition(self, stateID):
         self.transitions.append(stateID)
+
     
     def addReverseTransition(self, stateID):
         self.reverseTransitions.append(stateID)
+
     
     def clearTransitions(self):
         self.transitions = list()
+        self.reverseTransitions = list()
+
         
     def clearReverseTransitions(self):
         self.reverseTransitions = list()
+
+ 
+    def followingIDs(self):
+        return self.transitions
+
+    
+    def previousIDs(self):
+        return self.reverseTransitions
+
         
     def remapIDs(self, ids):
         self.stateID = ids[self.stateID]
         self.transitions = map(lambda x:ids[x], self.transitions)
         self.reverseTransitions = map(lambda x:ids[x], self.reverseTransitions)
+
         
     def getStartProbability(self):
         return self.startProbability
+
     
     def getEndProbability(self):
         return self.endProbability
     
-    def followingIDs(self):
-        return self.transitions
-    
-    def previousIDs(self):
-        return self.reverseTransitions
+ 
 
 class HMM(ConfigObject):
         
