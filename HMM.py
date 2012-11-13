@@ -113,7 +113,6 @@ class HMM(ConfigObject):
         
     def load(self, dictionary):
         ConfigObject.load(self, dictionary)
-        ConfigObject.load(self, dictionary)
         self.loadStates(dictionary)
         self.loadTransitions(dictionary)
             
@@ -158,7 +157,9 @@ class HMM(ConfigObject):
         ret = list()
         for (src, toDict) in self.transitions.iteritems():
             for (to, prob) in toDict.iteritems():
-                ret.append({"from": src, "to": to, "prob": prob})
+                _src = self.states[src].stateName
+                _to = self.states[to].stateName
+                ret.append({"from": _src, "to": _to, "prob": prob})
         dictionary["transitions"] = ret
         return dictionary
       
