@@ -29,6 +29,7 @@ def orderToDict(permutation):
     Change permutation into dictionary.
     """
     ret = dict()
+    permutation = list(permutation)
     for index in range(len(permutation)):
         ret[permutation[index]] = index
     return ret

@@ -182,16 +182,20 @@ class HMM(ConfigObject):
             reversed(
                 Graphs.toposort(self.transitions)))
         transitions = defaultdict(dict)
-        for (key, value) in self.transitions.iteritems:
+        for (key, value) in self.transitions.iteritems():
             newval = dict()
-            for (k, v) in value:
+            for (k, v) in value.iteritems():
                 newval[reorder[k]] = v
             transitions[reorder[key]] = newval
         self.transitions = transitions
-        self.statenameToID = list()
+        self.statenameToID = dict()
         for stateID in range(len(self.states)):
-            self.states[stateID].remap(reorder)
+            self.states[stateID].remapIDs(reorder)
             self.statenameToID[self.states[stateID].stateName] = stateID
+        newstates = list(self.states)
+        for state in self.states:
+            newstates[state.getStateID()] = state
+        self.states = newstates
             
 
     # This functions transfers dictionaries to lists, so it is a bit faster
