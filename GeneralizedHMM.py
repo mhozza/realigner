@@ -59,12 +59,12 @@ class GeneralizedHMM(HMM):
                 continue
             for (stateID, _dx) in rows[_x]:
                 state = self.states[stateID]
-                for followingID in state.followingIDs():
+                for (followingID, transprob) in state.followingIDs():
                     following = self.states[followingID]
                     for (_sdx, dprob) in state.durationGenerator():
                         rows[_x + _dx][(followingID, _sdx)] += \
                             following.emission(X, x + _x + _dx, _sdx) \
-                            * self.transitions[stateID][followingID] * dprob
+                            * transprob * dprob
                 
             if memoryPattern.next():
                 retTable.append((x + _x, rows[_x]))
@@ -95,12 +95,12 @@ class GeneralizedHMM(HMM):
                 continue
             for (stateID, _dx) in rows[_x]:
                 state = self.states[stateID]
-                for previousID in state.previousIDs():
+                for (previousID, transprob) in state.previousIDs():
                     previous = self.states[previousID]
                     for (_sdx, dprob) in previous.durationGenerator():
                         rows[_x - _sdx][(previousID, _sdx)] += \
                             state.emission(X, x + _x, _dx) \
-                            * self.transitions[previousID][stateID] * dprob
+                            * transprob * dprob
                 
             if memoryPattern.next():
                 retTable.append((x + _x, rows[_x]))

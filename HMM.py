@@ -63,12 +63,12 @@ class State(ConfigObject):
         return self.stateID
 
     
-    def addTransition(self, stateID):
-        self.transitions.append(stateID)
+    def addTransition(self, stateID, prob):
+        self.transitions.append((stateID, self.mathType(prob)))
 
     
-    def addReverseTransition(self, stateID):
-        self.reverseTransitions.append(stateID)
+    def addReverseTransition(self, stateID, prob):
+        self.reverseTransitions.append((stateID, self.mathType(prob)))
 
     
     def clearTransitions(self):
@@ -86,8 +86,9 @@ class State(ConfigObject):
         
     def remapIDs(self, ids):
         self.stateID = ids[self.stateID]
-        self.transitions = map(lambda x:ids[x], self.transitions)
-        self.reverseTransitions = map(lambda x:ids[x], self.reverseTransitions)
+        self.transitions = map(lambda x:(ids[x[0]], x[1]), self.transitions)
+        self.reverseTransitions = map(lambda x:(ids[x[0]], x[1]), 
+                                      self.reverseTransitions)
 
         
     def getStartProbability(self):
@@ -172,9 +173,10 @@ class HMM(ConfigObject):
     
     
     def addTransition(self, stateFrom, stateTo, probability):
+        probability = self.mathType(probability)
         self.transitions[stateFrom][stateTo] = probability
-        self.states[stateFrom].addTransition(stateTo)
-        self.states[stateTo].addReverseTransition(stateFrom)
+        self.states[stateFrom].addTransition(stateTo, probability)
+        self.states[stateTo].addReverseTransition(stateFrom, probability)
         
         
     def reorderStatesTopologically(self):
@@ -196,14 +198,3 @@ class HMM(ConfigObject):
         for state in self.states:
             newstates[state.getStateID()] = state
         self.states = newstates
-            
-
-    # This functions transfers dictionaries to lists, so it is a bit faster
-    # TODO: probably obsolete
-    def optimize(self):
-        # Vyrobi potrebne tabulky, aby sme vedeli rychlo pocitat
-        self.__transitions = list()
-        self.__reverse_transitions = list()
-        for _ in range(len(self.states)):
-            self.__transitions.append(list())
-            self.__reverse_transitions.append(list())

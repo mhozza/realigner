@@ -93,35 +93,35 @@ class ConfigFactoryTest(unittest.TestCase):
             self.assertAlmostEqual(X, Y, delta=1e-7, 
                                    msg="HMM.emission(\"AC\", 0) does not " + \
                                    "work: " + str(X) + " != " + str(Y))
-        #test stateID
-        for Y in range(4):
-            state.setStateID(Y)
-            X = state.getStateID()
-            self.assertEqual(X, Y, "HMM.set/getStateID({0}) is broken." \
-                             .format(Y))
-        #test transitions & remap
-        transitions = [1, 2, 3, 4]
-        M = {1: 2, 2: 3, 3: 4, 4: 5}
-        for x in transitions:
-            state.addTransition(x)
-            state.addReverseTransition(x)
-        X = state.followingIDs()
-        Y = transitions
-        self.assertEqual(X, Y, "HMM.?transitions are not working.")
-        X = state.previousIDs()
-        self.assertEqual(X, Y, "HMM.?reverse transitions are not working.")
-        state.remapIDs(M)
-        transitions = [M[x] for x in transitions]
-        X = state.followingIDs()
-        Y = transitions
-        self.assertEqual(X, Y, "HMM.remapIDs() is not working.")
-        X = state.previousIDs()
-        self.assertEqual(X, Y, "HMM.remapIDs() is not working.")
-        state.clearTransitions()
-        Y = []
-        X = state.followingIDs()
-        X.extend(state.previousIDs())
-        self.assertEqual(X, Y, "HMM.clearTransitions() is not working.")
+            #test stateID
+            for Y in range(4):
+                state.setStateID(Y)
+                X = state.getStateID()
+                self.assertEqual(X, Y, "HMM.set/getStateID({0}) is broken." \
+                                 .format(Y))
+            #test transitions & remap
+            transitions = [(1, 1.0), (2, 0.4), (3, 0.2), (4, 0.6)]
+            M = {1: 2, 2: 3, 3: 4, 4: 5}
+            for (x, p) in transitions:
+                state.addTransition(x, p)
+                state.addReverseTransition(x, p)
+            X = state.followingIDs()
+            Y = transitions
+            self.assertEqual(X, Y, "HMM.?transitions are not working.")
+            X = state.previousIDs()
+            self.assertEqual(X, Y, "HMM.?reverse transitions are not working.")
+            state.remapIDs(M)
+            transitions = [(M[x[0]], x[1]) for x in transitions]
+            X = state.followingIDs()
+            Y = transitions
+            self.assertEqual(X, Y, "HMM.remapIDs() is not working.")
+            X = state.previousIDs()
+            self.assertEqual(X, Y, "HMM.remapIDs() is not working.")
+            state.clearTransitions()
+            Y = []
+            X = state.followingIDs()
+            X.extend(state.previousIDs())
+            self.assertEqual(X, Y, "HMM.clearTransitions() is not working.")
         #test start & stop probability
         X = state.getStartProbability()
         Y = 1.0

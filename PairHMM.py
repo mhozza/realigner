@@ -66,7 +66,7 @@ class GeneralizedPairHMM(HMM):
                 continue
             for (stateID, _dx, _dy) in rows[x + _x][y + _y].iteritems():
                 state = self.states[stateID]
-                for followingID in state.followingIDs():
+                for (followingID, transprob) in state.followingIDs():
                     following = self.states[followingID]
                     for ((_sdx, _sdy), dprob) in state.durationGenerator():
                         rows[_x + _dx][_y + _dy][(following, _sdx, _sdy)] += \
@@ -77,7 +77,7 @@ class GeneralizedPairHMM(HMM):
                                 y + _y + _dy, 
                                 _sdx, 
                                 _sdy
-                            ) * self.transitions[stateID][followingID] * dprob
+                            ) * transprob * dprob
             # If rows were changed, remember it
             if _x_prev != _x:
                 if memoryPattern.next():
@@ -131,7 +131,7 @@ class GeneralizedPairHMM(HMM):
                 continue
             for (stateID, _dx, _dy) in rows[x + _dx][y + _dy].iteritems():
                 state = self.states[stateID]
-                for previousID in state.previousIDs():
+                for (previousID, transprob) in state.previousIDs():
                     previous = self.states[previousID]
                     for ((_sdx, _sdy), dprob) in previous.durationGenerator():
                         rows[_x - _sdx][_y - _sdy][(previous, _sdx, _sdy)] = \
@@ -142,7 +142,7 @@ class GeneralizedPairHMM(HMM):
                                 x + _y,
                                 _dx,
                                 _dy
-                            ) * self.transitions[previousID][stateID] * dprob
+                            ) * transprob * dprob
             
             # Remember last row if necessary
             if _x_prev != _x:
