@@ -1,6 +1,3 @@
-# TODO: start writing docstring!
-# TODO: start writing unittests!
-
 import MemoryPatterns
 from collections import defaultdict
 from GeneralizedHMM import GeneralizedState
