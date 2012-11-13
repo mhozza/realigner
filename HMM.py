@@ -199,6 +199,7 @@ class HMM(ConfigObject):
             
 
     # This functions transfers dictionaries to lists, so it is a bit faster
+    # TODO: probably obsolete
     def optimize(self):
         # Vyrobi potrebne tabulky, aby sme vedeli rychlo pocitat
         self.__transitions = list()

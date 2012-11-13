@@ -168,6 +168,7 @@ class ConfigFactoryTest(unittest.TestCase):
                 self.assertAlmostEqual(float(hmm.transitions[i][i]), 1.0,
                                        delta="1e-7", msg=
                                        "Remapping of transitions does not work")
- 
+                
+   
 if __name__ == '__main__':
     unittest.main()
