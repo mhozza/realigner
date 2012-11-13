@@ -75,10 +75,6 @@ class State(ConfigObject):
         self.transitions = list()
         self.reverseTransitions = list()
 
-        
-    def clearReverseTransitions(self):
-        self.reverseTransitions = list()
-
  
     def followingIDs(self):
         return self.transitions
@@ -104,6 +100,16 @@ class State(ConfigObject):
  
 
 class HMM(ConfigObject):
+    
+    
+    def __init__(self, mathType = float):
+        self.mathType = mathType
+        self.transitions = defaultdict(dict)
+        self.states = list()
+        self.statenameToID = dict()
+        self.__transitions = list()
+        self.__reverse_transitions = list()
+        
         
     def load(self, dictionary):
         ConfigObject.load(self, dictionary)
@@ -155,17 +161,8 @@ class HMM(ConfigObject):
                 ret.append({"from": src, "to": to, "prob": prob})
         dictionary["transitions"] = ret
         return dictionary
-    
-    
-    def __init__(self, mathType = float):
-        self.mathType = mathType
-        self.transitions = defaultdict(dict)
-        self.states = list()
-        self.statenameToID = dict()
-        self.__transitions = list()
-        self.__reverse_transitions = list()
-        
-        
+      
+      
     def addState(self, state):
         state.setStateID(len(self.states))
         self.statenameToID[state.stateName] = state.getStateID()
