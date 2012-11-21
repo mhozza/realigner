@@ -15,6 +15,8 @@ class State(ConfigObject):
             raise ParseException("startprob not found in state")
         if "endprob" not in dictionary:
             raise ParseException("endprob not found in state")
+        if "serialize" in dictionary:
+            self.serialize = dictionary["serialize"] 
         self.stateName = dictionary["name"]
         self.startProbability = self.mathType(dictionary["startprob"])
         self.endProbability = self.mathType(dictionary["endprob"])
@@ -37,6 +39,7 @@ class State(ConfigObject):
         
     
     def __init__(self, mathType = float):
+        self.serialize = True
         self.mathType = mathType
         self.stateID = -1
         self.stateName = ""
@@ -46,6 +49,10 @@ class State(ConfigObject):
         self.startProbability = self.mathType(0.0)
         self.endProbability = self.mathType(0.0)
         
+
+    def serialize(self):
+        return self.serialize
+
 
     def durationGenerator(self):
         yield((1, self.mathType(1.0)))
@@ -157,7 +164,11 @@ class HMM(ConfigObject):
     def transitionsToJSON(self, dictionary):
         ret = list()
         for (src, toDict) in self.transitions.iteritems():
+            if not self.states[src].serializeMe():
+                continue
             for (to, prob) in toDict.iteritems():
+                if not self.states[to].serializeMe():
+                    continue
                 _src = self.states[src].stateName
                 _to = self.states[to].stateName
                 ret.append({"from": _src, "to": _to, "prob": prob})

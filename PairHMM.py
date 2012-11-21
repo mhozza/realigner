@@ -33,6 +33,7 @@ class GeneralizedPairHMM(HMM):
     # and initial row. Compatible with memory preserving tricks 
     # TODO: +-1
     # TODO: allow restrictions 
+    # TODO: ohranicenia nefunguju ak chcem robit podsekvencie, treba to vyriesit
     def getForwardTable(self, X, Y, x, y, dx, dy,
         memoryPattern = None, positionGenerator = None, initialRow = None):
         # Default position generator
