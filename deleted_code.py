@@ -67,3 +67,16 @@
                       "),"
                 )
             print("]")
+            
+            
+            print("[")
+            for _x in range(len(X)):
+                print("    {")
+                for _y in X[_x]:
+                    print("        " + str(_y) + ": {" + ", ".join([
+                        str(k) + ": " + str(v) for (k,v) in X[_x][_y].iteritems()
+                    ]) + "}, ")
+                print("    },")
+            print("]")
+           
+    

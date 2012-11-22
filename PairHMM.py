@@ -147,7 +147,7 @@ class GeneralizedPairHMM(HMM):
             if ignoreFirstRow and _x == dx:
                 continue
             for stateID in reversed(range(len(self.states))):
-                acc_prob = acc_prob =  reduce(operator.add, 
+                acc_prob = reduce(operator.add, 
                                   [value for (_,value) in
                                       rows[_x][_y][stateID].iteritems()], 
                                   self.mathType(0.0))
@@ -202,7 +202,7 @@ class GeneralizedPairHMM(HMM):
                     for (stateID, i) in table[0][1][dy]])
     
     
-    def getPosteriorTable(self, X, Y, x, y, dx, dy, 
+    def getPosteriorTable(self, X, x, dx, Y, y, dy, 
                           forwardTable = None, backwardTable = None,
                           positionGenerator = None):
         # Najskor chcem taku, co predpoklada ze obe tabulky su velke
@@ -212,25 +212,51 @@ class GeneralizedPairHMM(HMM):
         
         # Fetch tables if they are not provided
         if forwardTable == None:
-            forwardTable = self.getForwardTable(X, Y, x, y, dx, dy,
+            forwardTable = self.getForwardTable(X, x, dx, Y, y, dy,
                 positionGenerator=positionGenerator)
         if backwardTable == None:
-            backwardTable = self.getBackwardTable(X, Y, x, y, dx, dy,
+            backwardTable = self.getBackwardTable(X, x, dx, Y, y, dy,
                 positionGenerator=positionGenerator)
 
         # Sort tables by first element (just in case)    
         sorted(forwardTable,key=lambda (x,_) : x)
         sorted(backwardTable,key=lambda (x,_) : x)
         
+        # Convert forward table into list
+        ft = [dict() for _ in range(dx + 1)]
+        
+        for (i, _x) in forwardTable:
+            ft[i - x] = _x
+            
+        # Flatten backward table
+        bt = [dict() for _ in range(dx + 1)]
+        for (i, B) in backwardTable:
+            for _y in B:
+                for state in B[_y]:
+                    B[_y][state] = reduce(operator.add, 
+                                          [value for (_,value) in
+                                           B[_y][state].iteritems()], 
+                                          self.mathType(0.0))
+            bt[i] = B
+        B = defaultdict(self.mathType)
+        for _x in range(dx + 1):
+            for _y in bt[_x]:
+                for stateID in range(len(self.states)):
+                    state = self.states[stateID]
+                    acc = self.mathType(0.0)
+                    for (followingID, prob) in state.followingIDs():
+                        acc += prob * bt[_x][_y][followingID]
+                    B[(_x, _y, stateID)] = acc
+        
         # Compute posterior probabilities
-        retTable = list()
-        for (index, column) in forwardTable:
-            backward_column = backwardTable[index]
-            ret = defaultdict(lambda *_:defaultdict(self.mathType(0.0)))
-            for (colindex, value) in column:
-                for triple in value:
-                    ret[colindex][triple] = column[colindex][triple] * \
-                        backward_column[colindex][triple]
-            retTable.append((index, ret)) 
-
+        retTable = [defaultdict(lambda *_:defaultdict(self.mathType))
+                    for _ in range(dx + 1)]
+        for _x in range(dx + 1):
+            for (_y, V) in ft[_x].iteritems():
+                for (state, VV) in V.iteritems():
+                    for ((_sdx, _sdy), prob) in VV.iteritems():
+                        retTable[_x][_y][(state, _sdx, _sdy)] = \
+                            prob * B[(_x, _y, state)]
+                            
+        
         return retTable
