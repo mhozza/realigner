@@ -43,3 +43,27 @@
             for (_, lst) in ret:
                 print("["+", ".join(["{"+ ", ".join([str(xxx)+": "+str(vvv) for (xxx,vvv) in xx.iteritems()])+"}" for xx in lst]) + "],")
             print("]")
+            
+            
+            
+            print("[")
+            for (i, xx) in X:
+                print(
+                      "(" + \
+                      str(i)  + ", {\n    " +\
+                      ",\n    ".join([
+                                 str(key) + ": {\n        " + \
+                                 ",\n        ".join([
+                                            str(kk) + ": " + \
+                                            "{" + \
+                                            ", ".join([str(kkk) + ": " + str(vvv)
+                                             for (kkk,vvv) in vv.iteritems()]) 
+                                            + "}"
+                                            for (kk,vv) in value.iteritems()
+                                            ]) 
+                                  + "\n    }"  
+                                 for (key, value) in xx.iteritems()]) + \
+                      "\n}" + \
+                      "),"
+                )
+            print("]")

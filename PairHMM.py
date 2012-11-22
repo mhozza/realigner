@@ -2,6 +2,7 @@ import MemoryPatterns
 from collections import defaultdict
 from GeneralizedHMM import GeneralizedState
 from HMM import HMM
+import operator
 
 class GeneralizedPairState(GeneralizedState):
         
@@ -16,7 +17,7 @@ class GeneralizedPairState(GeneralizedState):
                                     self.durations[d][1])
        
         
-    def emission(self, X, Y, x, y, dx, dy):
+    def emission(self, X, x, dx, Y, y, dy):
         return self.emissions[(X[x : x + dx], Y[y : y + dy])]
         
 
@@ -34,7 +35,7 @@ class GeneralizedPairHMM(HMM):
     # TODO: +-1
     # TODO: allow restrictions 
     # TODO: ohranicenia nefunguju ak chcem robit podsekvencie, treba to vyriesit
-    def getForwardTable(self, X, Y, x, y, dx, dy,
+    def getForwardTable(self, X, x, dx, Y, y, dy,
         memoryPattern = None, positionGenerator = None, initialRow = None):
         # Default position generator
         if positionGenerator == None:
@@ -43,11 +44,12 @@ class GeneralizedPairHMM(HMM):
         
         # Default memory pattern (everything)
         if memoryPattern == None:
-            memoryPattern = MemoryPatterns.every(dx)
-            return
+            memoryPattern = MemoryPatterns.every(dx + 1)
         
         # Initialize table
-        rows = [defaultdict(lambda *_:defaultdict(self.mathType)) for _ in range(dx+1)]
+        rows = [defaultdict(
+                lambda *_:defaultdict(
+                lambda *_:defaultdict(self.mathType))) for _ in range(dx + 1)]
         
         # Initialize first row
         ignoreFirstRow = False
@@ -56,34 +58,46 @@ class GeneralizedPairHMM(HMM):
             ignoreFirstRow = True
         else:
             for state in self.states:
-                rows[0][0][(state.getStateID(), 0, 0)] = \
+                rows[0][0][state.getStateID()][(0, 0)] = \
                     state.getStartProbability()
         
         # Main algorithm
         _x_prev = -1000000 
         retTable = list()
+        # Position generator zaruci ze nebudem mat problem menenim 
+        # dictionary za jazdy. Problem to vyraba ak sa vyraba novy stav. 
         for (_x, _y) in positionGenerator:
             if ignoreFirstRow and _x == 0: #BUG: ak ignorujem prvy riadok, pokazi sa mi zapamatavanie
                 continue
-            for (stateID, _dx, _dy) in rows[x + _x][y + _y].iteritems():
+            for stateID in range(len(self.states)):
+                acc_prob =  reduce(operator.add, 
+                                  [value for (_,value) in
+                                      rows[_x][_y][stateID].iteritems()], 
+                                  self.mathType(0.0))
                 state = self.states[stateID]
+                if acc_prob <= self.mathType(0.0):
+                    continue
                 for (followingID, transprob) in state.followingIDs():
                     following = self.states[followingID]
-                    for ((_sdx, _sdy), dprob) in state.durationGenerator():
-                        rows[_x + _dx][_y + _dy][(following, _sdx, _sdy)] += \
+                    for ((_sdx, _sdy), dprob) in following.durationGenerator():
+                        if _x + _sdx > dx or _y + _sdy > dy:
+                            continue
+                        rows[_x + _sdx][_y + _sdy][followingID][(_sdx, _sdy)] \
+                            += acc_prob * transprob * dprob * \
                             following.emission(
                                 X, 
+                                x + _x,
+                                _sdx,
                                 Y, 
-                                x + _x + _dx, 
-                                y + _y + _dy, 
-                                _sdx, 
+                                y + _y, 
                                 _sdy
-                            ) * transprob * dprob
+                            )
             # If rows were changed, remember it
             if _x_prev != _x:
-                if memoryPattern.next():
-                    retTable.append((x + _x, rows[_x_prev]))
-                rows[_x_prev] = list()
+                if _x_prev >= 0 and _x_prev <= dx:
+                    if memoryPattern.next():
+                        retTable.append((x + _x_prev, rows[_x_prev]))
+                    rows[_x_prev] = list()
             _x_prev = _x
         
         # Remember last row if necessary
@@ -98,7 +112,7 @@ class GeneralizedPairHMM(HMM):
     # TODO: +- 1
     # TODO: restrictions
     # TODO: reverse memory pattern?
-    def getBackwardTable(self, X, Y, x, y, dx, dy,
+    def getBackwardTable(self, X, x, dx, Y, y, dy,
         memoryPattern = None, positionGenerator = None, initialRow = None):
         # Default position generator
         if positionGenerator == None:
@@ -109,10 +123,12 @@ class GeneralizedPairHMM(HMM):
         
         # Default memory pattern (everything)
         if memoryPattern == None:
-            memoryPattern = MemoryPatterns.every(dx)
+            memoryPattern = MemoryPatterns.every(dx + 1)
         
         # Initialize table
-        rows = [defaultdict(lambda *_:defaultdict(self.mathType)) for _ in range(dx+1)]
+        rows = [defaultdict(
+                lambda *_:defaultdict(
+                lambda *_:defaultdict(self.mathType))) for _ in range(dx + 1)]
         
         # Initialize first row
         ignoreFirstRow = False
@@ -121,7 +137,7 @@ class GeneralizedPairHMM(HMM):
             ignoreFirstRow = True
         else:
             for state in self.states:
-                rows[dx][dy][state.getStateID(), 0, 0] = \
+                rows[dx][dy][state.getStateID()] [(0, 0)] = \
                     state.getEndProbability()
         
         # Main algorithm
@@ -130,26 +146,36 @@ class GeneralizedPairHMM(HMM):
         for (_x, _y) in positionGenerator:
             if ignoreFirstRow and _x == dx:
                 continue
-            for (stateID, _dx, _dy) in rows[x + _dx][y + _dy].iteritems():
+            for stateID in reversed(range(len(self.states))):
+                acc_prob = acc_prob =  reduce(operator.add, 
+                                  [value for (_,value) in
+                                      rows[_x][_y][stateID].iteritems()], 
+                                  self.mathType(0.0))
                 state = self.states[stateID]
+                if acc_prob <= self.mathType(0.0):
+                    continue
                 for (previousID, transprob) in state.previousIDs():
                     previous = self.states[previousID]
                     for ((_sdx, _sdy), dprob) in previous.durationGenerator():
-                        rows[_x - _sdx][_y - _sdy][(previous, _sdx, _sdy)] = \
+                        if _x - _sdx < 0 or _y - _sdy < 0:
+                            continue
+                        rows[_x - _sdx][_y - _sdy][previousID][(_sdx, _sdy)] \
+                            += acc_prob * transprob * dprob * \
                             previous.emission(
                                 X,
+                                x + _x - _sdx,
+                                _sdx,
                                 Y,
-                                x + _x,
-                                x + _y,
-                                _dx,
-                                _dy
-                            ) * transprob * dprob
+                                x + _y - _sdy,
+                                _sdy
+                            )
             
             # Remember last row if necessary
             if _x_prev != _x:
-                if memoryPattern.next():
-                    retTable.append((x + _x, rows[_x_prev]))
-                rows[_x_prev] = list()  
+                if _x_prev >= 0 and _x_prev <= dx:
+                    if memoryPattern.next():
+                        retTable.append((x + _x_prev, rows[_x_prev]))
+                    rows[_x_prev] = list()  
             _x_prev = _x
         
         # Remember last row if necessary
