@@ -173,9 +173,6 @@ class ConfigFactoryTest(unittest.TestCase):
                                                msg="Dict has wrong value.")
     
     
-    def test_posterior(self):   
-        return
-    
     
 if __name__ == '__main__':
     unittest.main()
