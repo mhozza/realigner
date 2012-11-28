@@ -50,7 +50,7 @@ class State(ConfigObject):
         self.endProbability = self.mathType(0.0)
         
 
-    def serialize(self):
+    def serializeMe(self):
         return self.serialize
 
 
@@ -117,7 +117,7 @@ class HMM(ConfigObject):
         self.statenameToID = dict()
         self.__transitions = list()
         self.__reverse_transitions = list()
-        
+                
         
     def load(self, dictionary):
         ConfigObject.load(self, dictionary)

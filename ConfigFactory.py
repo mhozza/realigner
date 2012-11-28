@@ -2,7 +2,7 @@ import json
 from Exceptions import ParseException
 
 class ConfigObject:
-            
+
     
     def load(self, dictionary):
         if "__name__" not in dictionary:
@@ -15,16 +15,21 @@ class ConfigObject:
         return {"__name__": self.__class__.__name__}
 
 # TODO: Moznost pridat nejaky defaultny parametricky objekt
-
-
 class ConfigFactory:
     
     def __init__(self):
         self.objects = dict()
+        self.functions = dict()
+        self.constants = dict()
     
     def addObject(self, obj):
         self.objects[obj.__name__] = obj
-
+        
+    def addFunction(self, name ,function):
+        self.functions[name] = function
+        
+    def addConstant(self, name, constant):
+        self.constants[name] = constant
 
     def objectHook(self, dictionary):
         """
@@ -41,6 +46,13 @@ class ConfigFactory:
             if ret == None:
                 return obj
             return ret
+        elif cn in self.functions:
+            ret = self.functions[cn](dictionary)
+            return ret
+        elif cn in self.constants:
+            return self.constants[cn]
+        else:
+            return dictionary
 
 
     def load(self, filename):
