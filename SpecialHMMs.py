@@ -1,15 +1,42 @@
 from HMM import State
 from GeneralizedHMM import GeneralizedState, GeneralizedHMM
 import math
+from Exceptions import ParseException
+
+def JCModelDist(c1, c2, time):
+    if c1 == c2:
+        return 0.25 + 0.75 * math.exp(-4.0 / 3.0 * time)
+    else:
+        return 0.25 - 0.25 * math.exp(-4.0 / 3.0 * time)
+        
 
 def JCModel(char, time, outchars):
     output = []
     for c in outchars:
-        if c==char:
-            output.append((c, 0.25 + 0.75 * math.exp(-4.0 / 3.0 * time)))
-        else:
-            output.append((c,0.25 - 0.25 * math.exp(-4.0 / 3.0 * time)))
-        
+        output.append((c, JCModelDist(c, char, time)))
+    return output
+    
+
+def JukesCantorGenerator(dictionary):
+    output = []
+    if "alphabet" not in dictionary:
+        raise ParseException("Alphabet not found for JC model")
+    if "time" not in dictionary:
+        raise ParseException("Time not found for JC model")
+    alphabet = dictionary["alphabet"]
+    time = dictionary["time"]
+    for c in alphabet:
+        for (cc, prob) in JCModel(c, time, alphabet):
+            output.append(((c, cc), prob / 4.0))
+    return output       
+
+def BackgroundProbabilityGenerator(dictionary):
+    if "alphabet" not in dictionary:
+        raise ParseException("Alphabet not found in background probability")
+    alphabet = dictionary['alphabet']
+    p = 1.0 / float(len(alphabet))
+    return [(c, p) for c in alphabet]
+      
 
 def createProfileHMM(mathType, consensus, time, backgroundProb, trans):
     length = len(consensus)

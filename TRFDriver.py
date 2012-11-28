@@ -52,22 +52,33 @@ class TRFDriver:
         Run tandem repeat finder and return repeats
         """
         if paramSeq == None:
-            paramSeq = ["2", "7", "7", "80", "10", "0", "500"]
-        pseq = [self.path]
+            paramSeq = ["2", "7", "7", "80", "10", "0", "500", "-h"]
+        pseq = [self.path, sequencefile]
         pseq.extend(paramSeq)
-        pseq.append(sequencefile)
         subprocess.call(pseq)
         pseq.pop()
-        pseq[0] = sequencefile
         pseq.append("dat")
-        outputfile = ".".join(pseq)
+        outputfile = ".".join(pseq[1:])
         f = open(outputfile, "r")
-        output = []
+        output = {}
+        sequence_name = ""
+        repeats = []
         for line in f:
-            line = [x.split() for x in line.strip().split(' ')]
+            line = [x.strip() for x in line.strip().split(' ')]
+            if len(line) < 2:
+                continue
+            if line[0] == 'Sequence:':
+                if sequence_name != "":
+                    output[sequence_name] = repeats
+                    repeats = []
+                sequence_name = " ".join(line[1:])
+                continue
+                    
             if len(line) < 15:
                 continue
-            output.append(
-                Repeat(int(line[0]) -1 , int(line[1]) - 1, float(line[3]),
+            repeats.append(
+                Repeat(int(line[0]) -1 , int(line[1]), float(line[3]),
                        line[13], line[14]))
+        if len(repeats) > 0 and sequence_name != "":
+            output[sequence_name] = repeats
         return output

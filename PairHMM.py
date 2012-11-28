@@ -17,11 +17,11 @@ class GeneralizedPairState(GeneralizedState):
                                     self.durations[d][1])
     
     
-    def durationGenerator(self, _, _):
+    def durationGenerator(self, _, __):
         return GeneralizedState.durationGenerator(self)
     
 
-    def reverseDurationGenerator(self, _, _):
+    def reverseDurationGenerator(self, _, __):
         return GeneralizedState.durationGenerator(self)
     
         

@@ -21,6 +21,7 @@ class ConfigFactory:
         self.objects = dict()
         self.functions = dict()
         self.constants = dict()
+        self.dictionary = dict()
     
     def addObject(self, obj):
         self.objects[obj.__name__] = obj
@@ -30,6 +31,9 @@ class ConfigFactory:
         
     def addConstant(self, name, constant):
         self.constants[name] = constant
+        
+    def addDictionary(self, name, dictionary):
+        self.dictionary[name] = dictionary
 
     def objectHook(self, dictionary):
         """
@@ -49,6 +53,11 @@ class ConfigFactory:
         elif cn in self.functions:
             ret = self.functions[cn](dictionary)
             return ret
+        elif cn in self.dictionary:
+            dct = self.dictionary[cn]
+            if "key" not in dictionary:
+                raise ParseException("Key not found in dictionary")
+            return dct[dictionary['key']]
         elif cn in self.constants:
             return self.constants[cn]
         else:
