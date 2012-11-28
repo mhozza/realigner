@@ -2,7 +2,7 @@ import json
 from Exceptions import ParseException
 
 class ConfigObject:
-        
+            
     
     def load(self, dictionary):
         if "__name__" not in dictionary:
@@ -14,8 +14,8 @@ class ConfigObject:
     def toJSON(self):
         return {"__name__": self.__class__.__name__}
 
-# TODO: moznost pridat aj funkciu, ktora nevrati objekt, ale nieco ine
-# takze by sme vedeli davat aj default loadery na ine veci
+# TODO: Moznost pridat nejaky defaultny parametricky objekt
+
 
 class ConfigFactory:
     
@@ -27,13 +27,20 @@ class ConfigFactory:
 
 
     def objectHook(self, dictionary):
+        """
+        Object has method load. If it returns None, then the instance of 
+        the object will be replaced with a dictionary. If load returns value X
+        that is not none, dictionary will be replaced with X.
+        """
         if "__name__" not in dictionary:
             return dictionary
         cn = dictionary["__name__"]
         if cn in self.objects:
             obj = self.objects[cn]()
-            obj.load(dictionary)
-            return obj
+            ret = obj.load(dictionary)
+            if ret == None:
+                return obj
+            return ret
 
 
     def load(self, filename):

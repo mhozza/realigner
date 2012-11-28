@@ -41,8 +41,7 @@ class TRFDriver:
         """
         Set path
         """
-        self.path = path
-    
+        self.path = path 
         
     def run(
             self, 
@@ -69,6 +68,6 @@ class TRFDriver:
             if len(line) < 15:
                 continue
             output.append(
-                Repeat(int(line[0]), int(line[1]), float(line[3]), line[13], 
-                       line[14]))
+                Repeat(int(line[0]) -1 , int(line[1]) - 1, float(line[3]),
+                       line[13], line[14]))
         return output

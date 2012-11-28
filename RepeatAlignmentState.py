@@ -1,9 +1,6 @@
-#TODO: najskor otestuj zvysny kod a az potom pis novy
 from HMM import State
-
 import SpecialHMMs
 
-  
 
 class RepeatProfileFactory:
             
@@ -29,20 +26,53 @@ class PairRepeatState(State):
         State.__init__(self, *p)
         self.hmm = None
         self.factory = RepeatProfileFactory()
+        self.repeatGeneratorX = None
+        self.repeatGeneratorY = None
+        self.consensus = ""
+        
+    
+    def addRepeatGenerator(self, repeatGeneratorX, repeatGeneratorY):
+        self.repeatGeneratorX = repeatGeneratorX
+        self.repeatGeneratorY = repeatGeneratorY
+
         
     def load(self, dictionary):
         State.load(self, dictionary)
         
     
-    def durationGenerator(self):
-        for i in range(1,10000):
-            for j in range(0,i):
-                yield(((j,i-j),0.001)) # now for some trivial distribution
+    def durationGenerator(self, _x, _y):
+        X = list(self.repeatGeneratorX.getHints(_x))
+        Y = list(self.repeatGeneratorY.getHints(_y))
+        N = len(X) * len(Y)
+        p = self.mathType(0.0)
+        if N > 0:
+            p = self.mathType(1.0 / float(N))
+        for (xlen, xcon) in X:
+            for (ylen, ycon) in Y:
+                self.consensus = xcon
+                yield((xlen, ylen), p)
+                self.consensus = ycon
+                yield((xlen, ylen), p)
+    
+    
+    def reverseDurationGenerator(self, _x, _y):
+        X = list(self.repeatGeneratorX.getReverseHints(_x))
+        Y = list(self.repeatGeneratorY.getReverseHints(_y))
+        N = len(X) * len(Y)
+        p = self.mathType(0.0)
+        if N > 0:
+            p = self.mathType(1.0 / float(N))
+        for (xlen, xcon) in X:
+            for (ylen, ycon) in Y:
+                self.consensus = xcon
+                yield((xlen, ylen), p)
+                self.consensus = ycon
+                yield((xlen, ylen), p)
         
         
-    def emission(self, X, x, dx, Y, y, dy, consensus):
-        hmm = self.factory.getHMM(consensus)
+    def emission(self, X, x, dx, Y, y, dy):
+        # we expect that we have consensus from last generated duration
+        hmm = self.factory.getHMM(self.consensus)
         return \
             hmm.getProbability(X, x, dx) * \
             hmm.getProbobility(Y, y, dy)
-        

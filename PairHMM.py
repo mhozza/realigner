@@ -15,25 +15,28 @@ class GeneralizedPairState(GeneralizedState):
         for d in range(len(self.durations)):
             self.durations[d] = (tuple(self.durations[d][0]),
                                     self.durations[d][1])
-       
+    
+    
+    def durationGenerator(self, _, _):
+        return GeneralizedState.durationGenerator(self)
+    
+
+    def reverseDurationGenerator(self, _, _):
+        return GeneralizedState.durationGenerator(self)
+    
         
     def emission(self, X, x, dx, Y, y, dy):
         return self.emissions[(X[x : x + dx], Y[y : y + dy])]
         
 
 class GeneralizedPairHMM(HMM):
-
-    # TODO: este pridat dalsie restrikcie z anotacie
-        
     
     def setAnnotations(self):
         return
    
     
     # Returns forward table. We can specify memory pattern, position generator
-    # and initial row. Compatible with memory preserving tricks 
-    # TODO: +-1
-    # TODO: allow restrictions 
+    # and initial row. Compatible with memory preserving tricks  
     # TODO: ohranicenia nefunguju ak chcem robit podsekvencie, treba to vyriesit
     def getForwardTable(self, X, x, dx, Y, y, dy,
         memoryPattern = None, positionGenerator = None, initialRow = None):
@@ -79,7 +82,8 @@ class GeneralizedPairHMM(HMM):
                     continue
                 for (followingID, transprob) in state.followingIDs():
                     following = self.states[followingID]
-                    for ((_sdx, _sdy), dprob) in following.durationGenerator():
+                    for ((_sdx, _sdy), dprob) in \
+                            following.durationGenerator(_x, _y):
                         if _x + _sdx > dx or _y + _sdy > dy:
                             continue
                         rows[_x + _sdx][_y + _sdy][followingID][(_sdx, _sdy)] \
@@ -156,7 +160,8 @@ class GeneralizedPairHMM(HMM):
                     continue
                 for (previousID, transprob) in state.previousIDs():
                     previous = self.states[previousID]
-                    for ((_sdx, _sdy), dprob) in previous.durationGenerator():
+                    for ((_sdx, _sdy), dprob) in \
+                            previous.reverseDurationGenerator(_x, _y):
                         if _x - _sdx < 0 or _y - _sdy < 0:
                             continue
                         rows[_x - _sdx][_y - _sdy][previousID][(_sdx, _sdy)] \
