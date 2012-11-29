@@ -1,3 +1,14 @@
+from HMM import HMM
+from GeneralizedHMM import GeneralizedState
+
+class delete:
+    
+    def __init__(self):
+        self.mathType = float
+        self.addState = float
+        self.states = float
+        self.addTransition = float
+    
     def load(self, dictionary):
         HMM.load(self, dictionary)
         a = GeneralizedState(self.mathType)
@@ -9,7 +20,7 @@
             "startprob" : self.mathType(1.0),
             "endprob" : self.mathType(0.0),
             "serialize" : False
-        });
+        })
         ID = self.addState(a)
         for stateID in range(len(self.states)):
             if ID == stateID: 
@@ -35,7 +46,7 @@
             if prob > self.mathType(0.0):
                 self.addTransition(stateID, ID, prob)
 
-
+            X = 0
        
             ret = X
             print(ret)

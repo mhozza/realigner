@@ -33,10 +33,24 @@ def JukesCantorGenerator(dictionary):
 def BackgroundProbabilityGenerator(dictionary):
     if "alphabet" not in dictionary:
         raise ParseException("Alphabet not found in background probability")
+    tracks = 1
+    track = 0
+    if "track" in dictionary:
+        track = dictionary['track']
+    if "tracks" in dictionary:
+        tracks = dictionary['tracks']
     alphabet = dictionary['alphabet']
     p = 1.0 / float(len(alphabet))
-    return [(c, p) for c in alphabet]
-      
+    output = []
+    for c in alphabet:
+        if tracks == 1:
+            output.append((c, p))
+        else:
+            cc = [""]*tracks
+            cc[track] = c
+            output.append((tuple(cc), p))
+    return output
+
 
 def createProfileHMM(mathType, consensus, time, backgroundProb, trans):
     length = len(consensus)

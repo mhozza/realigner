@@ -16,8 +16,17 @@ class State(ConfigObject):
         if "endprob" not in dictionary:
             raise ParseException("endprob not found in state")
         if "serialize" in dictionary:
-            self.serialize = dictionary["serialize"] 
+            self.serialize = dictionary["serialize"]
         self.stateName = dictionary["name"]
+        if "onechar" in dictionary:
+            if len(dictionary['onechar']) != 1:
+                raise ParseException('onechar has wrong length')
+            self.onechar = dictionary["onechar"]
+        else:
+            if len(self.stateName) > 0:
+                self.onechar = self.stateName[0]
+            else:
+                self.onechar = "?" 
         self.startProbability = self.mathType(dictionary["startprob"])
         self.endProbability = self.mathType(dictionary["endprob"])
         self.emissions = dict()
@@ -43,6 +52,7 @@ class State(ConfigObject):
         self.mathType = mathType
         self.stateID = -1
         self.stateName = ""
+        self.onechar = "?"
         self.transitions = list()
         self.reverseTransitions = list()
         self.emissions = defaultdict(self.mathType)
@@ -105,6 +115,8 @@ class State(ConfigObject):
     def getEndProbability(self):
         return self.endProbability
     
+    def getChar(self):
+        return self.onechar
  
 
 class HMM(ConfigObject):

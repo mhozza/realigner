@@ -57,7 +57,8 @@ class ConfigFactory:
             dct = self.dictionary[cn]
             if "key" not in dictionary:
                 raise ParseException("Key not found in dictionary")
-            return dct[dictionary['key']]
+            ret = dct[dictionary['key']]
+            return ret
         elif cn in self.constants:
             return self.constants[cn]
         else:

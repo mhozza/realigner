@@ -29,8 +29,8 @@
 	    		"__name__": "JukesCantorGenerator",
 	    		"alphabet": "ACGT",
 	    		"time": 0.47
-	    	}
-	    	
+	    	},
+	    	"onechar": "M"
 	    },
 	    {
 	    	"__name__": "GeneralizedPairState",
@@ -38,7 +38,9 @@
 	    	"startprob": 0.25,
 	    	"endprob": 1.0,
 	    	"durations": [[[1, 0], 1.0]],
-	    	"emission": {"__name__": "backgroundprob", "alphabet": "ACGT"}    	
+	    	"emission": {"__name__": "backgroundprob", "alphabet": "ACGT", 
+	    		         "tracks": 2, "track": 0},
+	    	"onechar": "X"    	
 	    },
 	    {
 	    	"__name__": "GeneralizedPairState",
@@ -46,7 +48,9 @@
 	    	"startprob": 0.25,
 	    	"endprob": 1.0,
 	    	"durations": [[[0, 1], 1.0]],
-	    	"emission": {"__name__": "backgroundprob", "alphabet": "ACGT"}    	
+	    	"emission": {"__name__": "backgroundprob", "alphabet": "ACGT", 
+		                 "tracks": 2, "track": 1},
+		    "onechar": "Y"    	
 	    },
 	    {
 	    	"__name__": "PairRepeatState", 
@@ -54,7 +58,8 @@
 	    	"startprob": 0.25,
 	    	"endprob": 1.0,
 	    	"durations": [],
-	    	"emission": []
+	    	"emission": [],
+	    	"onechar": "R"
 	    }
 	]	
 }
