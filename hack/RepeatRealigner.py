@@ -8,6 +8,7 @@ from TRFDriver import TRFDriver
 from collections import defaultdict
 from tools import structtools
 import profile
+import os
 
 def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm):
 
@@ -105,9 +106,16 @@ def main():
     seq2_name = alignment[1][0]
     
     # Compute repeat hints
-    #trf = TRFDriver("C:\\cygwin\\bin\\trf407b.dos.exe")
-    trf = TRFDriver("/cygdrive/c/cygwin/bin/trf407b.dos.exe")
-    repeats = trf.run(alignment_filename)
+    for trf_executable in [
+                           "/cygdrive/c/cygwin/bin/trf407b.dos.exe",
+                           "C:\\cygwin\\bin\\trf407b.dos.exe",
+                           "/home/mic/Vyskum/duplikacie/trf404.linux64",
+                           ]:
+        if os.path.exists(trf_executable):
+            trf = TRFDriver(trf_executable)
+            break
+        
+    repeats = trf.run(alignment_filename)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
     seq1_repeats = repeats[seq1_name]
     seq2_repeats = repeats[seq2_name]
     PHMM.states[PHMM.statenameToID['Repeat']].addRepeatGenerator(
@@ -130,5 +138,5 @@ def main():
     
     
 if __name__ == "__main__":
-    #main()
-    profile.runctx("""main()""", globals(), locals(), filename='profile.txt')
+    main()
+    #profile.runctx("""main()""", globals(), locals(), filename='profile.txt')
