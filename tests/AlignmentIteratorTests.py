@@ -1,10 +1,10 @@
 """
 Unittests for AlignmentIterator module
 """
-from AlignmentIterator import TextAlignmentToTupleList, \
-                              AlignmentPositionGenerator, \
-                              AlignmentBeamGenerator, \
-                              AlignmentFullGenerator
+from alignment.AlignmentIterator import TextAlignmentToTupleList, \
+                                        AlignmentPositionGenerator, \
+                                        AlignmentBeamGenerator, \
+                                        AlignmentFullGenerator
 import unittest
 
 class AlignmentIteratorTest(unittest.TestCase):

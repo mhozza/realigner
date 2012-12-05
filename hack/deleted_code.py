@@ -1,5 +1,5 @@
-from HMM import HMM
-from GeneralizedHMM import GeneralizedState
+from hmm.HMM import HMM
+from hmm.GeneralizedHMM import GeneralizedState
 
 class delete:
     

@@ -1,7 +1,7 @@
-from HMM import State
-from GeneralizedHMM import GeneralizedState, GeneralizedHMM
+from hmm.HMM import State
+from hmm.GeneralizedHMM import GeneralizedState, GeneralizedHMM
 import math
-from Exceptions import ParseException
+from tools.Exceptions import ParseException
 
 def JCModelDist(c1, c2, time):
     if c1 == c2:

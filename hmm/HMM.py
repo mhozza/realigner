@@ -1,7 +1,7 @@
 from collections import defaultdict
-import Graphs
-from ConfigFactory import ConfigObject
-from Exceptions import ParseException
+from algorithm import Graphs
+from tools.ConfigFactory import ConfigObject
+from tools.Exceptions import ParseException
 
 class State(ConfigObject):
         

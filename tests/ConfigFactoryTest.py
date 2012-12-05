@@ -1,5 +1,5 @@
 import unittest
-from ConfigFactory import ConfigFactory, ConfigObject
+from tools.ConfigFactory import ConfigFactory, ConfigObject
 
 class ConfigFactoryTest(unittest.TestCase):
     
@@ -8,7 +8,7 @@ class ConfigFactoryTest(unittest.TestCase):
                     
     
     def test_configLoadingAndSaving(self):
-        input_file = "../test_data/ConfigFactoryTestData.js"
+        input_file = "data/test_data/ConfigFactoryTestData.js"
         a = ConfigFactory()
         a.addObject(ConfigObject)
         X = a.load(input_file)

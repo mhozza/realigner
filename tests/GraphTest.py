@@ -1,5 +1,5 @@
 import unittest
-from Graphs import toposort, orderToDict
+from algorithm.Graphs import toposort, orderToDict
 
 class AlignmentIteratorTest(unittest.TestCase):
     

@@ -1,9 +1,8 @@
-import MemoryPatterns
+from algorithm import MemoryPatterns
 from collections import defaultdict
-from HMM import State, HMM
-from Exceptions import ParseException
+from hmm.HMM import State, HMM
+from tools.Exceptions import ParseException
 import operator
-from tools import structtools
     
 class GeneralizedState(State):
        

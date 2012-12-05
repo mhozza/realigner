@@ -1,9 +1,8 @@
-import MemoryPatterns
+from algorithm import MemoryPatterns
 from collections import defaultdict
-from GeneralizedHMM import GeneralizedState
-from HMM import HMM
+from hmm.GeneralizedHMM import GeneralizedState
+from hmm.HMM import HMM
 import operator
-import profile
 
 class GeneralizedPairState(GeneralizedState):
         

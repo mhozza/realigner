@@ -1,5 +1,5 @@
 import unittest
-from MemoryPatterns import every, first, last, sqrt
+from algorithm.MemoryPatterns import every, first, last, sqrt
 
 class ConfigFactoryTest(unittest.TestCase):
     

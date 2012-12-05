@@ -1,9 +1,10 @@
-from ConfigFactory import ConfigFactory
-from HMM import HMM, State
-from GeneralizedHMM import GeneralizedHMM, GeneralizedState
-from PairHMM import GeneralizedPairHMM, GeneralizedPairState
-from RepeatAlignmentState import PairRepeatState
-from SpecialHMMs import JukesCantorGenerator, BackgroundProbabilityGenerator
+from tools.ConfigFactory import ConfigFactory
+from hmm.HMM import HMM, State
+from hmm.GeneralizedHMM import GeneralizedHMM, GeneralizedState
+from hmm.PairHMM import GeneralizedPairHMM, GeneralizedPairState
+from models.RepeatAlignmentState import PairRepeatState
+from models.SpecialHMMs import JukesCantorGenerator, \
+                               BackgroundProbabilityGenerator
 import json
 
 class HMMLoader(ConfigFactory):

@@ -1,6 +1,6 @@
 import unittest
 
-from PairHMM import GeneralizedPairState, GeneralizedPairHMM
+from hmm.PairHMM import GeneralizedPairState, GeneralizedPairHMM
 
 
 class ConfigFactoryTest(unittest.TestCase):

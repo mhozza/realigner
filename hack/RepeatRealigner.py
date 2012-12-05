@@ -1,10 +1,9 @@
-import AlignmentIterator
-from LogNum import LogNum
+from algorithm import LogNum
 import sys
-from HMMLoader import HMMLoader
-from RepeatGenerator import RepeatGenerator
-import Fasta
-from TRFDriver import TRFDriver
+from hmm.HMMLoader import HMMLoader
+from hack.RepeatGenerator import RepeatGenerator
+from alignment import Fasta
+from adapters.TRFDriver import TRFDriver
 from collections import defaultdict
 from tools import structtools
 import profile
@@ -77,33 +76,33 @@ def main():
     
     # Parse input parameters
 
-    sys.argv.append('data/pokus.fa')
-    sys.argv.append('data/output.fa')
+    sys.argv.append('data/sequences/pokus.fa')
+    sys.argv.append('data/sequences/output.fa')
     alignment_filename = sys.argv[1]
     output_filename = sys.argv[2]
 
     # Load model
-    loader = HMMLoader()
+    loader = HMMLoader() 
     loader.addDictionary("trans", trans)
-    model_filename = "models/repeatHMM.js"
-    #model_filename = "models/EditDistanceHMM.js"
-    #model_filename = "models/SimpleHMM.js"
+    model_filename = "data/models/repeatHMM.js"
+    #model_filename = "data/models/EditDistanceHMM.js"
+    #model_filename = "data/models/SimpleHMM.js"
     PHMM = loader.load(model_filename)
     
     # Load alignment
-    alignment = Fasta.load(alignment_filename)
-    if len(alignment) < 2:
+    aln = Fasta.load(alignment_filename)
+    if len(aln) < 2:
         print("ERROR: not enough sequences in file")
         
     # Sequence 1
-    seq1 = Fasta.alnToSeq(alignment[0][1])
+    seq1 = Fasta.alnToSeq(aln[0][1])
     seq1_length = len(seq1)
-    seq1_name = alignment[0][0]
+    seq1_name = aln[0][0]
     
     # Sequence 2
-    seq2 = Fasta.alnToSeq(alignment[1][1])
+    seq2 = Fasta.alnToSeq(aln[1][1])
     seq2_length = len(seq2)
-    seq2_name = alignment[1][0]
+    seq2_name = aln[1][0]
     
     # Compute repeat hints
     for trf_executable in [
@@ -125,8 +124,8 @@ def main():
     
     # Compute stuff
     table = PHMM.getPosteriorTable(seq1, 0, seq1_length, seq2, 0, seq2_length)
-    alignment = ""
-    alignment = realign(
+    aln = ""
+    aln = realign(
         seq1_name, seq1, 0, seq1_length,
         seq2_name, seq2, 0, seq2_length,
         table,
@@ -134,7 +133,7 @@ def main():
     )
     
     # Save output
-    Fasta.save(alignment, output_filename)
+    Fasta.save(aln, output_filename)
     
     
 if __name__ == "__main__":

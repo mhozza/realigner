@@ -1,6 +1,6 @@
 import unittest
-from LogNum import LogNum
-from GeneralizedHMM import GeneralizedState, GeneralizedHMM
+from algorithm.LogNum import LogNum
+from hmm.GeneralizedHMM import GeneralizedState, GeneralizedHMM
 
 def toLogNum(L):
     return [LogNum(f) for f in L]

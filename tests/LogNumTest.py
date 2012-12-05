@@ -1,5 +1,5 @@
 import unittest
-from LogNum import LogNum
+from algorithm.LogNum import LogNum
 import operator
 
 
