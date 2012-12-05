@@ -68,7 +68,7 @@ class State(ConfigObject):
         yield((1, self.mathType(1.0)))
 
 
-    def emission(self, X, x):
+    def emission(self, X, x, _=1):
         return self.emissions[X[x]]
 
     

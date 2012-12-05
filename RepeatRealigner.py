@@ -7,13 +7,14 @@ import Fasta
 from TRFDriver import TRFDriver
 from collections import defaultdict
 from tools import structtools
+import profile
 
 def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm):
 
     # [x][y][(state, dx, dy)]
-    f = open("debug.txt", "w")
-    f.write(structtools.structToStr(posteriorTable, 3, ""))
-    f.close()
+    #f = open("debug.txt", "w")
+    #f.write(structtools.structToStr(posteriorTable, 3, ""))
+    #f.close()
     D = [defaultdict(lambda *_: defaultdict(float)) for _ in range(dx + 1)] # [x]{y} = (score, (fromstate, dx, dy))
     
     # compute table
@@ -33,9 +34,9 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm):
     _x = dx
     _y = dy
     aln = []
-    f = open("debug.txt", "a")
-    f.write(structtools.structToStr(D, 2, ""))
-    f.close()
+    #f = open("debug.txt", "a")
+    #f.write(structtools.structToStr(D, 2, ""))
+    #f.close()
     while _x > 0 or _y > 0:
         (_, (fr, _dx, _dy)) = D[_x][_y]
         aln.append((fr, _dx, _dy))
@@ -59,7 +60,8 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm):
             (Y_name, Y_aligned)]
     
 
-if __name__ == "__main__":
+
+def main():
     trans = {
         "MM": 0.91,
         "MI": 0.03,
@@ -83,6 +85,8 @@ if __name__ == "__main__":
     loader = HMMLoader()
     loader.addDictionary("trans", trans)
     model_filename = "models/repeatHMM.js"
+    #model_filename = "models/EditDistanceHMM.js"
+    #model_filename = "models/SimpleHMM.js"
     PHMM = loader.load(model_filename)
     
     # Load alignment
@@ -101,7 +105,8 @@ if __name__ == "__main__":
     seq2_name = alignment[1][0]
     
     # Compute repeat hints
-    trf = TRFDriver("C:\\cygwin\\bin\\trf407b.dos.exe")
+    #trf = TRFDriver("C:\\cygwin\\bin\\trf407b.dos.exe")
+    trf = TRFDriver("/cygdrive/c/cygwin/bin/trf407b.dos.exe")
     repeats = trf.run(alignment_filename)
     seq1_repeats = repeats[seq1_name]
     seq2_repeats = repeats[seq2_name]
@@ -112,6 +117,7 @@ if __name__ == "__main__":
     
     # Compute stuff
     table = PHMM.getPosteriorTable(seq1, 0, seq1_length, seq2, 0, seq2_length)
+    alignment = ""
     alignment = realign(
         seq1_name, seq1, 0, seq1_length,
         seq2_name, seq2, 0, seq2_length,
@@ -121,3 +127,8 @@ if __name__ == "__main__":
     
     # Save output
     Fasta.save(alignment, output_filename)
+    
+    
+if __name__ == "__main__":
+    #main()
+    profile.runctx("""main()""", globals(), locals(), filename='profile.txt')

@@ -3,6 +3,7 @@ from collections import defaultdict
 from GeneralizedHMM import GeneralizedState
 from HMM import HMM
 import operator
+import profile
 
 class GeneralizedPairState(GeneralizedState):
         
@@ -82,6 +83,7 @@ class GeneralizedPairHMM(HMM):
                     continue
                 for (followingID, transprob) in state.followingIDs():
                     following = self.states[followingID]
+                    #print("Duration: ", followingID, _x, _y, len(list(following.durationGenerator(_x, _y))), list(following.durationGenerator(_x,_y)))
                     for ((_sdx, _sdy), dprob) in \
                             following.durationGenerator(_x, _y):
                         if _x + _sdx > dx or _y + _sdy > dy:
@@ -147,10 +149,11 @@ class GeneralizedPairHMM(HMM):
         # Main algorithm
         _x_prev = x + dx + 100000
         retTable = list()
+        states = list(reversed(range(len(self.states))))
         for (_x, _y) in positionGenerator:
             if ignoreFirstRow and _x == dx:
                 continue
-            for stateID in reversed(range(len(self.states))):
+            for stateID in states:
                 acc_prob = reduce(operator.add, 
                                   [value for (_,value) in
                                       rows[_x][_y][stateID].iteritems()], 
@@ -222,6 +225,7 @@ class GeneralizedPairHMM(HMM):
         if backwardTable == None:
             backwardTable = self.getBackwardTable(X, x, dx, Y, y, dy,
                 positionGenerator=positionGenerator)
+        
 
         # Sort tables by first element (just in case)    
         sorted(forwardTable,key=lambda (x,_) : x)

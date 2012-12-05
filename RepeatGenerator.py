@@ -8,9 +8,10 @@ class RepeatGenerator:
         self.vals = []
         self.rrepeats = []
         self.rvals = []
-        self.width = 5
+        self.width = 0
         if repeats != None:
             self.addRepeats(repeats)
+            self.buildRepeatDatabase()
         
     def addRepeats(self, repeats):
         self.repeats.extend(repeats)
@@ -30,8 +31,11 @@ class RepeatGenerator:
         for pos in range(low, high):
             rep = self.repeats[pos]
             length = len(rep.sequence)
-            length += position - rep.start
-            for d in range(self.width):
+            length += rep.start - position
+            dd = self.width
+            if dd == 0:
+                dd = 1
+            for d in range(dd):
                 yield(length + d, rep.consensus)
 
         
@@ -42,5 +46,8 @@ class RepeatGenerator:
             rep = self.rrepeats[pos]
             length = len(rep.sequence)
             length += position - rep.end
-            for d in range(self.width):
+            dd = self.width
+            if dd == 0:
+                dd = 1
+            for d in range(dd):
                 yield (length + d, rep.consensus)

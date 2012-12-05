@@ -3,7 +3,7 @@ Several generators of positions used in alignments.
 """
 
 from collections import deque 
-import matplotlib.pyplot as pyplot
+#import matplotlib.pyplot as pyplot
 
 def TextAlignmentToTupleList(X, Y):
     """
@@ -95,31 +95,31 @@ if __name__ == "__main__":
         """
         Test function
         """
-        A = TextAlignmentToTupleList("ACG--C-A--CA-C", "AC-TGGGAC-CACC")
-        maxX = len([a[0] for a in A if a[0] != '-'])
-        maxY = len([a[1] for a in A if a[1] != '-'])
-        fig = pyplot.figure()
-        ax  = fig.add_subplot(111)
-        (X, Y) = unzipList(AlignmentPositionGenerator(A))
-        ax.plot(X, Y, "-")
-        ax.grid(True)
-        width = 2
-        (X, Y) = unzipList(AlignmentBeamGenerator(A, width))    
-        ax.plot(X, Y, "o", color="red")
-        X = []
-        Y = []
-        a = AlignmentPositionGenerator(A)
-        for x in a:
-            for i in range(-width, width+1):
-                for j in range(-width, width+1):
-                    if x[0] + i < 0 or \
-                       x[1] + j < 0 or \
-                       x[0] + i >= maxX or \
-                       x[1] + j >= maxY:
-                        continue
-                    X.append(x[0]+i+0.2)
-                    Y.append(x[1]+j)
-        ax.plot(X, Y, "o", color="green")
-        pyplot.show()
+#        A = TextAlignmentToTupleList("ACG--C-A--CA-C", "AC-TGGGAC-CACC")
+#        maxX = len([a[0] for a in A if a[0] != '-'])
+#        maxY = len([a[1] for a in A if a[1] != '-'])
+#        fig = pyplot.figure()
+#        ax  = fig.add_subplot(111)
+#        (X, Y) = unzipList(AlignmentPositionGenerator(A))
+#        ax.plot(X, Y, "-")
+#        ax.grid(True)
+#        width = 2
+#        (X, Y) = unzipList(AlignmentBeamGenerator(A, width))    
+#        ax.plot(X, Y, "o", color="red")
+#        X = []
+#        Y = []
+#        a = AlignmentPositionGenerator(A)
+#        for x in a:
+#            for i in range(-width, width+1):
+#                for j in range(-width, width+1):
+#                    if x[0] + i < 0 or \
+#                       x[1] + j < 0 or \
+#                       x[0] + i >= maxX or \
+#                       x[1] + j >= maxY:
+#                        continue
+#                    X.append(x[0]+i+0.2)
+#                    Y.append(x[1]+j)
+#        ax.plot(X, Y, "o", color="green")
+#        pyplot.show()
     visualize()    
     

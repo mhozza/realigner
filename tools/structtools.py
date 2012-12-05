@@ -26,6 +26,9 @@ def structToStr(value, rec = -1, indent = ""):
     if t == type(list()):
         iterable = ((i, value[i]) for i in range(len(value)))
         tp = "list"
+    elif t == type(tuple()):
+        iterable = ((i, value[i]) for i in range(len(value)))
+        tp = "tuple"
     elif t == type(dict()) or t == type(collections.defaultdict()):
         iterable = value.iteritems()
         tp = "dict"

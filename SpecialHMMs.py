@@ -155,6 +155,7 @@ def createProfileHMM(mathType, consensus, time, backgroundProb, trans):
         "endprob": 1.0,
         "durations": [(0, 1.0)]
     })
+    states.append(initState)
     hmm = GeneralizedHMM(mathType)
     hmm.load({
         "__name__": "GeneralizedHMM",

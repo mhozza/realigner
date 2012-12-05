@@ -3,6 +3,7 @@ from collections import defaultdict
 from HMM import State, HMM
 from Exceptions import ParseException
 import operator
+from tools import structtools
     
 class GeneralizedState(State):
        
@@ -27,8 +28,9 @@ class GeneralizedState(State):
         
     
     def durationGenerator(self):
-        for x in self.durations:
-            yield(x)
+        return self.durations
+        #for x in self.durations:
+        #    yield(x)
 
 
     def emission(self, X, x, dx):
@@ -43,7 +45,6 @@ class GeneralizedHMM(HMM):
     def getForwardTable(self, X, x, dx, memoryPattern=None, initialRow=None):
         if memoryPattern == None:
             memoryPattern = MemoryPatterns.every(dx + 1)
-            
         #TODO: pridaj jednu vrstvu dictov, aby to fungovalo (lebo inac
         #pri initi stave/silent stavoch pises do dictu cez ktory sa iteruje
         #a zaroven to chces aj pouzit
@@ -52,7 +53,7 @@ class GeneralizedHMM(HMM):
         # init stav, ktory pojde do ostatnych stavov
         rows = [[defaultdict(self.mathType) 
                  for _ in range(len(self.states))] 
-                     for _ in range(dx+1)]
+                     for _ in range(dx + 1)]
         
         #zacinam v 0 riadku
         ignoreFirstRow = False
@@ -146,7 +147,8 @@ class GeneralizedHMM(HMM):
     # TODO: check if this even works
     def getProbability(self, X, x, dx, positionGenerator = None): 
         table = self.getForwardTable(X, x, dx, 
-                                     memoryPattern=MemoryPatterns.last(dx))
-        return sum([i * self.states[stateID].getEndProbability() 
-                    for ((stateID, _), i) in table[0][1]])
+                                     memoryPattern=MemoryPatterns.last(dx + 1))
+        
+        return sum([sum([prob for prob in dct]) * self.states[stateID].getEndProbability() \
+                    for (stateID, dct) in ((l, table[0][1][l]) for l in range(len(table[0][1])))])
     
