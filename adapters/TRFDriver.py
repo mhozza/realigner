@@ -21,6 +21,7 @@ class Repeat:
         self.consensus = consensus
         self.sequence = sequence
 
+
 class TRFDriver:
     """
     Wrapper for tandem repeat finder
@@ -55,9 +56,13 @@ class TRFDriver:
             paramSeq = ["2", "7", "7", "80", "10", "0", "500", "-h"]
         pseq = [self.path, sequencefile]
         pseq.extend(paramSeq)
-        subprocess.call(pseq)
+        process = subprocess.Popen(pseq, stdout=subprocess.PIPE, 
+                                   stderr=subprocess.STDOUT)
+        output, _ = process.communicate()
+        process.poll()
+        #print(output)
         pseq.pop()
-        pseq.append("dat")
+        pseq.append("dat")   
         outputfile = ".".join(pseq[1:])
         f = open(outputfile, "r")
         output = {}
