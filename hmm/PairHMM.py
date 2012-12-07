@@ -3,6 +3,8 @@ from collections import defaultdict
 from hmm.GeneralizedHMM import GeneralizedState
 from hmm.HMM import HMM
 import operator
+from tools import structtools
+#from tools import visualize
 
 class GeneralizedPairState(GeneralizedState):
         
@@ -120,12 +122,22 @@ class GeneralizedPairHMM(HMM):
     def getBackwardTable(self, X, x, dx, Y, y, dy,
         memoryPattern = None, positionGenerator = None, initialRow = None):
         # Default position generator
+        
+        #positionGenerator = list(reversed(list(positionGenerator)))
+        #f = open("debug.txt", "w")
+        #f.write("originalPositionGenerator\n")
+        #f.write(structtools.structToStr(positionGenerator, 3, ""))
+        #f.close()
+        #positionGenerator = None
         if positionGenerator == None:
             positionGenerator = \
                 ((i,j) for i in range(dx + 1) for j in range(dy + 1))
         # Some generators have to be reversed
-        positionGenerator = reversed(list(positionGenerator))
-        
+        positionGenerator = list(reversed(list(positionGenerator)))
+        #f = open("debug.txt", "a")
+        #f.write("newPositionGenerator\n")
+        #f.write(structtools.structToStr(positionGenerator, 3, ""))
+        #f.close()
         # Default memory pattern (everything)
         if memoryPattern == None:
             memoryPattern = MemoryPatterns.every(dx + 1)
@@ -218,6 +230,8 @@ class GeneralizedPairHMM(HMM):
         # Ale potom bude treba vediet, ci ist od predu, alebo od zadu
         
         # Fetch tables if they are not provided
+        if positionGenerator != None:
+            positionGenerator = list(positionGenerator)
         if forwardTable == None:
             forwardTable = self.getForwardTable(X, x, dx, Y, y, dy,
                 positionGenerator=positionGenerator)
@@ -225,6 +239,22 @@ class GeneralizedPairHMM(HMM):
             backwardTable = self.getBackwardTable(X, x, dx, Y, y, dy,
                 positionGenerator=positionGenerator)
         
+        #vis = visualize.Vis2D()
+        #vis.addTable(forwardTable, "o", "green", visualize.containNonzeroElement, 0.0, 0.3)
+        #vis.addTable(backwardTable, "o", "blue", visualize.containNonzeroElement, 0.3, 0.0)
+        #vis.addPositionGenerator(positionGenerator, "o", "red")
+        #vis.show()
+        
+        #=======================================================================
+        # f = open("debug.txt", "a")
+        # f.write("forwardTable\n")
+        # f.write(structtools.structToStr(forwardTable, 3, ""))
+        # f.close()
+        # f = open("debug.txt", "a")
+        # f.write("backwardTable\n")
+        # f.write(structtools.structToStr(backwardTable, 3, ""))
+        # f.close()
+        #=======================================================================
 
         # Sort tables by first element (just in case)    
         sorted(forwardTable,key=lambda (x,_) : x)
@@ -241,20 +271,28 @@ class GeneralizedPairHMM(HMM):
         for (i, B) in backwardTable:
             for _y in B:
                 for state in B[_y]:
+                    if _y==24  and i == 4:
+                        print("WTF", _y, state, B[_y][state])
+                    # Bug -- razsej by bolo lepsie vymazat povodny zaznam a 
+                    # spravit to v inej tabulke. Tak ci tak 
                     B[_y][state] = reduce(operator.add, 
                                           [value for (_,value) in
                                            B[_y][state].iteritems()], 
                                           self.mathType(0.0))
+                    if _y==24  and i == 4:
+                        print("WTF", _y, state, B[_y][state])
+                        print(B[_y][state]*0.5)
             bt[i] = B
         B = defaultdict(self.mathType)
-        for _x in range(dx + 1):
-            for _y in bt[_x]:
-                for stateID in range(len(self.states)):
-                    state = self.states[stateID]
-                    acc = self.mathType(0.0)
-                    for (followingID, prob) in state.followingIDs():
-                        acc += prob * bt[_x][_y][followingID]
-                    B[(_x, _y, stateID)] = acc
+        for (_x, _y) in positionGenerator:
+            for stateID in range(len(self.states)):
+                state = self.states[stateID]
+                acc = self.mathType(0.0)
+                for (followingID, prob) in state.followingIDs():
+                    if _x == 4 and _y==24:
+                        print (_x, _y, followingID, bt[_x][_y][followingID])
+                    acc += prob * bt[_x][_y][followingID]
+                B[(_x, _y, stateID)] = acc
         
         # Compute posterior probabilities
         retTable = [defaultdict(lambda *_:defaultdict(self.mathType))

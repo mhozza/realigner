@@ -5,38 +5,48 @@ from hack.RepeatGenerator import RepeatGenerator
 from alignment import Fasta
 from adapters.TRFDriver import TRFDriver
 from collections import defaultdict
+from alignment.AlignmentIterator import TextAlignmentToTupleList, \
+                                        AlignmentBeamGenerator, \
+                                        AlignmentFullGenerator
 from tools import structtools
 import profile
 import os
 
-def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm):
+def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm, 
+            positionGenerator=None):
 
-    # [x][y][(state, dx, dy)]
-    #f = open("debug.txt", "w")
-    #f.write(structtools.structToStr(posteriorTable, 3, ""))
-    #f.close()
+    #===========================================================================
+    # f = open("debug.txt", "a")
+    # f.write("posteriorTable\n")
+    # f.write(structtools.structToStr(posteriorTable, 3, ""))
+    # f.close()
+    #===========================================================================
     D = [defaultdict(lambda *_: defaultdict(float)) for _ in range(dx + 1)] # [x]{y} = (score, (fromstate, dx, dy))
     
+    if positionGenerator == None:
+        positionGenerator = AlignmentFullGenerator([X, Y])
+    
     # compute table
-    for _x in range( dx + 1):
-        for (_y, _) in \
-                posteriorTable[_x].iteritems():
-            bestScore = -1.0
-            bestFrom = (-1, -1, -1)
-            for ((fr, _sdx, _sdy), prob) in posteriorTable[_x][_y].iteritems():
-                sc = D[_x - _sdx][_y - _sdy][0] + (_sdx + _sdy) * prob
-                if sc > bestScore:
-                    bestScore = sc
-                    bestFrom = (fr, _sdx, _sdy)
-            #if bestScore >= 0:
-            D[_x][_y] = (bestScore, bestFrom)
+    for (_x, _y)in positionGenerator:
+        bestScore = -1.0
+        bestFrom = (-1, -1, -1)
+        for ((fr, _sdx, _sdy), prob) in posteriorTable[_x][_y].iteritems():
+            sc = D[_x - _sdx][_y - _sdy][0] + (_sdx + _sdy) * prob
+            if sc > bestScore:
+                bestScore = sc
+                bestFrom = (fr, _sdx, _sdy)
+        #if bestScore >= 0:
+        D[_x][_y] = (bestScore, bestFrom)
     # backtrack
     _x = dx
     _y = dy
     aln = []
-    #f = open("debug.txt", "a")
-    #f.write(structtools.structToStr(D, 2, ""))
-    #f.close()
+    #===========================================================================
+    # f = open("debug.txt", "a")
+    # f.write("D\n")
+    # f.write(structtools.structToStr(D, 2, ""))
+    # f.close()
+    #===========================================================================
     while _x > 0 or _y > 0:
         (_, (fr, _dx, _dy)) = D[_x][_y]
         aln.append((fr, _dx, _dy))
@@ -76,8 +86,6 @@ def main():
     
     # Parse input parameters
 
-    sys.argv.append('data/sequences/pokus.fa')
-    sys.argv.append('data/sequences/output.fa')
     alignment_filename = sys.argv[1]
     output_filename = sys.argv[2]
 
@@ -88,7 +96,7 @@ def main():
     #model_filename = "data/models/EditDistanceHMM.js"
     #model_filename = "data/models/SimpleHMM.js"
     PHMM = loader.load(model_filename)
-    
+
     # Load alignment
     aln = Fasta.load(alignment_filename)
     if len(aln) < 2:
@@ -122,14 +130,25 @@ def main():
         RepeatGenerator(seq2_repeats),
     )
     
+    # positions
+    positionGenerator = \
+        AlignmentBeamGenerator(TextAlignmentToTupleList(aln[0][1], aln[1][1]), width = 10)
+    positionGenerator = list(positionGenerator)
+    #print(list(positionGenerator))
+    #positionGenerator = \
+    #            ((i,j) for i in range(len(seq1) + 1) for j in range(len(seq2) + 1))
+    #print(list(positionGenerator))
+    
     # Compute stuff
-    table = PHMM.getPosteriorTable(seq1, 0, seq1_length, seq2, 0, seq2_length)
+    table = PHMM.getPosteriorTable(seq1, 0, seq1_length, seq2, 0, seq2_length,
+                                   positionGenerator = positionGenerator)
     aln = ""
     aln = realign(
         seq1_name, seq1, 0, seq1_length,
         seq2_name, seq2, 0, seq2_length,
         table,
-        PHMM
+        PHMM,
+        positionGenerator
     )
     
     # Save output
