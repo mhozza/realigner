@@ -7,7 +7,7 @@ def toLogNum(L):
     return [LogNum(f) for f in L]
     
 
-class ConfigFactoryTest(unittest.TestCase):
+class LogNumTest(unittest.TestCase):
     
     def test_conversion_to_float(self):
         tests = [0.0, 1.0, 0.2, 0.3, 0.8, 0.4]

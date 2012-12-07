@@ -29,8 +29,10 @@ class TRFDriver:
     def __init__(
             self,
             path=None,
+            mathType=float
         ):
         self.path = 'trf'
+        self.mathType=mathType
         if self.path != None:
             self.setPath(path)
     
@@ -47,7 +49,7 @@ class TRFDriver:
     def run(
             self, 
             sequencefile,
-            paramSeq=None,
+            paramSeq=None
         ):
         """
         Run tandem repeat finder and return repeats
@@ -82,7 +84,7 @@ class TRFDriver:
             if len(line) < 15:
                 continue
             repeats.append(
-                Repeat(int(line[0]) -1 , int(line[1]), float(line[3]),
+                Repeat(int(line[0]) -1 , int(line[1]), self.mathType(line[3]),
                        line[13], line[14]))
         if len(repeats) > 0 and sequence_name != "":
             output[sequence_name] = repeats

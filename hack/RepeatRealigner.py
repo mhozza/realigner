@@ -1,4 +1,4 @@
-from algorithm import LogNum
+from algorithm.LogNum import LogNum
 import sys
 from hmm.HMMLoader import HMMLoader
 from hack.RepeatGenerator import RepeatGenerator
@@ -13,7 +13,7 @@ import profile
 import os
 
 def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm, 
-            positionGenerator=None):
+            positionGenerator=None, mathType=float):
 
     #===========================================================================
     # f = open("debug.txt", "a")
@@ -21,18 +21,18 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
     # f.write(structtools.structToStr(posteriorTable, 3, ""))
     # f.close()
     #===========================================================================
-    D = [defaultdict(lambda *_: defaultdict(float)) for _ in range(dx + 1)] # [x]{y} = (score, (fromstate, dx, dy))
+    D = [defaultdict(lambda *_: defaultdict(mathType)) for _ in range(dx + 1)] # [x]{y} = (score, (fromstate, dx, dy))
     
     if positionGenerator == None:
         positionGenerator = AlignmentFullGenerator([X, Y])
     
     # compute table
     for (_x, _y)in positionGenerator:
-        bestScore = -1.0
+        bestScore = mathType(0.0)
         bestFrom = (-1, -1, -1)
         for ((fr, _sdx, _sdy), prob) in posteriorTable[_x][_y].iteritems():
-            sc = D[_x - _sdx][_y - _sdy][0] + (_sdx + _sdy) * prob
-            if sc > bestScore:
+            sc = D[_x - _sdx][_y - _sdy][0] + mathType(_sdx + _sdy) * prob
+            if sc >= bestScore:
                 bestScore = sc
                 bestFrom = (fr, _sdx, _sdy)
         #if bestScore >= 0:
@@ -43,6 +43,8 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
     aln = []
     #===========================================================================
     # f = open("debug.txt", "a")
+    # f.write("positions\n")
+    # f.write(structtools.structToStr(positionGenerator))
     # f.write("D\n")
     # f.write(structtools.structToStr(D, 2, ""))
     # f.close()
@@ -72,6 +74,13 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
 
 
 def main():
+    f = open("debug.txt", "w")
+    f.close()
+    
+    mathType = float
+    if sys.argv[3] == 'LogNum':
+        mathType = LogNum
+        
     trans = {
         "MM": 0.91,
         "MI": 0.03,
@@ -83,14 +92,15 @@ def main():
         "RI": 0.03,
         "RR": 0.03,
     }
+    for k in trans:
+        trans[k] = mathType(trans[k])    
     
     # Parse input parameters
-
     alignment_filename = sys.argv[1]
     output_filename = sys.argv[2]
 
     # Load model
-    loader = HMMLoader() 
+    loader = HMMLoader(mathType) 
     loader.addDictionary("trans", trans)
     model_filename = "data/models/repeatHMM.js"
     #model_filename = "data/models/EditDistanceHMM.js"
@@ -119,7 +129,7 @@ def main():
                            "/home/mic/Vyskum/duplikacie/trf404.linux64",
                            ]:
         if os.path.exists(trf_executable):
-            trf = TRFDriver(trf_executable)
+            trf = TRFDriver(trf_executable, mathType=mathType)
             break
         
     repeats = trf.run(alignment_filename)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
@@ -148,7 +158,8 @@ def main():
         seq2_name, seq2, 0, seq2_length,
         table,
         PHMM,
-        positionGenerator
+        positionGenerator,
+        mathType=mathType
     )
     
     # Save output

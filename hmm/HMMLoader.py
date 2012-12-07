@@ -7,10 +7,25 @@ from models.SpecialHMMs import JukesCantorGenerator, \
                                BackgroundProbabilityGenerator
 import json
 
+def getInitializerObject(tp, mathType):
+    def __getInitializer(dictionary):
+        t = tp(mathType)
+        t.load(dictionary)
+        return t
+    return __getInitializer
+
+
+def getInitializerFunction(function, mathType):
+    def __getInitializer(dictionary):
+        return function(dictionary, mathType)
+    return __getInitializer
+     
+
 class HMMLoader(ConfigFactory):
     
-    def __init__(self):
+    def __init__(self, mathType=float):
         ConfigFactory.__init__(self)
+        self.mathType=mathType
         for obj in [
             HMM, 
             State, 
@@ -22,14 +37,14 @@ class HMMLoader(ConfigFactory):
         ]:
 
             print (obj.__name__ + " added")
-            self.addObject(obj)
+            self.addFunction(obj.__name__,getInitializerObject(obj, mathType))
         
         for (name, function) in [
             ("JukesCantorGenerator", JukesCantorGenerator),
             ("backgroundprob", BackgroundProbabilityGenerator),
         ]:
             print (function.__name__ + " added under name " + name)
-            self.addFunction(name, function)
+            self.addFunction(name, getInitializerFunction(function, mathType))
         
         for (name, constant) in [
             # STUB 

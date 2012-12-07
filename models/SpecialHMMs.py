@@ -17,7 +17,7 @@ def JCModel(char, time, outchars):
     return output
     
 
-def JukesCantorGenerator(dictionary):
+def JukesCantorGenerator(dictionary,  mathType):
     output = []
     if "alphabet" not in dictionary:
         raise ParseException("Alphabet not found for JC model")
@@ -27,10 +27,10 @@ def JukesCantorGenerator(dictionary):
     time = dictionary["time"]
     for c in alphabet:
         for (cc, prob) in JCModel(c, time, alphabet):
-            output.append(((c, cc), prob / 4.0))
+            output.append(((c, cc), mathType(prob / 4.0)))
     return output       
 
-def BackgroundProbabilityGenerator(dictionary):
+def BackgroundProbabilityGenerator(dictionary, mathType):
     if "alphabet" not in dictionary:
         raise ParseException("Alphabet not found in background probability")
     tracks = 1
@@ -40,7 +40,7 @@ def BackgroundProbabilityGenerator(dictionary):
     if "tracks" in dictionary:
         tracks = dictionary['tracks']
     alphabet = dictionary['alphabet']
-    p = 1.0 / float(len(alphabet))
+    p = mathType(1.0 / float(len(alphabet)))
     output = []
     for c in alphabet:
         if tracks == 1:

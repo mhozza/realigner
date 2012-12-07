@@ -2,17 +2,19 @@ import math
 
 def autoconvDecorator(f):
     def newFunction(self, other):
-        if type(other) is not type(self):
+        if not isinstance(other, LogNum):
             other = self.factory(other)
         return f(self, other)
     return newFunction
 
+NegativeInfinity = float("-inf")
+
 class LogNum:
     value = float("-inf")
-        
+    
     def __init__(self, value = float(0), log = True):
-        if type(value) is LogNum:
-            self.value = LogNum.value
+        if isinstance(value, LogNum):
+            self.value = value.value
         elif log:
             try: 
                 self.value = math.log(float(value))
@@ -20,6 +22,7 @@ class LogNum:
                 self.value = float("-inf")
         else:
             self.value = float(value)
+
     
     def factory(self, other):
         return LogNum(other)
@@ -27,10 +30,19 @@ class LogNum:
 
     @autoconvDecorator   
     def __add__(self, other):
-        return LogNum(math.exp(self.value) + math.exp(other.value))
-    
-    #def __radd__(self, other):
-    #    return self + LogNum(other)
+        if self.value == NegativeInfinity:
+            return LogNum(other)
+        if other.value == NegativeInfinity:
+            return LogNum(self)
+        #return LogNum(math.exp(self.value) + math.exp(other.value))
+        if self.value > other.value:
+            return LogNum(self.value + math.log(1 + math.exp(other.value - self.value)), False)
+        else:
+            return LogNum(other.value + math.log(1 + math.exp(self.value - other.value)), False)
+
+    @autoconvDecorator 
+    def __radd__(self, other):
+        return self + LogNum(other)
    
     @autoconvDecorator 
     def __sub__(self, other):
@@ -63,7 +75,7 @@ class LogNum:
     
     @autoconvDecorator 
     def __eq__(self, other):
-        if type(other) is not LogNum:
+        if not isinstance(other, LogNum):
             other = LogNum(other)
         return self.value == other.value
     

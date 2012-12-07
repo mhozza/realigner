@@ -1,7 +1,6 @@
 from hmm.HMM import State
 from models import SpecialHMMs
 
-
 class RepeatProfileFactory:
             
     def __init__(self, mathType=float):
