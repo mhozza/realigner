@@ -15,12 +15,10 @@ import os
 def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm, 
             positionGenerator=None, mathType=float):
 
-    #===========================================================================
-    # f = open("debug.txt", "a")
-    # f.write("posteriorTable\n")
-    # f.write(structtools.structToStr(posteriorTable, 3, ""))
-    # f.close()
-    #===========================================================================
+    f = open("debug.txt", "a")
+    f.write("posteriorTable\n")
+    f.write(structtools.structToStr(posteriorTable, 3, ""))
+    f.close()
     D = [defaultdict(lambda *_: defaultdict(mathType)) for _ in range(dx + 1)] # [x]{y} = (score, (fromstate, dx, dy))
     
     if positionGenerator == None:
@@ -41,14 +39,12 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
     _x = dx
     _y = dy
     aln = []
-    #===========================================================================
-    # f = open("debug.txt", "a")
-    # f.write("positions\n")
-    # f.write(structtools.structToStr(positionGenerator))
-    # f.write("D\n")
-    # f.write(structtools.structToStr(D, 2, ""))
-    # f.close()
-    #===========================================================================
+    f = open("debug.txt", "a")
+    f.write("positions\n")
+    f.write(structtools.structToStr(positionGenerator))
+    f.write("D\n")
+    f.write(structtools.structToStr(D, 2, ""))
+    f.close()
     while _x > 0 or _y > 0:
         (_, (fr, _dx, _dy)) = D[_x][_y]
         aln.append((fr, _dx, _dy))

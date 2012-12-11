@@ -41,6 +41,7 @@ class GeneralizedPairHMM(HMM):
     # and initial row. Compatible with memory preserving tricks  
     # TODO: ohranicenia nefunguju ak chcem robit podsekvencie, treba to vyriesit
     def getForwardTable(self, X, x, dx, Y, y, dy,
+        # adjustments -- vrati aj cislo o ktore to je posunute, takze sa da ziskat realna pravdepodobnost
         memoryPattern = None, positionGenerator = None, initialRow = None):
         # Default position generator
         if positionGenerator == None:
@@ -55,6 +56,9 @@ class GeneralizedPairHMM(HMM):
         rows = [defaultdict(
                 lambda *_:defaultdict(
                 lambda *_:defaultdict(self.mathType))) for _ in range(dx + 1)]
+        
+        # Adjustments
+        adj = [self.mathType(0.0) for _ in range(dx + 1)]
         
         # Initialize first row
         ignoreFirstRow = False
@@ -71,14 +75,41 @@ class GeneralizedPairHMM(HMM):
         retTable = list()
         # Position generator zaruci ze nebudem mat problem menenim 
         # dictionary za jazdy. Problem to vyraba ak sa vyraba novy stav. 
+        
+        adjustment = self.mathType(1)
+        
+        def rowChange(_x):
+            sm = self.mathType(0.0)
+            cnt = 0
+            for (k, v) in rows[_x].iteritems():
+                for (k, v) in v.iteritems():
+                    for (k, v) in v.iteritems():
+                        sm = max(sm, v)
+                        cnt += 1
+            print("suma",sm, cnt)
+            adj[_x] = sm
+            if sm <= 0.0:
+                return sm
+            for (k, v) in rows[_x].iteritems():
+                for (k, v) in v.iteritems():
+                    for k in v:
+                        v[k] /= sm
+            return sm
+            
+            
+                    
         for (_x, _y) in positionGenerator:
+            if _x_prev != _x:
+                if _x_prev >= 0 and _x_prev <= dx:
+                    adjustment = rowChange(_x_prev)
+                print(_x, "adjustment", adjustment)
             if ignoreFirstRow and _x == 0: #BUG: ak ignorujem prvy riadok, pokazi sa mi zapamatavanie
                 continue
             for stateID in range(len(self.states)):
                 acc_prob =  reduce(operator.add, 
                                   [value for (_,value) in
                                       rows[_x][_y][stateID].iteritems()], 
-                                  self.mathType(0.0))
+                                  self.mathType(0.0)) / adjustment
                 state = self.states[stateID]
                 if acc_prob <= self.mathType(0.0):
                     continue
@@ -103,15 +134,17 @@ class GeneralizedPairHMM(HMM):
             if _x_prev != _x:
                 if _x_prev >= 0 and _x_prev <= dx:
                     if memoryPattern.next():
-                        retTable.append((x + _x_prev, rows[_x_prev]))
+                        retTable.append((x + _x_prev, rows[_x_prev], adj[_x_prev]))
                     rows[_x_prev] = list()
             _x_prev = _x
         
         # Remember last row if necessary
+        rowChange(_x_prev)
         if memoryPattern.next():
-            retTable.append((x + _x_prev, rows[dx]))   
+            retTable.append((x + _x_prev, rows[dx], adj[_x_prev]))   
         
         # Finally, done:-)
+        print(adj)
         return retTable
     
     
@@ -238,16 +271,14 @@ class GeneralizedPairHMM(HMM):
         # vis.show()
         #=======================================================================
         
-        #=======================================================================
-        # f = open("debug.txt", "a")
-        # f.write("forwardTableXX\n")
-        # f.write(structtools.structToStr(forwardTable, 3, ""))
-        # f.close()
-        # f = open("debug.txt", "a")
-        # f.write("backwardTable\n")
-        # f.write(structtools.structToStr(backwardTable, 3, ""))
-        # f.close()
-        #=======================================================================
+        f = open("debug.txt", "a")
+        f.write("forwardTableXX\n")
+        f.write(structtools.structToStr(forwardTable, 3, ""))
+        f.close()
+        f = open("debug.txt", "a")
+        f.write("backwardTable\n")
+        f.write(structtools.structToStr(backwardTable, 3, ""))
+        f.close()
 
         # Sort tables by first element (just in case)    
         sorted(forwardTable,key=lambda (x,_) : x)
