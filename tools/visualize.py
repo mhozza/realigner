@@ -1,5 +1,4 @@
 import matplotlib.pyplot as pyplot
-from tools import structtools
 from collections import defaultdict
 
 def getPairIterator(X):
@@ -29,11 +28,11 @@ class Vis2D:
         self.ax = self.fig.add_subplot(111)
         self.ax.grid(True)
         
-    def addFigure(self, X, Y, type, color=None):
+    def addFigure(self, X, Y, tp, color=None):
         if color == None:
-            self.ax.plot(X, Y, type)
+            self.ax.plot(X, Y, tp)
         else:
-            self.ax.plot(X, Y, type, color=color)
+            self.ax.plot(X, Y, tp, color=color)
             
     def addTable(self, table, tp, color=None, function=None,
                  xdx=0.0, ydx=0.0):
