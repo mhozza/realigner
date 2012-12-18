@@ -81,31 +81,17 @@ def main():
     if sys.argv[3] == 'LogNum':
         mathType = LogNum
         
-    trans = {
-        "MM": 0.91,
-        "MI": 0.03,
-        "MR": 0.03,
-        "IM": 0.91,
-        "II": 0.03,
-        "IR": 0.03,
-        "RM": 0.91,
-        "RI": 0.03,
-        "RR": 0.03,
-    }
-    for k in trans:
-        trans[k] = mathType(trans[k])    
-    
     # Parse input parameters
     alignment_filename = sys.argv[1]
     output_filename = sys.argv[2]
 
     # Load model
     loader = HMMLoader(mathType) 
-    loader.addDictionary("trans", trans)
     model_filename = "data/models/repeatHMM.js"
     #model_filename = "data/models/EditDistanceHMM.js"
     #model_filename = "data/models/SimpleHMM.js"
-    PHMM = loader.load(model_filename)
+    
+    PHMM = loader.load(model_filename)["model"]
 
     # Load alignment
     aln = Fasta.load(alignment_filename)
@@ -127,6 +113,7 @@ def main():
                            "/cygdrive/c/cygwin/bin/trf407b.dos.exe",
                            "C:\\cygwin\\bin\\trf407b.dos.exe",
                            "/home/mic/Vyskum/duplikacie/trf404.linux64",
+                           "/home/mic/bin/trf404.linux64",
                            ]:
         if os.path.exists(trf_executable):
             trf = TRFDriver(trf_executable, mathType=mathType)
