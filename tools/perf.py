@@ -31,3 +31,12 @@ def msg(message, back = 0):
 def printAll():
     for message in messages:
         sys.stderr.write(message + "\n")
+
+def runningTimeDecorator(fn):
+    def wrapped(*p, **k):
+        push(2)
+        ret = fn(*p, **k)
+        msg("Function " + fn.__name__ + " took {time} seconds.", 1)
+        pop(2)
+        return ret
+    return wrapped
