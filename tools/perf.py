@@ -36,7 +36,8 @@ def runningTimeDecorator(fn):
     def wrapped(*p, **k):
         push(2)
         ret = fn(*p, **k)
-        msg("Function " + fn.__name__ + " took {time} seconds.", 1)
+        msg("Function " + fn.__name__ + " (" + fn.__module__ + 
+            ") took {time} seconds.", 1)
         pop(2)
         return ret
     return wrapped

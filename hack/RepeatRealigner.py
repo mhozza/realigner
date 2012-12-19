@@ -57,9 +57,8 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
             (Y_name, Y_aligned)]
     
 
-
+@perf.runningTimeDecorator
 def main():
-    perf.push(2)
     f = open("debug.txt", "w")
     f.close()
     
@@ -147,9 +146,7 @@ def main():
     # Save output
     Fasta.save(aln, output_filename)
     perf.msg("Output saved in {time} seconds.")
-    perf.msg("Everything take {time} seconds.", 1)
 
-    
     
 if __name__ == "__main__":
     main()
