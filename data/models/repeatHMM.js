@@ -1,7 +1,7 @@
 {
     "contants": [
  	    {
- 	        "__name__": "@trans",   	 
+ 	        "__name__": "@trans?",   	 
 	        "MM": 0.91,
 	        "MI": 0.03,
 	        "MR": 0.03,
@@ -13,8 +13,9 @@
 	        "RR": 0.03
         },
         {
-        	"__name__": "@times",
-        	"jukes-cantor-pair-state": 0.00005
+        	"__name__": "@times?",
+        	"jukes-cantor-pair-state-time-X": 0.00005,
+        	"jukes-cantor-pair-state-time-Y": 0.00005
         }
     ],
  	"model": {
@@ -47,7 +48,9 @@
  		    	"emission": {
  		    		"__name__": "JukesCantorGenerator",
  		    		"alphabet": "ACGT",
- 		    		"time": {"__name__": "times", "key": "jukes-cantor-pair-state"}
+ 		    		"timeX": {"__name__": "times", "key": "jukes-cantor-pair-state-time-X"},
+ 		    		"timeY": {"__name__": "times", "key": "jukes-cantor-pair-state-time-Y"},
+ 		        	"backgroundprob": {"__name__": "backgroundprob", "alphabet": "ACGT"}
  		    	},
  		    	"onechar": "M"
  		    },

@@ -2,6 +2,7 @@ from hmm.HMM import State
 from hmm.GeneralizedHMM import GeneralizedState, GeneralizedHMM
 import math
 from tools.Exceptions import ParseException
+from collections import defaultdict
 
 def JCModelDist(c1, c2, time):
     if c1 == c2:
@@ -18,17 +19,24 @@ def JCModel(char, time, outchars):
     
 
 def JukesCantorGenerator(dictionary,  mathType):
-    output = []
     if "alphabet" not in dictionary:
         raise ParseException("Alphabet not found for JC model")
-    if "time" not in dictionary:
+    if "timeX" not in dictionary or "timeY" not in dictionary:
         raise ParseException("Time not found for JC model")
+    if "backgroundprob" not in dictionary:
+        raise ParseException("backgroundprob not in JC model")
     alphabet = dictionary["alphabet"]
-    time = dictionary["time"]
+    timeX = dictionary["timeX"]
+    timeY = dictionary["timeY"]
+    background = dict()
+    for (key, value) in dictionary["backgroundprob"]:
+        background[key] = value
+    dst = defaultdict(mathType)
     for c in alphabet:
-        for (cc, prob) in JCModel(c, time, alphabet):
-            output.append(((c, cc), mathType(prob / 4.0)))
-    return output       
+        for (cc, prob) in JCModel(c, timeX, alphabet):
+            for (ccc, prob2) in JCModel(c, timeY, alphabet):
+                dst[(cc, ccc)] += background[c] * prob * prob2 
+    return [x for x in dst.iteritems()]       
 
 def BackgroundProbabilityGenerator(dictionary, mathType):
     if "alphabet" not in dictionary:

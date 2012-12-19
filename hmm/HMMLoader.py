@@ -37,7 +37,7 @@ class HMMLoader(ConfigFactory):
         ]:
 
             print (obj.__name__ + " added")
-            self.addFunction(obj.__name__,getInitializerObject(obj, mathType))
+            self.addFunction(obj.__name__, getInitializerObject(obj, mathType))
         
         for (name, function) in [
             ("JukesCantorGenerator", JukesCantorGenerator),

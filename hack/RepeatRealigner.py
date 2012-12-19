@@ -8,20 +8,12 @@ from collections import defaultdict
 from alignment.AlignmentIterator import TextAlignmentToTupleList, \
                                         AlignmentBeamGenerator, \
                                         AlignmentFullGenerator
-from tools import structtools
-import profile
 import os
 
 def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm, 
             positionGenerator=None, mathType=float):
 
-    #===========================================================================
-    # f = open("debug.txt", "a")
-    # f.write("posteriorTable\n")
-    # f.write(structtools.structToStr(posteriorTable, 3, ""))
-    # f.close()
-    #===========================================================================
-    D = [defaultdict(lambda *_: defaultdict(mathType)) for _ in range(dx + 1)] # [x]{y} = (score, (fromstate, dx, dy))
+    D = [defaultdict(lambda *_: defaultdict(mathType)) for _ in range(dx + 1)] 
     
     if positionGenerator == None:
         positionGenerator = AlignmentFullGenerator([X, Y])
@@ -41,14 +33,6 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
     _x = dx
     _y = dy
     aln = []
-    #===========================================================================
-    # f = open("debug.txt", "a")
-    # f.write("positions\n")
-    # f.write(structtools.structToStr(positionGenerator))
-    # f.write("D\n")
-    # f.write(structtools.structToStr(D, 2, ""))
-    # f.close()
-    #===========================================================================
     while _x > 0 or _y > 0:
         (_, (fr, _dx, _dy)) = D[_x][_y]
         aln.append((fr, _dx, _dy))
@@ -131,10 +115,6 @@ def main():
     positionGenerator = \
         AlignmentBeamGenerator(TextAlignmentToTupleList(aln[0][1], aln[1][1]), width = 10)
     positionGenerator = list(positionGenerator)
-    #print(list(positionGenerator))
-    #positionGenerator = \
-    #            ((i,j) for i in range(len(seq1) + 1) for j in range(len(seq2) + 1))
-    #print(list(positionGenerator))
     
     # Compute stuff
     table = PHMM.getPosteriorTable(seq1, 0, seq1_length, seq2, 0, seq2_length,
@@ -155,4 +135,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-    #profile.runctx("""main()""", globals(), locals(), filename='profile.txt')

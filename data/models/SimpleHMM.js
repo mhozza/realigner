@@ -21,7 +21,9 @@
 	    	"emission": {
 	    		"__name__": "JukesCantorGenerator",
 	    		"alphabet": "ACGT",
-	    		"time": 0.05
+	    		"timeX": 0.01,
+		    	"timeY": 0.04,
+		        "backgroundprob": {"__name__": "backgroundprob", "alphabet": "ACGT"}
 	    	},
 	    	"onechar": "M"
 	    },
