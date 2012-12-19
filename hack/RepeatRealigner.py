@@ -8,6 +8,7 @@ from collections import defaultdict
 from alignment.AlignmentIterator import TextAlignmentToTupleList, \
                                         AlignmentBeamGenerator, \
                                         AlignmentFullGenerator
+from tools import perf
 import os
 
 def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm, 
@@ -58,6 +59,7 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
 
 
 def main():
+    perf.push(2)
     f = open("debug.txt", "w")
     f.close()
     
@@ -92,6 +94,9 @@ def main():
     seq2_length = len(seq2)
     seq2_name = aln[1][0]
     
+    perf.msg("Data loaded in {time} seconds.")
+    perf.replace()
+    
     # Compute repeat hints
     for trf_executable in [
                            "/cygdrive/c/cygwin/bin/trf407b.dos.exe",
@@ -116,9 +121,16 @@ def main():
         AlignmentBeamGenerator(TextAlignmentToTupleList(aln[0][1], aln[1][1]), width = 10)
     positionGenerator = list(positionGenerator)
     
+    perf.msg("Hints computed in {time} seconds.")
+    perf.replace()
+    
     # Compute stuff
     table = PHMM.getPosteriorTable(seq1, 0, seq1_length, seq2, 0, seq2_length,
                                    positionGenerator = positionGenerator)
+    
+    perf.msg("Posterior table computed in {time} seconds.")
+    perf.replace()
+    
     aln = ""
     aln = realign(
         seq1_name, seq1, 0, seq1_length,
@@ -129,9 +141,16 @@ def main():
         mathType=mathType
     )
     
+    perf.msg("Sequence was realigned in {time} seconds.")
+    perf.replace()
+    
     # Save output
     Fasta.save(aln, output_filename)
+    perf.msg("Output saved in {time} seconds.")
+    perf.msg("Everything take {time} seconds.", 1)
+
     
     
 if __name__ == "__main__":
     main()
+    perf.printAll()
