@@ -34,14 +34,14 @@ class ConfigFactory:
         
     def addDictionary(self, name, dictionary, check_if_exists=False):
         if check_if_exists and name in self.dictionary:
-            return
+            self.dictionary[name].update(dictionary)
         self.dictionary[name] = dictionary
 
     def objectHook(self, dictionary):
         """
         Object has method load. If it returns None, then the instance of 
         the object will be replaced with a dictionary. If load returns value X
-        that is not none, dictionary will be replaced with X.
+        that is not none, dictionary will be updated with X.
         
         It is possible to dynamically add dictionaries. If __name__ start with @, it means that
         it will be added as dictionary into objectHook. If it ends with ?, it will be added only

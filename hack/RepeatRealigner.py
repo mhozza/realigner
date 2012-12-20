@@ -9,7 +9,8 @@ from alignment.AlignmentIterator import TextAlignmentToTupleList, \
                                         AlignmentBeamGenerator, \
                                         AlignmentFullGenerator
 from tools import perf
-import os
+import os   
+import argparse
 
 def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm, 
             positionGenerator=None, mathType=float):
@@ -56,23 +57,42 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
             ("annotation of " + X_name + " and " + Y_name, annotation),
             (Y_name, Y_aligned)]
     
+def getMathType(s):
+    if s == 'LogNum':
+        return LogNum
+    elif s == 'float':
+        return float
+    else:
+        raise('Unknown type')
+    
+def toList(s):
+    return [s]
 
 @perf.runningTimeDecorator
 def main():
-    f = open("debug.txt", "w")
-    f.close()
     
-    mathType = float
-    if sys.argv[3] == 'LogNum':
-        mathType = LogNum
+    parser = argparse.ArgumentParser(description='Realign sequence using informations from repeat realigner')
+    parser.add_argument('--mathType', '-m', type=getMathType, default=float, choices=[LogNum, float])
+    parser.add_argument('alignment', type=str)
+    parser.add_argument('output', type=str)
+    parser.add_argument('--model', '-M', type=str, default='data/models/repeatHMM.js')
+    parser.add_argument('--trf', '-t', type=toList, default=[
+                           "/cygdrive/c/cygwin/bin/trf407b.dos.exe",
+                           "C:\\cygwin\\bin\\trf407b.dos.exe",
+                           "/home/mic/Vyskum/duplikacie/trf404.linux64",
+                           "/home/mic/bin/trf404.linux64",
+                           ])
+    parsed_arg = parser.parse_args()
+    mathType = parsed_arg.mathType
+    
         
     # Parse input parameters
-    alignment_filename = sys.argv[1]
-    output_filename = sys.argv[2]
+    alignment_filename = parsed_arg.alignment
+    output_filename = parsed_arg.output
 
     # Load model
     loader = HMMLoader(mathType) 
-    model_filename = "data/models/repeatHMM.js"
+    model_filename = parsed_arg.model
     #model_filename = "data/models/EditDistanceHMM.js"
     #model_filename = "data/models/SimpleHMM.js"
     
@@ -97,12 +117,7 @@ def main():
     perf.replace()
     
     # Compute repeat hints
-    for trf_executable in [
-                           "/cygdrive/c/cygwin/bin/trf407b.dos.exe",
-                           "C:\\cygwin\\bin\\trf407b.dos.exe",
-                           "/home/mic/Vyskum/duplikacie/trf404.linux64",
-                           "/home/mic/bin/trf404.linux64",
-                           ]:
+    for trf_executable in parsed_arg.trf:
         if os.path.exists(trf_executable):
             trf = TRFDriver(trf_executable, mathType=mathType)
             break
