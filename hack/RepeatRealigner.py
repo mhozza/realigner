@@ -1,5 +1,4 @@
 from algorithm.LogNum import LogNum
-import sys
 from hmm.HMMLoader import HMMLoader
 from hack.RepeatGenerator import RepeatGenerator
 from alignment import Fasta
@@ -166,3 +165,4 @@ def main():
 if __name__ == "__main__":
     main()
     perf.printAll()
+    

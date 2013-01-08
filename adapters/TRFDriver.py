@@ -60,7 +60,7 @@ class TRFDriver:
         pseq.extend(paramSeq)
         process = subprocess.Popen(pseq, stdout=subprocess.PIPE, 
                                    stderr=subprocess.STDOUT)
-        output, _ = process.communicate()
+        _, _ = process.communicate()
         process.poll()
         #print(output)
         pseq.pop()
