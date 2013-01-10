@@ -1,32 +1,34 @@
 """
 Unittests for AlignmentIterator module
 """
-from alignment.AlignmentIterator import TextAlignmentToTupleList, \
-                                        AlignmentPositionGenerator, \
+from alignment.AlignmentIterator import AlignmentPositionGenerator, \
                                         AlignmentBeamGenerator, \
-                                        AlignmentFullGenerator
+                                        AlignmentFullGenerator, \
+                                        seq_len
 import unittest
 
 class AlignmentIteratorTest(unittest.TestCase):
     
     def setUp(self):
-        self.Alignment = TextAlignmentToTupleList(
+        self.Alignment = (
             "ACG--C-A--CA-C",
             "AC-TGGGAC-CACC")
         return
     
-    
-    def test_tupleList(self):
-        tests = [(
-            "ACGT", "----", 
-             [('A', '-'), ('C', '-'), ('G', '-'), ('T', '-')])
-        ]
-        for test in tests:
-            X = TextAlignmentToTupleList(test[0], test[1])
-            Y = test[2]
-            self.assertEqual(X, Y, "Wrong conversion to tuple list: " + 
-                             str(X) + " != " + str(Y))
-    
+    #TODO: urvat
+    #===========================================================================
+    # def test_tupleList(self):
+    #    tests = [(
+    #        "ACGT", "----", 
+    #         [('A', '-'), ('C', '-'), ('G', '-'), ('T', '-')])
+    #    ]
+    #    for test in tests:
+    #        X = TextAlignmentToTupleList(test[0], test[1])
+    #        Y = test[2]
+    #        self.assertEqual(X, Y, "Wrong conversion to tuple list: " + 
+    #                         str(X) + " != " + str(Y))
+    # 
+    #===========================================================================
             
     def test_positions(self):
         X = [(0, 0), (1, 1), (2, 1), (2, 2), (2, 3), (3, 4), (3, 5), (4, 6),
@@ -37,11 +39,11 @@ class AlignmentIteratorTest(unittest.TestCase):
     
     
     def test_beam(self):
-        self.assertEqual(self.Alignment, TextAlignmentToTupleList(
+        self.assertEqual(self.Alignment, (
             "ACG--C-A--CA-C",
             "AC-TGGGAC-CACC"))
-        maxX = len([a[0] for a in self.Alignment if a[0] != '-'])
-        maxY = len([a[1] for a in self.Alignment if a[1] != '-'])
+        maxX = seq_len(self.Alignment[0])
+        maxY = seq_len(self.Alignment[1])
         for width in range(0, 20):
             positions = AlignmentPositionGenerator(self.Alignment)
             X = set()
@@ -55,17 +57,18 @@ class AlignmentIteratorTest(unittest.TestCase):
                             continue
                         X.add((x[0] + i, x[1] + j))
             Y = set(AlignmentBeamGenerator(self.Alignment, width))
-            self.assertEqual(X, Y, "Beam iterator is not correct")
+            self.assertEqual(X, Y, "Beam iterator is not correct:\n\t{0} !=\n\t{1}".
+                             format(X, Y))
      
             
     def test_full(self):
-        alignment = TextAlignmentToTupleList("ACTA---", "TCTCTCT")
-        X = list(AlignmentFullGenerator(alignment))
-        Y = list(((i, j)for i in range(4) for j in range(7)))
-        self.assertEqual(X,
-                         Y,
-                         "Full iterator is not correct: " + str(X) + \
-                         " != " + str(Y))
+       alignment = ("ACTA---", "TCTCTCT")
+       X = list(AlignmentFullGenerator(alignment))
+       Y = list(((i, j)for i in range(4) for j in range(7)))
+       self.assertEqual(X,
+                        Y,
+                        "Full iterator is not correct: " + str(X) + \
+                        " != " + str(Y))
     
     
 if __name__ == '__main__':

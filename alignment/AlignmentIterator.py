@@ -5,42 +5,100 @@ Several generators of positions used in alignments.
 from collections import deque 
 #import matplotlib.pyplot as pyplot
 
-def TextAlignmentToTupleList(X, Y):
-    """
-    Convert alignment to list of tuples (like zip)
-    """
-    return [(X[ii], Y[ii]) for ii in range(len(X)) if ii < len(Y)]
+class Alignment:
     
+    def __init__(self, sequences):
+        self.sequences = list()
+        self.names = list()
+        self.memoryhints = list()
+        self.seq_to_aln = list()
+        self.aln_to_seq = list()
+        self.addSequences(sequences)
+        
+        
+    
+    def addSequences(self, sequences):
+        for sequence in sequences:
+            name = ""
+            if type(sequence) == tuple:
+                name = sequence[1]
+                sequence = sequence
+            self.sequences.append(sequence)
+            self.names.append(name)
+            self.seq_to_aln.append(list())
+            self.aln_to_seq.append(list())            
+            self.computeMemoryHint(len(self.sequences) - 1)
+        
+        
+    def computeMemoryHint(self, index):
+        self.seq_to_aln[index] = list()
+        self.aln_to_seq[index] = list()
+        x = -1;
+        for i in range(len(self.sequences[index])):
+            if self.sequences[index][i] != '-':
+                self.seq_to_aln[index].append(i)
+                x += 1
+            self.aln_to_seq[index].append(x)
+        #Add end of the sequence TODO: maybe we want to remove this
+        self.seq_to_aln[index].append(len(self.sequences[index]))
+        
+def autoconvDecorator(f):
+    def newFunction(other, *args):
+        if not isinstance(other, Alignment):
+            other = Alignment(other)
+        return f(other, *args)
+    return newFunction
 
-def AlignmentPositionGenerator(Alignment):
+NegativeInfinity = float("-inf")
+
+
+def seq_len(sequence):
+    return len(sequence) - sequence.count('-')
+    
+@autoconvDecorator
+def AlignmentPositionGenerator(alignment, window=None):
     """
-    Generate all positions form alignment
+    Generate all positions from alignment. Accepts tuple/list or Alignment
+    object for parameter "alignment". "window" parameter is list of tuples
+    containing restrictions for each alignment
     """
-    Xlen = -1
-    Ylen = -1
-    #yield((Xlen, Ylen))
-    for (X, Y) in Alignment:
-        if Y != '-':
-            Ylen += 1
-        if X != '-':
-            Xlen += 1
-        #else:
-        #    continue # If there is no move at X, we do not yield
-        yield((Xlen, Ylen))
+    if window == None:
+        window = [(0, seq_len(x)) for x in alignment.sequences]
+    
+    start = max(
+        [alignment.seq_to_aln[i][window[i][0]] for i in range(len(window))]
+    )
+    stop  = min(
+        [alignment.seq_to_aln[i][window[i][1]] for i in range(len(window))]
+    )
+    for i in range(start, stop):
+        yield tuple([alignment.aln_to_seq[j][i] for j in range(len(window))])    
         
 
-def AlignmentBeamGenerator(Alignment, width = -1):
+@autoconvDecorator
+def AlignmentBeamGenerator(alignment, width = -1, window=None):
     """
-    Generator of positions with distance width around input alignment
+    Generator of positions with distance width around input alignment. Works
+    ony for two dimmensional alignments now
     """
     if width < 0:
-        width = len(Alignment)
+        width = len(alignment.sequences[0])
+    if window == None:
+        window = [(0, seq_len(x)) for x in alignment.sequences]
+    maxY = seq_len(alignment.sequences[1])
+    maxX = seq_len(alignment.sequences[0])
     Q = deque()
-    G = list(AlignmentPositionGenerator(Alignment))
-    maxY = len([A[1] for A in Alignment if A[1] != '-'])
-    maxX = len([A[0] for A in Alignment if A[0] != '-'])
+    pos = [maxX, maxY]
+    larger_window = [
+        (
+            max(0, window[i][0] - width),
+            min(pos[i], window[i][1] + width)
+        )
+        for i in range(len(window))
+    ]
+    G = list(AlignmentPositionGenerator(alignment, larger_window))
     G.append((maxX, maxY))
-    X = 0
+    X = G[0][0]
     for g in G:
         Q.append(g)
         if X + width >= g[0]:
@@ -50,9 +108,10 @@ def AlignmentBeamGenerator(Alignment, width = -1):
         if len(Q) > 1: 
             gg = Q[-2]
         else:
-            gg = g 
-        for i in range(max(0, Q[0][1] - width), min(maxY + 1, gg[1] + width + 1)):
-            yield((X, i))
+            gg = g
+        if X >= window[0][0] and X < window[0][1]: 
+            for i in range(max(0, Q[0][1] - width, window[1][0]), min(maxY + 1, gg[1] + width + 1, window[1][1])):
+                yield((X, i))
         X += 1
     if len(Q) == 0:
         return 
@@ -66,17 +125,19 @@ def AlignmentBeamGenerator(Alignment, width = -1):
             gg = Q[-2]
         else: 
             gg = g
-        for i in range(max(0, Q[0][1] - width), min(maxY + 1, gg[1] + width + 1)):
-            yield((X, i))
+        if X >= window[0][0] and X < window[0][1]:
+            for i in range(max(0, Q[0][1] - width, window[1][0]), min(maxY + 1, gg[1] + width + 1, window[1][1])):
+                yield((X, i))
         X += 1
         
-def AlignmentFullGenerator(Alignment, _ = -1):
+@autoconvDecorator
+def AlignmentFullGenerator(alignment, _ = -1):
     """
     Generate iterator over all possible combination of positions in sequences
     from input alignment.
     """
-    maxX = len([A[0] for A in Alignment if A[0] != '-'])
-    maxY = len([A[1] for A in Alignment if A[1] != '-'])
+    maxX = seq_len(alignment.sequences[0])
+    maxY = seq_len(alignment.sequences[1])
     for i in range(0, maxX):
         for j in range(0, maxY):
             yield((i, j))

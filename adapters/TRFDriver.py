@@ -3,6 +3,7 @@ Wrapper for tandem repeat finder
 """
 import subprocess
 
+
 class Repeat:
     """
     Repeat data structure
