@@ -4,8 +4,7 @@ from hack.RepeatGenerator import RepeatGenerator
 from alignment import Fasta
 from adapters.TRFDriver import TRFDriver
 from collections import defaultdict
-from alignment.AlignmentIterator import TextAlignmentToTupleList, \
-                                        AlignmentBeamGenerator, \
+from alignment.AlignmentIterator import AlignmentBeamGenerator, \
                                         AlignmentFullGenerator
 from tools import perf
 import os   
@@ -99,18 +98,18 @@ def main():
 
     # Load alignment
     aln = Fasta.load(alignment_filename)
-    if len(aln) < 2:
+    if len(aln.sequences) < 2:
         print("ERROR: not enough sequences in file")
         
     # Sequence 1
-    seq1 = Fasta.alnToSeq(aln[0][1])
+    seq1 = Fasta.alnToSeq(aln.sequences[0])
     seq1_length = len(seq1)
-    seq1_name = aln[0][0]
+    seq1_name = aln.names[0]
     
     # Sequence 2
-    seq2 = Fasta.alnToSeq(aln[1][1])
+    seq2 = Fasta.alnToSeq(aln.sequences[1])
     seq2_length = len(seq2)
-    seq2_name = aln[1][0]
+    seq2_name = aln.names[1]
     
     perf.msg("Data loaded in {time} seconds.")
     perf.replace()
@@ -131,7 +130,7 @@ def main():
     
     # positions
     positionGenerator = \
-        AlignmentBeamGenerator(TextAlignmentToTupleList(aln[0][1], aln[1][1]), width = 10)
+        AlignmentBeamGenerator(aln, width = 10)
     positionGenerator = list(positionGenerator)
     
     perf.msg("Hints computed in {time} seconds.")

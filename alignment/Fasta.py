@@ -1,4 +1,5 @@
 #Alignment sa load
+from Alignment import Alignment
 
 def load(filename):
     
@@ -20,7 +21,7 @@ def load(filename):
     if len(sequence) > 0:
         sequences.append((seq_name, sequence))
     f.close()
-    return sequences
+    return Alignment(sequences)
 
 def save(alignment, filename, width = 80):
     f = open(filename, "w")
