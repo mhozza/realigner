@@ -10,8 +10,12 @@ from tools import perf
 import os   
 import argparse
 
+#TODO: vymysli datovy model pre rozne tracky, refaktoruj
+#TODO: mio: refaktoruj to pre tento datovy model -- ty ho potrebujes
+#TODO: sklearn ma nejake HMMka v sebe. Mozno by sme chceli porozmyslat ci nechceme
+#      byt kompatibilny s nimi
 def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm, 
-            positionGenerator=None, mathType=float):
+            positionGenerator=None, mathType=float, ignore=set()):
 
     D = [defaultdict(lambda *_: defaultdict(mathType)) for _ in range(dx + 1)] 
     
@@ -23,6 +27,10 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
         bestScore = mathType(0.0)
         bestFrom = (-1, -1, -1)
         for ((fr, _sdx, _sdy), prob) in posteriorTable[_x][_y].iteritems():
+            if fr in ignore:
+                continue
+            if len(ignore)> 0:
+                print(_x, _sdx)
             sc = D[_x - _sdx][_y - _sdy][0] + mathType(_sdx + _sdy) * prob
             if sc >= bestScore:
                 bestScore = sc
@@ -33,6 +41,7 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
     _x = dx
     _y = dy
     aln = []
+    #print(D)
     while _x > 0 or _y > 0:
         (_, (fr, _dx, _dy)) = D[_x][_y]
         aln.append((fr, _dx, _dy))
@@ -45,10 +54,37 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
     annotation = ""
     _x = 0
     _y = 0
+    index = 0
     for (stateID, _dx, _dy) in aln:
-        annotation += hmm.states[stateID].getChar() * max(_dx, _dy)
-        X_aligned += X[x + _x: x + _x + _dx] + '-' * max (0, _dy - _dx)
-        Y_aligned += Y[y + _y: y + _y + _dy] + '-' * max (0, _dx - _dy)
+        alnPartLen = max(_dx, _dy)
+        if alnPartLen > 1:
+            print("kuko")
+            window = ( (x + _x, x + _x + _dx),
+                       (y + _y, y + _y + _dy))
+            pG = list()
+            while index < len(positionGenerator) and \
+                  positionGenerator[index][0] <= window[0][1]:
+                if window[0][0] <= positionGenerator[index][0] and \
+                   positionGenerator[index][0] <= window[0][1] and \
+                   window[1][0] <= positionGenerator[index][1] and \
+                   positionGenerator[index][1] <= window[1][1]:
+                    pG.append((positionGenerator[index][0] - window[0][0],
+                               positionGenerator[index][1] - window[1][0]))
+                index += 1
+            print(window)
+            print(pG)
+            ign = set(ignore)
+            ign.add(stateID)
+            rr = realign(X_name, X, x + _x, _dx, Y_name, Y, y + _y, _dy, 
+                         posteriorTable, hmm, pG, mathType, ign)
+            #rekurzivne zavolame zarovnanie
+            X_aligned += rr[0][1]
+            Y_aligned += rr[2][1]
+            annotation += hmm.states[stateID].getChar() * len(rr[0][1])
+        else: 
+            X_aligned += X[x + _x: x + _x + _dx] + '-' * max (0, _dy - _dx)
+            Y_aligned += Y[y + _y: y + _y + _dy] + '-' * max (0, _dx - _dy)
+            annotation += hmm.states[stateID].getChar() * alnPartLen
         _x += _dx
         _y += _dy
     return [(X_name, X_aligned),
@@ -130,8 +166,7 @@ def main():
     
     # positions
     positionGenerator = \
-        AlignmentBeamGenerator(aln, width = 10)
-    positionGenerator = list(positionGenerator)
+        list(AlignmentBeamGenerator(aln, width = 10))
     
     perf.msg("Hints computed in {time} seconds.")
     perf.replace()

@@ -43,6 +43,7 @@ def AlignmentPositionGenerator(alignment, window=None):
         yield tuple([alignment.aln_to_seq[j][i] for j in range(len(window))])    
         
 
+#TODO: add support for more than one sequencew
 @autoconvDecorator
 def AlignmentBeamGenerator(alignment, width = -1, window=None):
     """
