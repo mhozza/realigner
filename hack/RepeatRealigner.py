@@ -29,8 +29,6 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
         for ((fr, _sdx, _sdy), prob) in posteriorTable[_x][_y].iteritems():
             if fr in ignore:
                 continue
-            if len(ignore)> 0:
-                print(_x, _sdx)
             sc = D[_x - _sdx][_y - _sdy][0] + mathType(_sdx + _sdy) * prob
             if sc >= bestScore:
                 bestScore = sc
@@ -58,7 +56,6 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
     for (stateID, _dx, _dy) in aln:
         alnPartLen = max(_dx, _dy)
         if alnPartLen > 1:
-            print("kuko")
             window = ( (x + _x, x + _x + _dx),
                        (y + _y, y + _y + _dy))
             pG = list()
@@ -71,13 +68,10 @@ def realign(X_name, X, x, dx, Y_name, Y, y, dy, posteriorTable, hmm,
                     pG.append((positionGenerator[index][0] - window[0][0],
                                positionGenerator[index][1] - window[1][0]))
                 index += 1
-            print(window)
-            print(pG)
             ign = set(ignore)
             ign.add(stateID)
             rr = realign(X_name, X, x + _x, _dx, Y_name, Y, y + _y, _dy, 
                          posteriorTable, hmm, pG, mathType, ign)
-            #rekurzivne zavolame zarovnanie
             X_aligned += rr[0][1]
             Y_aligned += rr[2][1]
             annotation += hmm.states[stateID].getChar() * len(rr[0][1])
