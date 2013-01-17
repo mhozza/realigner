@@ -2,8 +2,8 @@ from tools.ConfigFactory import ConfigFactory
 from hmm.HMM import HMM, State
 from hmm.GeneralizedHMM import GeneralizedHMM, GeneralizedState
 from hmm.PairHMM import GeneralizedPairHMM, GeneralizedPairState
-from models.RepeatAlignmentState import PairRepeatState
-from models.SpecialHMMs import JukesCantorGenerator, \
+from repeats.RepeatAlignmentState import PairRepeatState
+from hmm.SpecialHMMs import JukesCantorGenerator, \
                                BackgroundProbabilityGenerator
 import json
 

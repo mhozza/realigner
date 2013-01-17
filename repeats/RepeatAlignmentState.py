@@ -1,5 +1,5 @@
 from hmm.HMM import State
-from models import SpecialHMMs
+from hmm import SpecialHMMs
 
 class RepeatProfileFactory:
             
