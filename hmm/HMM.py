@@ -2,6 +2,8 @@ from collections import defaultdict
 from algorithm import Graphs
 from tools.ConfigFactory import ConfigObject
 from tools.Exceptions import ParseException
+from tools.my_rand import rand_generator
+from tools.tuplemetrics import tadd, tless, tlesssome
 
 class State(ConfigObject):
         
@@ -34,7 +36,15 @@ class State(ConfigObject):
             if key.__class__.__name__ == "list":
                 key = tuple(key)
             self.emissions[key] = self.mathType(prob)
-            
+    
+    
+    def buildSampleEmission(self):
+        self._sampleEmission = rand_generator(self.emissions)
+        
+        
+    def sampleEmission(self):
+        return self._sampleEmission()
+    
                     
     def toJSON(self):
         ret = ConfigObject.toJSON(self)
@@ -58,6 +68,8 @@ class State(ConfigObject):
         self.emissions = defaultdict(self.mathType)
         self.startProbability = self.mathType(0.0)
         self.endProbability = self.mathType(0.0)
+        self._sampleEmission = None
+
         
 
     def serializeMe(self):
@@ -129,7 +141,25 @@ class HMM(ConfigObject):
         self.statenameToID = dict()
         self.__transitions = list()
         self.__reverse_transitions = list()
-                
+        self.transitionsSampler = None
+        self.initStateSampler = None
+    
+    
+    def sampleTransition(self, state):
+        return self.transitionsSampler[state]()
+    
+    
+    def buildSampleTransitions(self):
+        self.transitionsSampler = dict()
+        for (key, value) in self.transitions.iteritems():
+            self.transitionsSampler[key] = rand_generator(value)
+        for stateID in range(len(self.states)):
+            self.states[stateID].buildSampleEmission()
+        self.initStateSampler = rand_generator(
+            [(float(self.states[i].getStartProbability()), i) 
+             for i in range(len(self.states))]
+        )
+    
         
     def load(self, dictionary):
         ConfigObject.load(self, dictionary)
@@ -221,3 +251,25 @@ class HMM(ConfigObject):
         for state in self.states:
             newstates[state.getStateID()] = state
         self.states = newstates
+        
+    def generateSequence(self, seq_len):
+        #TODO: nefunguje pre viacrozmerne a generalizovane HMM (pre silent stavy
+        #      to funguje) a ak vsetky stavy su koncove. Aby to fungovalo je 
+        #      treba zlozitejsi algoritmus (ak chceme specifikovat dlzku)
+        if type(seq_len)==int:
+            seq_len = tuple([seq_len])
+        else:
+            seq_len = tuple(seq_len)
+        dim = len(seq_len)
+        gen_len = tuple([0] * dim)
+        state = self.initStateSampler()
+        ret = list() 
+        while tlesssome(gen_len, seq_len):
+            em = self.states[state].sampleEmission()
+            if dim == 1:
+                gen_len = tuple([gen_len[0] + len(em)])
+            else:
+                gen_len = tadd(gen_len, tuple([len(x) for x in em]))
+            ret.append((em, state))
+            state = self.sampleTransition(state)
+        return ret

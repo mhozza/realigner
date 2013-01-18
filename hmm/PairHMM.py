@@ -3,7 +3,7 @@ from collections import defaultdict
 from hmm.GeneralizedHMM import GeneralizedState
 from hmm.HMM import HMM
 import operator
-from tools import structtools
+from tools.my_rand import rand_generator
 #from tools import visualize
 
 class GeneralizedPairState(GeneralizedState):
@@ -29,7 +29,17 @@ class GeneralizedPairState(GeneralizedState):
         
     def emission(self, X, x, dx, Y, y, dy):
         return self.emissions[(X[x : x + dx], Y[y : y + dy])]
-        
+    
+    
+    def buildSampleEmission(self):
+        duration_dict = defaultdict(float)
+        for (k, v) in self.durations:
+            duration_dict[k] += v
+        em = dict(self.emissions)
+        for (key, _) in em.iteritems():
+            em[key] *= duration_dict[(len(key[0]), len(key[1]))]
+        self._sampleEmission = rand_generator(em)
+         
 
 class GeneralizedPairHMM(HMM):
     

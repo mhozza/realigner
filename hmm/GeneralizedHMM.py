@@ -3,6 +3,7 @@ from collections import defaultdict
 from hmm.HMM import State, HMM
 from tools.Exceptions import ParseException
 import operator
+from tools.my_rand import rand_generator
     
 class GeneralizedState(State):
        
@@ -31,11 +32,19 @@ class GeneralizedState(State):
         #for x in self.durations:
         #    yield(x)
 
-
     def emission(self, X, x, dx):
         return self.emissions[X[x:x+dx]]
     
-    
+   
+    def buildSampleEmission(self):
+        duration_dict = defaultdict(float)
+        for (k, v) in self.durations:
+            duration_dict[k] += v
+        em = dict(self.emissions)
+        for (key, _) in em.iteritems():
+            em[key] *= duration_dict[len(key)]
+        self._sampleEmission = rand_generator(em)
+        
     
 class GeneralizedHMM(HMM):
     

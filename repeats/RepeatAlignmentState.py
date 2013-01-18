@@ -1,5 +1,7 @@
 from hmm.HMM import State
 from hmm import SpecialHMMs
+from collections import defaultdict
+from tools.my_rand import rand_generator
 
 class RepeatProfileFactory:
             
@@ -37,6 +39,8 @@ class PairRepeatState(State):
         self.memoizeY = dict()
         self.dgmemoize = dict()
         self.rdgmemoize = dict()
+        self.consensusSampler = None
+        self.durationSampler = None
         
     
     def addRepeatGenerator(self, repeatGeneratorX, repeatGeneratorY):
@@ -95,14 +99,7 @@ class PairRepeatState(State):
         
         
     def emission(self, X, x, dx, Y, y, dy):
-        # we expect that we have consensus from last generated duration
-        #key = (self.consensus, x, dx)
-        #if key in self.memoizeX:
-        #    return self.memoizeX[key]
-        #hmm = self.factory.getHMM(self.consensus)
-        #val = hmm.getProbability(X, x, dx) * hmm.getProbability(Y, y, dy)
-        #self.memoizeX[key] = val
-        #return val      
+        # we expect that we have consensus from last generated duration  
         keyX = (self.consensus, x, dx)
         keyY = (self.consensus, y, dy)
         hmm = None
@@ -120,3 +117,35 @@ class PairRepeatState(State):
             valY = hmm.getProbability(Y, y, dy)
             self.memoizeY[keyY] = valY
         return valX * valY
+    
+    def buildSampleEmission(self): 
+        dur = defaultdict(int)
+        cons = defaultdict(int)
+        total = 0;
+        for rg in [self.repeatGeneratorX, self.repeatGeneratorY]:
+            for rep in rg.repeats:
+                dur[rep.end - rep.start] += 1
+                cons[rep.consensus] += 1
+                total += 1
+        total = float(total)
+        for (key, val) in dur.iteritems():
+            dur[key] = float(val) / total
+        for (key, val) in cons.iteritems():
+            cons[key] = float(val) / total
+        self.durationSampler = rand_generator(dur)
+        self.consensusSampler = rand_generator(cons)
+        
+    
+    def sampleEmission(self):
+        # generate durations
+        dx, dy = self.durationSampler(), self.durationSampler()
+        # generate consensus
+        consensus = self.consensusSampler()
+        hmm = self.factory.getHMM(consensus)
+        hmm.buildSampleTransitions()
+        # generate sequences
+        X, Y = hmm.generateSequence(dx), hmm.generateSequence(dy)
+        X = "".join([x for (x, _) in X])
+        Y = "".join([x for (x, _) in Y])
+        # Generate Alignment
+        return X, Y
