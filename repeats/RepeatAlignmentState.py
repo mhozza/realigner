@@ -1,3 +1,4 @@
+#TODO: Skontroluj pre kazdy config objekt ci sa dobre serializuje naspat do JSONu. Budeme to neskor vyuzivat pri ukladani parametrov z experimentov
 from hmm.HMM import State
 from hmm import SpecialHMMs
 from collections import defaultdict
@@ -23,10 +24,9 @@ class RepeatProfileFactory:
     def getHMM(self, consensus):
         if consensus in self.cache:
             return self.cache[consensus]
-        # TODO: toto by malo byt v konfiguraku -- aj cas
         self.cache[consensus] = SpecialHMMs.createProfileHMM(self.mathType, 
             consensus, self.time, 
-            self.backgroudProbability, self.transitionMatrix) #TODO
+            self.backgroudProbability, self.transitionMatrix)
         return self.cache[consensus]
     
 
@@ -59,7 +59,8 @@ class PairRepeatState(State):
         State.load(self, dictionary)
         if 'backgroundprob' not in dictionary:
             raise ParseException("Backround probability was not found in state")
-        self.backgroundProbability = dictionary['backgroundprob']
+        self.backgroundProbability = [tuple(x) 
+                                      for x in dictionary['backgroundprob']]
         self.factory.backgroudProbability = self.backgroundProbability
         if 'time' not in dictionary:
             raise ParseException('Time was not found in state')
@@ -69,6 +70,14 @@ class PairRepeatState(State):
             raise ParseException('Transition matrix not found in state')
         self.transitionMatrix = dictionary['transitionmatrix']
         self.factory.transitionMatrix = self.transitionMatrix
+
+
+    def toJSON(self, dictionary):
+        ret = State.toJSON(self)
+        ret['backgroundprob'] = self.backgroundProbability
+        ret['time'] = self.time
+        ret['transitionmatrix'] = self.transitionmatrix
+        return ret
 
 
     def durationGenerator(self, _x, _y):

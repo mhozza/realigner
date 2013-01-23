@@ -73,7 +73,7 @@
  		    		"alphabet": "ACGT",
  		    		"timeX": {"__name__": "times", "key": "jukes-cantor-pair-state-time-X"},
  		    		"timeY": {"__name__": "times", "key": "jukes-cantor-pair-state-time-Y"},
- 		        	"backgroundprob": {"__name__": "backgroundprob", "alphabet": "ACGT"}
+ 		        	"backgroundprob": {"__name__": "background-probability", "key": "value"}
  		    	},
  		    	"onechar": "M"
  		    },
@@ -112,4 +112,3 @@
  		]	
  	}
 }
-

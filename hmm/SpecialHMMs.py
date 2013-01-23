@@ -38,6 +38,7 @@ def JukesCantorGenerator(dictionary,  mathType):
                 dst[(cc, ccc)] += background[c] * prob * prob2 
     return [x for x in dst.iteritems()]       
 
+
 def BackgroundProbabilityGenerator(dictionary, mathType):
     if "alphabet" not in dictionary:
         raise ParseException("Alphabet not found in background probability")
