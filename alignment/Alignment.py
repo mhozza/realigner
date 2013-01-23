@@ -34,3 +34,15 @@ class Alignment:
             self.aln_to_seq[index].append(x)
         #Add end of the sequence TODO: maybe we want to remove this
         self.seq_to_aln[index].append(len(self.sequences[index]))
+        
+    
+    def getCoordPairs(self, gapsPlace=True):
+        ret = []
+        for i in range(len(self.sequences[0][1])):
+            ret.append(tuple([
+                self.aln_to_seq[x][i] 
+                    if self.sequences[x][i] != '-' or gapsPlace == True else
+                -1
+                    for x in range(len(self.sequences))
+            ]))
+        return ret

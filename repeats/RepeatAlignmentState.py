@@ -2,6 +2,7 @@ from hmm.HMM import State
 from hmm import SpecialHMMs
 from collections import defaultdict
 from tools.my_rand import rand_generator
+from tools.Exceptions import ParseException
 
 class RepeatProfileFactory:
             
@@ -9,21 +10,24 @@ class RepeatProfileFactory:
         self.a = 2
         self.cache = dict()
         self.mathType = mathType
+        self.backgroudProbability = \
+            [("A", 0.25), ("C", 0.25), ("G", 0.25), ("T", 0.25)]
+        self.time = 23.0
+        self.transitionMatrix = {
+            "MM": 0.92, "MI": 0.04, "MD": 0.04,
+            "IM": 0.1, "II": 0.85, "ID": 0.05,
+            "DM": 0.1, "DI": 0.1, "DD": 0.8,
+            "_M": 0.8, "_I": 0.1, "_D": 0.1,
+        }
         
     def getHMM(self, consensus):
         if consensus in self.cache:
             return self.cache[consensus]
+        # TODO: toto by malo byt v konfiguraku -- aj cas
         self.cache[consensus] = SpecialHMMs.createProfileHMM(self.mathType, 
-            consensus, 23.0, 
-            [("A", 0.25), ("C", 0.25), ("G", 0.25), ("T", 0.25)], {
-                "MM": 0.92, "MI": 0.04, "MD": 0.04,
-                "IM": 0.1, "II": 0.85, "ID": 0.05,
-                "DM": 0.1, "DI": 0.1, "DD": 0.8,
-                "_M": 0.8, "_I": 0.1, "_D": 0.1,
-            }) #TODO
+            consensus, self.time, 
+            self.backgroudProbability, self.transitionMatrix) #TODO
         return self.cache[consensus]
-        
-    
     
 
 class PairRepeatState(State):
@@ -41,6 +45,9 @@ class PairRepeatState(State):
         self.rdgmemoize = dict()
         self.consensusSampler = None
         self.durationSampler = None
+        self.backgroundProbability = None
+        self.time = None
+        self.transitionMatrix = None
         
     
     def addRepeatGenerator(self, repeatGeneratorX, repeatGeneratorY):
@@ -50,8 +57,20 @@ class PairRepeatState(State):
         
     def load(self, dictionary):
         State.load(self, dictionary)
-        
-    
+        if 'backgroundprob' not in dictionary:
+            raise ParseException("Backround probability was not found in state")
+        self.backgroundProbability = dictionary['backgroundprob']
+        self.factory.backgroudProbability = self.backgroundProbability
+        if 'time' not in dictionary:
+            raise ParseException('Time was not found in state')
+        self.time = dictionary['time']
+        self.factory.time = self.fime
+        if 'transitionmatrix' not in dictionary:
+            raise ParseException('Transition matrix not found in state')
+        self.transitionMatrix = dictionary['transitionmatrix']
+        self.factory.transitionMatrix = self.transitionMatrix
+
+
     def durationGenerator(self, _x, _y):
         key = (_x, _y)
         if key in self.dgmemoize:
@@ -59,7 +78,8 @@ class PairRepeatState(State):
         val = list(self._durationGenerator(_x, _y))
         self.dgmemoize[key] = val
         return val
-    
+
+
     def _durationGenerator(self, _x, _y):
         X = list(self.repeatGeneratorX.getHints(_x))
         Y = list(self.repeatGeneratorY.getHints(_y))
@@ -73,8 +93,8 @@ class PairRepeatState(State):
                 yield((xlen, ylen), p)
                 self.consensus = ycon
                 yield((xlen, ylen), p)
-    
-    
+
+
     def reverseDurationGenerator(self, _x, _y):
         key = (_x, _y)
         if key in self.rdgmemoize:
@@ -82,7 +102,8 @@ class PairRepeatState(State):
         val = list(self._reverseDurationGenerator(_x, _y))
         self.rdgmemoize[key] = val
         return val
-    
+
+
     def _reverseDurationGenerator(self, _x, _y):
         X = list(self.repeatGeneratorX.getReverseHints(_x))
         Y = list(self.repeatGeneratorY.getReverseHints(_y))
@@ -96,8 +117,8 @@ class PairRepeatState(State):
                 yield((xlen, ylen), p)
                 self.consensus = ycon
                 yield((xlen, ylen), p)
-        
-        
+
+
     def emission(self, X, x, dx, Y, y, dy):
         # we expect that we have consensus from last generated duration  
         keyX = (self.consensus, x, dx)
@@ -117,7 +138,8 @@ class PairRepeatState(State):
             valY = hmm.getProbability(Y, y, dy)
             self.memoizeY[keyY] = valY
         return valX * valY
-    
+
+
     def buildSampleEmission(self): 
         dur = defaultdict(int)
         cons = defaultdict(int)

@@ -3,7 +3,7 @@ from algorithm import Graphs
 from tools.ConfigFactory import ConfigObject
 from tools.Exceptions import ParseException
 from tools.my_rand import rand_generator
-from tools.tuplemetrics import tadd, tless, tlesssome
+from tools.tuplemetrics import tadd, tlesssome
 
 class State(ConfigObject):
         

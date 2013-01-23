@@ -1,3 +1,4 @@
+// TODO: Clean names
 {
     "contants": [
  	    {
@@ -15,7 +16,29 @@
         {
         	"__name__": "@times?",
         	"jukes-cantor-pair-state-time-X": 0.00005,
-        	"jukes-cantor-pair-state-time-Y": 0.00005
+        	"jukes-cantor-pair-state-time-Y": 0.00005,
+        	"jukes-cantor-repeat-state-time": 0.00000005
+        },
+        {
+        	"__name__": "@background-probability?",
+        	"value": [("A", 0.25), ("C", 0.25), ("G", 0.25), ("T", 0.25)]
+        },
+        {
+        	"__name__": "@repeat-transitions?",
+        	"value": {
+        		"MM": 0.92,
+	        	"MI": 0.04,
+	        	"MD": 0.04,
+	            "IM": 0.1,
+	            "II": 0.85,
+	            "ID": 0.05,
+	            "DM": 0.1,
+	            "DI": 0.1,
+	            "DD": 0.8,
+	            "_M": 0.8,
+	            "_I": 0.1,
+	            "_D": 0.1
+        	}
         }
     ],
  	"model": {
@@ -81,7 +104,10 @@
  		    	"endprob": 1.0,
  		    	"durations": [],
  		    	"emission": [],
- 		    	"onechar": "R"
+ 		    	"onechar": "R",
+ 		    	"time": {"__name__": "times", "key": "jukes-cantor-repeat-state-time"},
+ 		    	"backgroundprobability": {"__name__": "background-probability", "key": "value"},
+ 		    	"transitionmatrix": {"__name__": "repeat-transitions", "key": "value"}
  		    }
  		]	
  	}
