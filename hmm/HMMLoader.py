@@ -19,7 +19,7 @@ def getInitializerFunction(function, mathType):
     def __getInitializer(dictionary):
         return function(dictionary, mathType)
     return __getInitializer
-     
+
 
 class HMMLoader(ConfigFactory):
     

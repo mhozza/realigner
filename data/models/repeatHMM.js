@@ -107,7 +107,9 @@
  		    	"onechar": "R",
  		    	"time": {"__name__": "times", "key": "jukes-cantor-repeat-state-time"},
  		    	"backgroundprobability": {"__name__": "background-probability", "key": "value"},
- 		    	"transitionmatrix": {"__name__": "repeat-transitions", "key": "value"}
+ 		    	"transitionmatrix": {"__name__": "repeat-transitions", "key": "value"},
+ 		    	"consensusdistribution": {"__name__": "#file(consensus.js)"},
+ 		    	"repeatlengthdistribution": {"__name__": "#file(repeatlength.js)"}
  		    }
  		]	
  	}

@@ -1,5 +1,7 @@
 import json
 from Exceptions import ParseException
+import os.path
+import re
 
 class ConfigObject:
 
@@ -15,6 +17,7 @@ class ConfigObject:
         return {"__name__": self.__class__.__name__}
 
 # TODO: Moznost pridat nejaky defaultny parametricky objekt
+# TODO: Moznost pridat vec zo suboru
 class ConfigFactory:
     
     def __init__(self):
@@ -22,6 +25,8 @@ class ConfigFactory:
         self.functions = dict()
         self.constants = dict()
         self.dictionary = dict()
+        self.fileRegExp = re.compile('^#file\((.*)\)$')
+        self.filenameStack = []
     
     def addObject(self, obj):
         self.objects[obj.__name__] = obj
@@ -62,6 +67,18 @@ class ConfigFactory:
             self.addDictionary(cnn, dictionary, check_if_exists)
             dictionary['__name__'] = cn
             return None
+        if len(cn) > 0 and cn[0] == '#':
+            res = self.fileRegExp(cn)
+            if res:
+                res = res.groups()
+                if len(res) != 0:
+                    raise ParseException('Internal error')
+                
+                fn = os.path.join(
+                    os.path.dirname(self.filenameStack[-1]),
+                    res[0]
+                )
+                return self.load(fn) 
         if cn in self.objects:
             obj = self.objects[cn]()
             ret = obj.load(dictionary)
@@ -84,6 +101,8 @@ class ConfigFactory:
 
 
     def load(self, filename):
+        self.filenameStack.append(filename)
         f = open(filename, "r")
-        r = json.load(f, object_hook=self.objectHook)  
+        r = json.load(f, object_hook=self.objectHook)
+        self.filenameStack.pop()  
         return r

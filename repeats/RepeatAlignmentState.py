@@ -149,7 +149,8 @@ class PairRepeatState(State):
         return valX * valY
 
 
-    def buildSampleEmission(self): 
+    def buildSampleEmission(self):
+        # TODO: save and load this shit from file 
         dur = defaultdict(int)
         cons = defaultdict(int)
         total = 0;
