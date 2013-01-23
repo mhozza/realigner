@@ -28,19 +28,24 @@ class ConfigFactory:
         self.fileRegExp = re.compile('^#file\((.*)\)$')
         self.filenameStack = []
     
+    
     def addObject(self, obj):
         self.objects[obj.__name__] = obj
+    
         
     def addFunction(self, name ,function):
         self.functions[name] = function
+    
         
     def addConstant(self, name, constant):
         self.constants[name] = constant
+    
         
     def addDictionary(self, name, dictionary, check_if_exists=False):
         if check_if_exists and name in self.dictionary:
             self.dictionary[name].update(dictionary)
         self.dictionary[name] = dictionary
+
 
     def objectHook(self, dictionary):
         """
@@ -69,16 +74,16 @@ class ConfigFactory:
             return None
         if len(cn) > 0 and cn[0] == '#':
             res = self.fileRegExp(cn)
-            if res:
-                res = res.groups()
-                if len(res) != 0:
-                    raise ParseException('Internal error')
-                
-                fn = os.path.join(
-                    os.path.dirname(self.filenameStack[-1]),
-                    res[0]
-                )
-                return self.load(fn) 
+            if not res:
+                raise ParseException('Unknown function')
+            res = res.groups()
+            if len(res) != 0:
+                raise ParseException('Internal error')
+            fn = os.path.join(
+                os.path.dirname(self.filenameStack[-1]),
+                res[0]
+            )
+            return self.load(fn) 
         if cn in self.objects:
             obj = self.objects[cn]()
             ret = obj.load(dictionary)
