@@ -15,20 +15,6 @@ class AlignmentIteratorTest(unittest.TestCase):
             "AC-TGGGAC-CACC")
         return
     
-    #TODO: urvat
-    #===========================================================================
-    # def test_tupleList(self):
-    #    tests = [(
-    #        "ACGT", "----", 
-    #         [('A', '-'), ('C', '-'), ('G', '-'), ('T', '-')])
-    #    ]
-    #    for test in tests:
-    #        X = TextAlignmentToTupleList(test[0], test[1])
-    #        Y = test[2]
-    #        self.assertEqual(X, Y, "Wrong conversion to tuple list: " + 
-    #                         str(X) + " != " + str(Y))
-    # 
-    #===========================================================================
             
     def test_positions(self):
         X = [(0, 0), (1, 1), (2, 1), (2, 2), (2, 3), (3, 4), (3, 5), (4, 6),
