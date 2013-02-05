@@ -48,6 +48,8 @@ class PairRepeatState(State):
         self.backgroundProbability = None
         self.time = None
         self.transitionMatrix = None
+        self.consensusDistribution = None
+        self.repeatLengthDistribution = None
         
     
     def addRepeatGenerator(self, repeatGeneratorX, repeatGeneratorY):
@@ -70,6 +72,11 @@ class PairRepeatState(State):
             raise ParseException('Transition matrix not found in state')
         self.transitionMatrix = dictionary['transitionmatrix']
         self.factory.transitionMatrix = self.transitionMatrix
+        if 'consensusdistribution' in dictionary:
+            self.consensusDistribution = dictionary['consensusdistribution']
+        if 'repeatlengthdistribution' in dictionary:
+            self.repeatLengthDistribution = \
+                dictionary['repeatlengthdistribution']
 
 
     def toJSON(self, dictionary):
@@ -164,6 +171,10 @@ class PairRepeatState(State):
             dur[key] = float(val) / total
         for (key, val) in cons.iteritems():
             cons[key] = float(val) / total
+        if self.repeatLengthDistribution != None:
+            dur = self.repeatLengthDistribution
+        if self.consensusDistribution != None:
+            cons = self.consensusDistribution
         self.durationSampler = rand_generator(dur)
         self.consensusSampler = rand_generator(cons)
         

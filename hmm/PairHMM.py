@@ -82,7 +82,7 @@ class GeneralizedPairHMM(HMM):
         # Position generator zaruci ze nebudem mat problem menenim 
         # dictionary za jazdy. Problem to vyraba ak sa vyraba novy stav. 
         for (_x, _y) in positionGenerator:
-            if ignoreFirstRow and _x == 0: #BUG: ak ignorujem prvy riadok, pokazi sa mi zapamatavanie
+            if ignoreFirstRow and _x == 0: #FIXME: ak ignorujem prvy riadok, pokazi sa mi zapamatavanie
                 continue
             for stateID in range(len(self.states)):
                 acc_prob =  reduce(operator.add, 
@@ -94,7 +94,6 @@ class GeneralizedPairHMM(HMM):
                     continue
                 for (followingID, transprob) in state.followingIDs():
                     following = self.states[followingID]
-                    #print("Duration: ", followingID, _x, _y, len(list(following.durationGenerator(_x, _y))), list(following.durationGenerator(_x,_y)))
                     for ((_sdx, _sdy), dprob) in \
                             following.durationGenerator(_x, _y):
                         if _x + _sdx > dx or _y + _sdy > dy:
