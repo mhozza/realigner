@@ -16,7 +16,7 @@ statLen = defaultdict(int)
 statStr = defaultdict(int)
 
 with open(parsed_arg.input, 'r') as f:
-    lines = (listConverter(line.strip().split(' '), (int, 0, 2)) for line in f)
+    lines = (listConverter(line.strip().split(' '), (int, 0, 2)) for line in f if len(line.split(' ')) >= 15)
     for line in lines:
         statLen[1 + line[1] - line[0]] += 1
         statStr[line[-2]] += 1
