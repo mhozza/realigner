@@ -1,6 +1,5 @@
 import json
 from alignment import Fasta
-from alignment import Alignment
 import argparse
 from collections import defaultdict
 
@@ -11,8 +10,8 @@ def main():
     parser.add_argument('output', type=str, help='Output file')
     parsed_arg = parser.parse_args()
     
-    correct = Alignment.Alignment(Fasta.load(parsed_arg.correct))
-    alignment = Alignment.Alignment(Fasta.load(parsed_arg.aln))
+    correct = Fasta.load(parsed_arg.correct)
+    alignment = Fasta.load(parsed_arg.aln)
     
     cc = correct.getCoordPairs(False)
     ac = alignment.getCoordPairs(False)

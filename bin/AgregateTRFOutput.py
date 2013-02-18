@@ -2,7 +2,7 @@ import argparse
 from collections import defaultdict
 import json
  
-parser = argparse.ArgumentParser(description='Agregate output from TRF alignment.')
+parser = argparse.ArgumentParser(description='Agregate stats from TRF output.')
 parser.add_argument('input', type=str, help='Program input -- output from TRF')
 parser.add_argument('lengthOutput', type=str, help='Output file')
 parser.add_argument('consensusOutput', type=str, help='Output file')
