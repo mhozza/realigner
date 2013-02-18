@@ -1,6 +1,19 @@
 import random
 from collections import defaultdict
 
+def default_dist(dct, default=None):
+    if default == None:
+        mn = min([v for _, v in dct.iteritems() if v > 0])
+        default=mn
+    x = defaultdict(lambda *_: default)
+    x.update(dct)
+    return x
+
+def normalize_dict(dct, mathType=float):
+    total = mathType(sum([v for _, v in dct.iteritems()]))
+    for k in dct:
+        dct[k] = mathType(dct[k]) / total
+
 def rand_generator(dct, normalize=False, mathType=float):
     """
     Returns function (zero arguments) that returns random elements 

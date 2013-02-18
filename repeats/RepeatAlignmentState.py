@@ -2,7 +2,7 @@
 from hmm.HMM import State
 from hmm import SpecialHMMs
 from collections import defaultdict
-from tools.my_rand import rand_generator
+from tools.my_rand import rand_generator, normalize_dict, default_dist
 from tools.Exceptions import ParseException
 
 class RepeatProfileFactory:
@@ -73,18 +73,16 @@ class PairRepeatState(State):
         self.transitionMatrix = dictionary['transitionmatrix']
         self.factory.transitionMatrix = self.transitionMatrix
         if 'consensusdistribution' in dictionary:
-            self.consensusDistribution = rand_generator(
+            self.consensusDistribution = default_dist(normalize_dict(
                 dictionary['consensusdistribution'],
-                normalize=True,
                 mathType=self.mathType
-            )
+            ))
         if 'repeatlengthdistribution' in dictionary:
             self.repeatLengthDistribution = \
-                rand_generator(
+                default_dist(normalize_dict(
                     dictionary['repeatlengthdistribution'],
-                    normalize=True,
                     mathTYpe=self.mathType
-                )
+                ))
 
 
     def toJSON(self, dictionary):
@@ -107,16 +105,18 @@ class PairRepeatState(State):
     def _durationGenerator(self, _x, _y):
         X = list(self.repeatGeneratorX.getHints(_x))
         Y = list(self.repeatGeneratorY.getHints(_y))
-        N = len(X) * len(Y)
-        p = self.mathType(0.0)
-        if N > 0:
-            p = self.mathType(1.0 / float(N))
         for (xlen, xcon) in X:
+            xp = self.repeatLengthDistribution[xlen] * \
+                self.consensusDistribution[xcon]
+            yp = self.repeatLengthDistribution[xlen]
             for (ylen, ycon) in Y:
+                xp *= self.repeatLengthDistribution[ylen]
+                yp *= self.repeatLengthDistribution[ylen] * \
+                    self.consensusDistribution[ycon]
                 self.consensus = xcon
-                yield((xlen, ylen), p)
+                yield((xlen, ylen), xp)
                 self.consensus = ycon
-                yield((xlen, ylen), p)
+                yield((xlen, ylen), yp)
 
 
     def reverseDurationGenerator(self, _x, _y):
@@ -131,16 +131,18 @@ class PairRepeatState(State):
     def _reverseDurationGenerator(self, _x, _y):
         X = list(self.repeatGeneratorX.getReverseHints(_x))
         Y = list(self.repeatGeneratorY.getReverseHints(_y))
-        N = len(X) * len(Y)
-        p = self.mathType(0.0)
-        if N > 0:
-            p = self.mathType(1.0 / float(N))
         for (xlen, xcon) in X:
+            xp = self.repeatLengthDistribution[xlen] * \
+                self.consensusDistribution[xcon]
+            yp = self.repeatLengthDistribution[xlen]
             for (ylen, ycon) in Y:
+                xp *= self.repeatLengthDistribution[ylen]
+                yp *= self.repeatLengthDistribution[ylen] * \
+                    self.consensusDistribution[ycon]
                 self.consensus = xcon
-                yield((xlen, ylen), p)
+                yield((xlen, ylen), xp)
                 self.consensus = ycon
-                yield((xlen, ylen), p)
+                yield((xlen, ylen), yp)
 
 
     def emission(self, X, x, dx, Y, y, dy):
