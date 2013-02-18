@@ -29,6 +29,7 @@ def getType(pair):
         return 'Y'
     if x != '-' and y != '-':
         return 'M'
+    print pair
     assert(False)
     
 
@@ -39,7 +40,7 @@ def aggregate(X, Y):
         if p == ('-', '-'):
             continue
         emissions[p] += 1
-    Types = [getType(x) for x in pairs]
+    Types = [getType(x) for x in pairs if x != ('-', '-')]
     for p in zip(Types, Types[1:]):
         transitions[p] += 1
         
