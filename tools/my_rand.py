@@ -1,7 +1,7 @@
 import random
 from collections import defaultdict
 
-def rand_generator(dct):
+def rand_generator(dct, normalize=False, mathType=float):
     """
     Returns function (zero arguments) that returns random elements 
     according distribution in input distionary (key = element, 
@@ -11,9 +11,12 @@ def rand_generator(dct):
     if type(dct)==dict or type(dct) == defaultdict:
         L = [[v, k] for (k, v) in dct.iteritems()]
     L = [list(v) for v in L]
-    L.sort(reverse=True)
+    L.sort(reverse=True, key=lambda (x, _): x)
+    if normalize:
+        total = mathType(sum([x for x, _ in L]))
+        L = [(mathType(x) / total, y) for x, y in L]
     #TODO: vyber spravny algoritmus 
-    s = 0.0
+    s = mathType(0.0)
     for i in range(len(L)):
         s += L[i][0]
         L[i][0] = s

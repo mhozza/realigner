@@ -49,7 +49,7 @@ def main():
     parser.add_argument('--algorithm', type=str, 
                         default='repeat', choices=['repeat'],
                         help="Which realignment algorithm to use")
-    parser.add_argument('--bindfile', nargs='*', help='Replace filenames in the input model.' ) # TODO
+    parser.add_argument('--bind_file', nargs='*', help='Replace filenames in the input model.' ) # TODO
     parser.add_argument('--sample', nargs=3, default=[], type=int, 
                         required=False, metavar=("n-samples", "X-length", 
                                                  "Y-length"),
@@ -68,8 +68,12 @@ def main():
 
     # Load model
     loader = HMMLoader(mathType) 
-    for i in range(0, len(parsed_arg.bind), 2):
-        loader.addFile(parsed_arg.bind[i], parsed_arg.bind[i + 1])
+    if len(parsed_arg.bind_file) % 2 != 0:
+        sys.stderr.write('ERROR: If binding files, the number of arguments has'
+                         + 'to be divisible by 2\n')
+        exit(1)
+    for i in range(0, len(parsed_arg.bind_file), 2):
+        loader.addFile(parsed_arg.bind_file[i], parsed_arg.bind_file[i + 1])
     model_filename = parsed_arg.model
     #model_filename = "data/models/EditDistanceHMM.js"
     #model_filename = "data/models/SimpleHMM.js"

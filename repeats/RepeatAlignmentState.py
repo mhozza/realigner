@@ -73,10 +73,18 @@ class PairRepeatState(State):
         self.transitionMatrix = dictionary['transitionmatrix']
         self.factory.transitionMatrix = self.transitionMatrix
         if 'consensusdistribution' in dictionary:
-            self.consensusDistribution = dictionary['consensusdistribution']
+            self.consensusDistribution = rand_generator(
+                dictionary['consensusdistribution'],
+                normalize=True,
+                mathType=self.mathType
+            )
         if 'repeatlengthdistribution' in dictionary:
             self.repeatLengthDistribution = \
-                dictionary['repeatlengthdistribution']
+                rand_generator(
+                    dictionary['repeatlengthdistribution'],
+                    normalize=True,
+                    mathTYpe=self.mathType
+                )
 
 
     def toJSON(self, dictionary):
@@ -184,6 +192,7 @@ class PairRepeatState(State):
         dx, dy = self.durationSampler(), self.durationSampler()
         # generate consensus
         consensus = self.consensusSampler()
+        print('DEBUG', consensus)
         hmm = self.factory.getHMM(consensus)
         hmm.buildSampleTransitions()
         # generate sequences
