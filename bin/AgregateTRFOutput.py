@@ -25,7 +25,7 @@ with open(parsed_arg.input, 'r') as f:
     
 with open(parsed_arg.lengthOutput, 'w') as f:
     json.dump(statLen, f, indent=4)
-with open(parsed_arg.consensusOutput) as f:
+with open(parsed_arg.consensusOutput, 'w') as f:
     json.dump(statStr, f, indent=4)
     
         
