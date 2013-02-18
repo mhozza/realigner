@@ -7,7 +7,7 @@ parser.add_argument('input', type=str, help='Program input -- output from TRF')
 parser.add_argument('output', type=str, help='Output file')
 parsed_arg = parser.parse_args()
 
-def listConverter(L, types):
+def listConverter(L, *types):
     for tp, f, t in types:
         L[f:t] = [tp(x) for x in L[f:t]]
     return L
