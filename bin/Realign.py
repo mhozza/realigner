@@ -49,10 +49,12 @@ def main():
     parser.add_argument('--algorithm', type=str, 
                         default='repeat', choices=['repeat'],
                         help="Which realignment algorithm to use")
+    parser.add_argument('--bindfile', nargs='*', help='Replace filenames in the input model.' ) # TODO
     parser.add_argument('--sample', nargs=3, default=[], type=int, 
                         required=False, metavar=("n-samples", "X-length", 
                                                  "Y-length"),
                         help="Sample sequences instead of aligning sequences")
+    parser.add_
     parsed_arg = parser.parse_args()
     mathType = getMathType(parsed_arg.mathType)
         
@@ -66,6 +68,8 @@ def main():
 
     # Load model
     loader = HMMLoader(mathType) 
+    for i in range(0, len(parsed_arg.bind), 2):
+        loader.addFile(parsed_arg.bind[i], parsed_arg.bind[i + 1])
     model_filename = parsed_arg.model
     #model_filename = "data/models/EditDistanceHMM.js"
     #model_filename = "data/models/SimpleHMM.js"

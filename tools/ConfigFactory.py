@@ -27,6 +27,7 @@ class ConfigFactory:
         self.dictionary = dict()
         self.fileRegExp = re.compile('^#file\((.*)\)$')
         self.filenameStack = []
+        self.files = dict()
     
     
     def addObject(self, obj):
@@ -46,6 +47,8 @@ class ConfigFactory:
             self.dictionary[name].update(dictionary)
         self.dictionary[name] = dictionary
 
+    def addFile(self, name, filename):
+        self.files[name] = filename
 
     def objectHook(self, dictionary):
         """
@@ -79,9 +82,12 @@ class ConfigFactory:
             res = res.groups()
             if len(res) != 0:
                 raise ParseException('Internal error')
+            filename = res[0]
+            if filename in self.files:
+                filename = self.files[filename]
             fn = os.path.join(
                 os.path.dirname(self.filenameStack[-1]),
-                res[0]
+                filename
             )
             return self.load(fn) 
         if cn in self.objects:
