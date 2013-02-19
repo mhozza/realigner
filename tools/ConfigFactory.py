@@ -38,7 +38,7 @@ class ConfigFactory:
         self.functions[name] = function
     
         
-    def addConstant(self, name, constant):
+    def addConstant(self, name, constant): #TODO
         self.constants[name] = constant
     
         
@@ -117,3 +117,6 @@ class ConfigFactory:
         r = json.load(f, object_hook=self.objectHook)
         self.filenameStack.pop()  
         return r
+    
+    def loads(self, string):
+        return json.load(string, object_hook=self.objectHook)  
