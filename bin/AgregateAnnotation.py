@@ -31,18 +31,26 @@ def getType(pair):
         return 'M'
     print pair
     assert(False)
-    
+
+def skip(p):
+    if 'N' in p or 'n' in p or '-' in p:
+        return True
+    return False
+
+def lower(p):
+    return tuple([x.lower() for x in p])
+
 
 def aggregate(X, Y):
     #RUN TRF
     pairs = zip(X, Y)
     for p in pairs:
-        if p == ('-', '-'):
+        if skip(p):
             continue
-        emissions[p] += 1
+        emissions[str(lower(p))] += 1
     Types = [getType(x) for x in pairs if x != ('-', '-')]
     for p in zip(Types, Types[1:]):
-        transitions[p] += 1
+        transitions[str(p)] += 1
         
 
 for seq_name, sequence in loadGenerator(parsed_arg.input):
@@ -65,4 +73,4 @@ with open(parsed_arg.emissionOutput, 'w') as f:
     json.dump(emissions, f, indent=4)
     
 with open(parsed_arg.transitionOutput, 'w'):
-    json.dump(transitions, f, index=4)
+    json.dump(transitions, f, indent=4)
