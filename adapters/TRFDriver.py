@@ -50,7 +50,8 @@ class TRFDriver:
     def run(
             self, 
             sequencefile,
-            paramSeq=None
+            paramSeq=None,
+            dont_parse=False
         ):
         """
         Run tandem repeat finder and return repeats
@@ -66,8 +67,10 @@ class TRFDriver:
         #print(output)
         pseq.pop()
         pseq.append("dat")   
-        outputfile = ".".join(pseq[1:])
-        f = open(outputfile, "r")
+        output_file = ".".join(pseq[1:])
+        if dont_parse:
+            return output_file
+        f = open(output_file, "r")
         output = {}
         sequence_name = ""
         repeats = []
