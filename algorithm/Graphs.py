@@ -6,7 +6,7 @@ from collections import defaultdict
 def toposort(graph):
     """
     Sort vertices of graph topologically. "graph" is expected to be two nested 
-    dictionaries, where vertices are used as keys. 
+    dictionaries (second can be list), where vertices are used as keys. 
     """
     states = [x for x in graph]
     visited = defaultdict(bool)

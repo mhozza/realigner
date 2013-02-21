@@ -60,7 +60,6 @@ def main():
                         required=False, metavar=("n-samples", "X-length", 
                                                  "Y-length"),
                         help="Sample sequences instead of aligning sequences")
-    parser.add_
     parsed_arg = parser.parse_args()
     mathType = getMathType(parsed_arg.mathType)
         

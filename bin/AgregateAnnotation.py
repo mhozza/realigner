@@ -42,7 +42,6 @@ def lower(p):
 
 
 def aggregate(X, Y):
-    #RUN TRF
     pairs = zip(X, Y)
     for p in pairs:
         if skip(p):
