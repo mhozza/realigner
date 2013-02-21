@@ -8,7 +8,6 @@ from tools import perf
 import os   
 import argparse
 import sys
-import json
 
     
 def getMathType(s):
@@ -18,6 +17,7 @@ def getMathType(s):
         return float
     else:
         raise('Unknown type')
+    
     
 def toList(s):
     return [s]
@@ -38,7 +38,7 @@ def main():
     parser.add_argument('--mathType', '-m', type=str, default='float',
                         choices=['LogNum', 'float'], help="Numeric type to use")
     parser.add_argument('alignment', type=str, help="Input alignment")
-    parser.add_argument('output', type=str, help="Output file")
+    parser.add_argument('output_file', type=str, help="Output file")
     parser.add_argument('--model', type=str,
                         default='data/models/repeatHMM.js', help="Model file")
     parser.add_argument('--trf', type=toList, default=[
@@ -51,11 +51,11 @@ def main():
                         default='repeat', choices=['repeat'],
                         help="Which realignment algorithm to use")
     parser.add_argument('--bind_file', nargs='*', help='Replace filenames in '
-                        + 'the input model.' )
+                        + 'the input_file model.' )
     parser.add_argument('--bind_constant', nargs='*', help='Replace constants'
-                         + ' in the input model.' )
+                         + ' in the input_file model.' )
     parser.add_argument('--bind_constant_file', nargs='*', help='Replace' + 
-                        ' constants in the input model.' )
+                        ' constants in the input_file model.' )
     parser.add_argument('--sample', nargs=3, default=[], type=int, 
                         required=False, metavar=("n-samples", "X-length", 
                                                  "Y-length"),
@@ -63,11 +63,11 @@ def main():
     parsed_arg = parser.parse_args()
     mathType = getMathType(parsed_arg.mathType)
         
-    # Parse input parameters
+    # Parse input_file parameters
     alignment_filename = parsed_arg.alignment
     output_filename = parsed_arg.output
     if len(parsed_arg.sample) > 0 and output_filename.count("%d") != 1:
-        sys.stderr.write('ERROR: If sampling, output filename has to contain '
+        sys.stderr.write('ERROR: If sampling, output_file filename has to contain '
                          + 'at least one "%d".\n')
         exit(1)
 
@@ -169,7 +169,7 @@ def main():
         perf.msg("Sequence was realigned in {time} seconds.")
         perf.replace()
         
-        # Save output
+        # Save output_file
         Fasta.save(aln, output_filename)
         perf.msg("Output saved in {time} seconds.")
     else:

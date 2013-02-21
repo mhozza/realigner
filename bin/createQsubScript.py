@@ -3,6 +3,7 @@ import argparse
 import sys
 from algorithm.Graphs import toposort
 
+
 def Open(filename, mode):
     if filename == '-':
         if mode == 'w':
@@ -15,20 +16,18 @@ def Open(filename, mode):
     else:
         return open(filename, mode)
 
-def main():
-    parser = argparse.ArgumentParser(description='Run commands in gridengine')
-    parser.add_argument('config', type=str, help="Config file")
-    parser.add_argument('output', type=str, help="Output file")
-    parsed_arg = parser.parse_args()
+
+def main(config_file, output_file):
     
-    with Open(parsed_arg.config) as f:
+    
+    with Open(config_file) as f:
         config = json.load(f)
         
     graph = dict()
     for name, item in config.iteritems:
         graph[name] = [] if "depends" not in item else item.depends
     
-    with Open(parsed_arg.output) as f:
+    with Open(output_file) as f:
         
         f.write('#!/bin/bash\n\n')
         
@@ -67,9 +66,11 @@ def main():
                 command=item.cmd
             )
             f.write(query + '\n')
-        
-    
-    
+
     
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Run commands in gridengine')
+    parser.add_argument('config', type=str, help="Config file")
+    parser.add_argument('output', type=str, help="Output file")
+    parsed_arg = parser.parse_args()
+    main(parsed_arg.config, parsed_arg.output)

@@ -7,7 +7,7 @@ def main():
     parser = argparse.ArgumentParser(description='Analyze alignment.')
     parser.add_argument('correct', type=str, help='Correct alignment')
     parser.add_argument('aln', type=str, help='Alignment to analyze')
-    parser.add_argument('output', type=str, help='Output file')
+    parser.add_argument('output_file', type=str, help='Output file')
     parsed_arg = parser.parse_args()
     
     correct = Fasta.load(parsed_arg.correct)
