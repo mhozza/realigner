@@ -7,9 +7,9 @@ import json
 def getType(pair):
     x, y = pair
     if x == '-' and y != '-':
-        return 'X'
+        return 'I'
     if y == '-' and x != '-':
-        return 'Y'
+        return 'I'
     if x != '-' and y != '-':
         return 'M'
     print pair
@@ -22,8 +22,8 @@ def skip(p):
     return False
 
 
-def lower(p):
-    return tuple([x.lower() for x in p])
+def upper(p):
+    return tuple([x.upper() for x in p])
 
 
 def main(input_file, index1, index2, emissionOutput, transitionOutput):
@@ -41,7 +41,7 @@ def main(input_file, index1, index2, emissionOutput, transitionOutput):
         for p in pairs:
             if skip(p):
                 continue
-            emissions[str(lower(p))] += 1
+            emissions[str(upper(p))] += 1
         Types = [getType(x) for x in pairs if x != ('-', '-')]
         for p in zip(Types, Types[1:]):
             transitions[str(p)] += 1

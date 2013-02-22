@@ -18,8 +18,8 @@ def main(files, trf):
         # AggregateAnnotation
         em_file = filename + '.emission.stat'
         tr_file = filename + '.transition.stat'
-        le_file = filename + '.trf.length.stat'
-        co_file = filename + '.trf.consensus.stat'
+        le_file = filename + '.trf_length.stat'
+        co_file = filename + '.trf_consensus.stat'
         AggregateAnnotation(
             filename, 0, 1,
             em_file,

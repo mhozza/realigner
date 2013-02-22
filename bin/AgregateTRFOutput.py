@@ -18,7 +18,8 @@ def main(input_file, length_output, consensus_output):
         lines = (listConverter(line.strip().split(' '), (int, 0, 2)) 
                  for line in f if len(line.split(' ')) >= 15)
         for line in lines:        
-            statLen[1 + line[1] - line[0]] += 1
+            statLen[round(2 * (1 + line[1] - line[0]) / len(line[-2])) / 2.0] \
+                += 1
             statStr[line[-2]] += 1
         
     with open(length_output, 'w') as f:

@@ -24,6 +24,16 @@
         	"value": [("A", 0.25), ("C", 0.25), ("G", 0.25), ("T", 0.25)]
         },
         {
+        	"__name__": "@MatchStateEmissions?",
+        	"value": {
+	    		"__name__": "JukesCantorGenerator",
+	    		"alphabet": "ACGT",
+	    		"timeX": {"__name__": "times", "key": "jukes-cantor-pair-state-time-X"},
+	    		"timeY": {"__name__": "times", "key": "jukes-cantor-pair-state-time-Y"},
+	        	"backgroundprob": {"__name__": "background-probability", "key": "value"}
+	    	}
+        },
+        {
         	"__name__": "@repeat-transitions?",
         	"value": {
         		"MM": 0.92,
@@ -68,13 +78,7 @@
  		    	"startprob": 0.25,
  		    	"endprob": 1.0,
  		    	"durations": [[[1, 1], 1.0]],
- 		    	"emission": {
- 		    		"__name__": "JukesCantorGenerator",
- 		    		"alphabet": "ACGT",
- 		    		"timeX": {"__name__": "times", "key": "jukes-cantor-pair-state-time-X"},
- 		    		"timeY": {"__name__": "times", "key": "jukes-cantor-pair-state-time-Y"},
- 		        	"backgroundprob": {"__name__": "background-probability", "key": "value"}
- 		    	},
+ 		    	"emission": {"__name__": "MatchStateEmissions", "key": "value"},
  		    	"onechar": "M"
  		    },
  		    {
