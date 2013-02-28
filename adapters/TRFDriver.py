@@ -2,6 +2,7 @@
 Wrapper for tandem repeat finder
 """
 import subprocess
+import os
 
 
 class Repeat:
@@ -45,7 +46,10 @@ class TRFDriver:
         """
         Set path
         """
-        self.path = path 
+        if type(path) == list:
+            for p in path:
+                if os.path.exists(p):
+                    self.path = p 
         
     def run(
             self, 
@@ -58,18 +62,25 @@ class TRFDriver:
         """
         if paramSeq == None:
             paramSeq = ["2", "7", "7", "80", "10", "0", "500", "-h"]
-        pseq = [self.path, sequencefile]
+        pseq = [self.path, os.path.basename(sequencefile)]
         pseq.extend(paramSeq)
+        #print self.path
+        current_path = os.getcwd()
+        #print current_path
+        #print os.path.dirname(sequencefile)
+        os.chdir(os.path.dirname(sequencefile))
+        #print os.getcwd()
         process = subprocess.Popen(pseq, stdout=subprocess.PIPE, 
                                    stderr=subprocess.STDOUT)
         _, _ = process.communicate()
         process.poll()
+        os.chdir(current_path)
         #print(output)
         pseq.pop()
         pseq.append("dat")   
         output_file = ".".join(pseq[1:])
         if dont_parse:
-            return output_file
+            return os.path.dirname(sequencefile) + '/' + output_file
         f = open(output_file, "r")
         output = {}
         sequence_name = ""

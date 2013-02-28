@@ -2,7 +2,8 @@
 from hmm.HMM import State
 from hmm import SpecialHMMs
 from collections import defaultdict
-from tools.my_rand import rand_generator, normalize_dict, default_dist
+from tools.my_rand import rand_generator, normalize_dict, default_dist, \
+                            dist_to_json
 from tools.Exceptions import ParseException
 
 class RepeatProfileFactory:
@@ -67,7 +68,7 @@ class PairRepeatState(State):
         if 'time' not in dictionary:
             raise ParseException('Time was not found in state')
         self.time = dictionary['time']
-        self.factory.time = self.fime
+        self.factory.time = self.time
         if 'transitionmatrix' not in dictionary:
             raise ParseException('Transition matrix not found in state')
         self.transitionMatrix = dictionary['transitionmatrix']
@@ -81,15 +82,20 @@ class PairRepeatState(State):
             self.repeatLengthDistribution = \
                 default_dist(normalize_dict(
                     dictionary['repeatlengthdistribution'],
-                    mathTYpe=self.mathType
+                    mathType=self.mathType
                 ))
 
 
-    def toJSON(self, dictionary):
+    def toJSON(self):
         ret = State.toJSON(self)
         ret['backgroundprob'] = self.backgroundProbability
         ret['time'] = self.time
-        ret['transitionmatrix'] = self.transitionmatrix
+        ret['transitionmatrix'] = self.transitionMatrix
+        ret['consensusdistribution'] = \
+            dist_to_json(self.consensusDistribution)
+        ret['repeatlengthdistribution'] = \
+            dist_to_json(self.repeatLengthDistribution)
+        #TODO: save consensus distribution
         return ret
 
 

@@ -5,14 +5,14 @@ from collections import defaultdict
 def _aggregate(dicts):
     output = defaultdict(int)
     for item in dicts:
-        for key, value in item:
+        for key, value in item.iteritems():
             output[key] += value
     return output         
             
 
 def aggregate(filelist):
     output = dict()
-    for tp, files in filelist.iteritems:
+    for tp, files in filelist.iteritems():
         f = [open(x, 'r') for x in files]
         output[tp] = _aggregate(map(json.load, f))
         map(lambda x:x.close(), f)

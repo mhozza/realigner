@@ -48,10 +48,15 @@ def BackgroundProbabilityGenerator(dictionary, mathType):
         track = dictionary['track']
     if "tracks" in dictionary:
         tracks = dictionary['tracks']
+    distribution = None
+    if 'distribution' in dictionary:
+        distribution = dict(dictionary['distribution'])
     alphabet = dictionary['alphabet']
     p = mathType(1.0 / float(len(alphabet)))
     output = []
     for c in alphabet:
+        if distribution != None:
+            p = distribution[c]
         if tracks == 1:
             output.append((c, p))
         else:

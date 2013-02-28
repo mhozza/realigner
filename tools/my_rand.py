@@ -13,6 +13,16 @@ def normalize_dict(dct, mathType=float):
     total = mathType(sum([v for _, v in dct.iteritems()]))
     for k in dct:
         dct[k] = mathType(dct[k]) / total
+    return dct
+
+def normalize_tuple_dict(dct, mathType=float, track=0):
+    total = defaultdict(mathType)
+    for k, v in dct.iteritems():
+        total[k[track]] += v
+    for k in dct:
+        dct[k] = mathType(dct[k]) / total[k[track]]
+    return dict(dct) 
+        
 
 def rand_generator(dct, normalize=False, mathType=float):
     """
@@ -42,3 +52,10 @@ def rand_generator(dct, normalize=False, mathType=float):
             i = len(L) - 1
         return L[i][1] 
     return function
+
+def dist_to_json(distribution):
+    if type(distribution) in [dict, defaultdict]:
+        return distribution
+    else:
+        raise "Not correct distribution type"
+        
