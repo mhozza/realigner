@@ -1,6 +1,6 @@
 import argparse
 import json
-from collections import defaultdict
+from collections import defaultdict 
 
 def _aggregate(dicts):
     output = defaultdict(int)
@@ -19,10 +19,14 @@ def aggregate(filelist):
     return output
 
 
-def main(filelist_filename, output_filebase, filelist_output):
-    with open(filelist_filename, 'r') as f:
-        filelist = json.load(f)
-        
+def main(filelist_filenames, output_filebase, filelist_output):
+    filelist = defaultdict(list)
+    for filelist_filename in filelist_filenames:
+        with open(filelist_filename, 'r') as f:
+            files = json.load(f)
+        for key, value in files.iteritems():
+            filelist[key].extend(value)
+
     files = list()
     for key, stat in aggregate(filelist).iteritems():
         output_filename = '{base}.{type}.stat'.format(base=output_filebase, 
@@ -38,12 +42,13 @@ def main(filelist_filename, output_filebase, filelist_output):
 if __name__ == "__main__":    
     parser = \
         argparse.ArgumentParser(description='Aggregate various statistics.')
-    parser.add_argument('filelist', type=str,
+    parser.add_argument('filelist', type=str, nargs='+',
                         help='Program input -- list of files')
     parser.add_argument('output', type=str, help='Base name for statistics')
     parser.add_argument('filelist_output', type=str,
                         help='Output file for filelist')
     parsed_arg = parser.parse_args()
+    print(parsed_arg)
     main(
          parsed_arg.filelist,
          parsed_arg.output,

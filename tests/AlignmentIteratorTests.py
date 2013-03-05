@@ -48,13 +48,15 @@ class AlignmentIteratorTest(unittest.TestCase):
      
             
     def test_full(self):
-       alignment = ("ACTA---", "TCTCTCT")
-       X = list(AlignmentFullGenerator(alignment))
-       Y = list(((i, j)for i in range(4) for j in range(7)))
-       self.assertEqual(X,
-                        Y,
-                        "Full iterator is not correct: " + str(X) + \
-                        " != " + str(Y))
+        alignment = ("ACTA---", "TCTCTCT")
+        X = list(AlignmentFullGenerator(alignment))
+        Y = list(((i, j)for i in range(4) for j in range(7)))
+        self.assertEqual(
+            X,
+            Y,
+            "Full iterator is not correct: " + str(X) + \
+            " != " + str(Y)
+        )
     
     
 if __name__ == '__main__':

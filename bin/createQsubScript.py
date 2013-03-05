@@ -20,50 +20,51 @@ def Open(filename, mode):
 def main(config_file, output_file):
     
     
-    with Open(config_file) as f:
+    with Open(config_file, 'r') as f:
         config = json.load(f)
         
     graph = dict()
-    for name, item in config.iteritems:
-        graph[name] = [] if "depends" not in item else item.depends
+    for name, item in config.iteritems():
+        graph[name] = [] if "depends" not in item else item['depends']
     
-    with Open(output_file) as f:
+    with Open(output_file, 'r') as f:
         
         f.write('#!/bin/bash\n\n')
-        
+        print graph, toposort(graph)
         for job in toposort(graph):
+            print('job', job)
             item = config[job]
             param = ['-terse', '-cwd']
                     
             if "depends" in item:
                 param.append('-hold_jid')
-                param.append(','.join(['$' + x for x in item.depends]))
+                param.append(','.join(['$' + x for x in item['depends']]))
             
             if "array" in item:
                 param.append('-t')
-                assert(len(item.array) > 0 and len(item.array) < 4)
+                assert(len(item['array']) > 0 and len(item['array']) < 4)
                 param.append(
                     ''.join([
                         ''.join(x) 
-                        for x in zip(map(str, item.array), ['-', ':', ''])
+                        for x in zip(map(str, item['array']), ['-', ':', ''])
                     ])
                 )
             
             if "resources" in item:
-                assert(len(item.resources) > 0)
+                assert(len(item['resources']) > 0)
                 param.append('-l')
                 param.append(','.join([
-                    '='.join(x) for x in item.resources.iteritems()
+                    '='.join(x) for x in item['resources'].iteritems()
                 ]))
             
             if "params" in item:
-                assert(len(item.params) > 0)
-                param.append(' '.join(item.params))
+                assert(len(item['params']) > 0)
+                param.append(' '.join(item['params']))
             
             query = '{jobname}=`qsub {parameters} {command}`'.format(
                 jobname=job,
-                parameters=' '.split(param),
-                command=item.cmd
+                parameters=' '.join(param),
+                command=item['cmd']
             )
             f.write(query + '\n')
 

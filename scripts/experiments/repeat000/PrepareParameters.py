@@ -75,10 +75,10 @@ if __name__ == '__main__':
     
     # Grid engine can always override parameters 
     if os.environ.has_key('SGE_TASK_FIRST'):
-        start_index = os.environ['SGE_TASK_FIRST']
+        start = os.environ['SGE_TASK_FIRST']
     if os.environ.has_key('SGE_STEP_SIZE'):
         step = os.environ['SGE_STEP_SIZE']
 
     output_files = main(files[start:start + step], parsed_arg.trf)
-    with open(parsed_arg.output_files, 'w') as f:
+    with open(parsed_arg.output_files.format(index=start), 'w') as f:
         json.dump(output_files, f, indent=4)
