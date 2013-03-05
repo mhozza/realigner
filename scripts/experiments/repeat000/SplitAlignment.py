@@ -34,7 +34,7 @@ def main(alignment, working_directory, split_count, output_file,
         os.makedirs(parallel_dir)
     
     filenames = ['{dir}/alignment_{index:04d}.fa'.format(dir=parallel_dir, 
-                                                         index=i)
+                                                         index=i + 1)
                  for i in range(split_count)]
     files = [open(name, 'w') for name in filenames] 
     
