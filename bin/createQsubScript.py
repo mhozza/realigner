@@ -17,7 +17,6 @@ def Open(filename, mode):
         return open(filename, mode)
 
 
-#TODO: ak mame array job, tak treba pridat sed za to co vyfiltruje haluze na konci
 def main(config_file, output_file):
     
     
@@ -62,7 +61,8 @@ def main(config_file, output_file):
                 assert(len(item['params']) > 0)
                 param.append(' '.join(item['params']))
             
-            query = '{jobname}=`qsub {parameters} {command}`'.format(
+            query = ("{jobname}=`qsub {parameters} {command} " + \
+                "| sed -e 's/[.].*$//'`").format(
                 jobname=job,
                 parameters=' '.join(param),
                 command=item['cmd']
