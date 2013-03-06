@@ -17,6 +17,7 @@ def Open(filename, mode):
         return open(filename, mode)
 
 
+#TODO: ak mame array job, tak treba pridat sed za to co vyfiltruje haluze na konci
 def main(config_file, output_file):
     
     
