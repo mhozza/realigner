@@ -10,12 +10,16 @@ def _aggregate(dicts):
     return output         
             
 
+def __loadJSON(filename):
+    with open(filename, 'r') as f:
+        return json.load(f)            
+
+
 def aggregate(filelist):
     output = dict()
     for tp, files in filelist.iteritems():
-        f = [open(x, 'r') for x in files]
-        output[tp] = _aggregate(map(json.load, f))
-        map(lambda x:x.close(), f)
+        print(len(files))
+        output[tp] = _aggregate(map(__loadJSON, files))
     return output
 
 
