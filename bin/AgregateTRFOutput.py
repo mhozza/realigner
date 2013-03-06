@@ -4,9 +4,13 @@ import json
 
 
 def listConverter(L, *types):
-    for tp, f, t in types:
-        L[f:t] = [tp(x) for x in L[f:t]]
-    return L
+    try:
+        for tp, f, t in types:
+            L[f:t] = [tp(x) for x in L[f:t]]
+        return L
+    except Exception:
+        return None
+        
 
 
 def main(input_file, length_output, consensus_output):
@@ -17,7 +21,9 @@ def main(input_file, length_output, consensus_output):
     with open(input_file, 'r') as f:
         lines = (listConverter(line.strip().split(' '), (int, 0, 2)) 
                  for line in f if len(line.split(' ')) >= 15)
-        for line in lines:        
+        for line in lines:    
+            if line == None:
+                continue    
             statLen[round(2 * (1 + line[1] - line[0]) / len(line[-2])) / 2.0] \
                 += 1
             statStr[line[-2]] += 1
