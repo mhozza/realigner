@@ -74,8 +74,8 @@ if __name__ == '__main__':
         step = len(files)
     
     # Grid engine can always override parameters 
-    if os.environ.has_key('SGE_TASK_FIRST'):
-        start = int(os.environ['SGE_TASK_FIRST'])
+    if os.environ.has_key('SGE_TASK_ID'):
+        start = int(os.environ['SGE_TASK_ID'])
     if os.environ.has_key('SGE_STEP_SIZE'):
         step = int(os.environ['SGE_STEP_SIZE'])
     print start, step
