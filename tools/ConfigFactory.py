@@ -17,8 +17,6 @@ class ConfigObject:
     def toJSON(self):
         return {"__name__": self.__class__.__name__}
 
-# TODO: Moznost pridat nejaky defaultny parametricky objekt
-# TODO: Moznost pridat vec zo suboru
 class ConfigFactory:
     
     def __init__(self):
