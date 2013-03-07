@@ -6,8 +6,9 @@ import ast
 from collections import defaultdict
 import os
 from tools.file_wrapper import Open
+from tools import perf
 
-
+@perf.runningTimeDecorator
 def main(model_file, additional_parameters,
          emmisions_file, transitions_file, repeat_consensus_file,
          repeat_length_file, repeat_probability, output_file):
@@ -94,3 +95,4 @@ if __name__ == "__main__":
          parsed_arg.repeat_probability,
          parsed_arg.output
     )
+    perf.printAll()

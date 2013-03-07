@@ -3,6 +3,8 @@ from alignment import Fasta
 from collections import defaultdict
 import json
 from tools.file_wrapper import Open
+from tools import perf
+import sys
     
     
 def getType(pair):
@@ -13,7 +15,7 @@ def getType(pair):
         return 'X'
     if x != '-' and y != '-':
         return 'M'
-    print pair
+    sys.stderr.write('{0}\n'.format(pair))
     assert(False)
 
 
@@ -41,6 +43,7 @@ def sortTypes(types):
         yield x
         
 
+@perf.runningTimeDecorator
 def main(input_file, index1, index2, emissionOutput, transitionOutput):
     
     emissions = defaultdict(int)
@@ -91,3 +94,4 @@ if __name__ == '__name__':
          parsed_arg.emissionOutput,
          parsed_arg.transitionOutout
     )
+    perf.printAll()

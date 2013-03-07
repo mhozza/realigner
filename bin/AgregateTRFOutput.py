@@ -2,6 +2,7 @@ import argparse
 from collections import defaultdict
 import json
 from tools.file_wrapper import Open
+from tools import perf
 
 
 def listConverter(L, *types):
@@ -13,7 +14,7 @@ def listConverter(L, *types):
         return None
         
 
-
+@perf.runningTimeDecorator
 def main(input_file, length_output, consensus_output):
     
     statLen = defaultdict(int)
@@ -46,4 +47,4 @@ if __name__ == "__main__":
          parsed_arg.lengthOutput,
          parsed_arg.consensusOutput
     ) 
-        
+    perf.printAll()

@@ -51,7 +51,6 @@ class Realigner(object):
         _x = dx
         _y = dy
         aln = []
-        #print(D)
         while _x > 0 or _y > 0:
             (_, (fr, _dx, _dy)) = D[_x][_y]
             aln.append((fr, _dx, _dy))

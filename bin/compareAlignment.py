@@ -4,7 +4,9 @@ import argparse
 from collections import defaultdict
 from tools.file_wrapper import Open
 from alignment.Alignment import Alignment
+from tools import perf
 
+@perf.runningTimeDecorator
 def main():
     parser = argparse.ArgumentParser(description='Analyze alignment.')
     parser.add_argument('correct', type=str, help='Correct alignment')
@@ -59,4 +61,7 @@ def main():
     with Open(parsed_arg.output, 'w') as f:
         json.dump(output, f, indent=4)
     
-    
+
+if __name__ == '__main__':
+    main()
+    perf.printAll() 

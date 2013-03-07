@@ -2,6 +2,7 @@ import argparse
 import json
 from collections import defaultdict 
 from tools.file_wrapper import Open
+from tools import perf
 
 def _aggregate(dicts):
     output = defaultdict(int)
@@ -22,7 +23,7 @@ def aggregate(filelist):
         output[tp] = _aggregate(map(__loadJSON, files))
     return output
 
-
+@perf.runningTimeDecorator
 def main(filelist_filenames, output_filebase, filelist_output):
     filelist = defaultdict(list)
     for filelist_filename in filelist_filenames:
@@ -52,9 +53,9 @@ if __name__ == "__main__":
     parser.add_argument('filelist_output', type=str,
                         help='Output file for filelist')
     parsed_arg = parser.parse_args()
-    print(parsed_arg)
     main(
          parsed_arg.filelist,
          parsed_arg.output,
          parsed_arg.filelist_output
     ) 
+    perf.printAll()

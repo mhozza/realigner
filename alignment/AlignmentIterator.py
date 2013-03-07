@@ -58,7 +58,6 @@ def AlignmentBeamGenerator(alignment, width = -1, window=None):
     maxX = seq_len(alignment.sequences[0])
     Q = deque()
     pos = [maxX, maxY]
-    print(len(pos), len(window))
     larger_window = [
         (
             max(0, window[i][0] - width),

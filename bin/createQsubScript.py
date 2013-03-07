@@ -3,8 +3,9 @@ import argparse
 import sys
 from algorithm.Graphs import toposort
 from tools.file_wrapper import Open
+from tools import perf
 
-
+@perf.runningTimeDecorator
 def main(config_file, output_file):
     
     
@@ -18,9 +19,7 @@ def main(config_file, output_file):
     with Open(output_file, 'r') as f:
         
         f.write('#!/bin/bash\n\n')
-        print graph, toposort(graph)
         for job in toposort(graph):
-            print('job', job)
             item = config[job]
             param = ['-terse', '-cwd']
                     
@@ -64,3 +63,4 @@ if __name__ == "__main__":
     parser.add_argument('output', type=str, help="Output file")
     parsed_arg = parser.parse_args()
     main(parsed_arg.config, parsed_arg.output)
+    perf.printAll()

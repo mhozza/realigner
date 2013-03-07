@@ -172,7 +172,6 @@ class PairRepeatState(State):
 
 
     def buildSampleEmission(self):
-        # TODO: save and load this shit from file 
         dur = defaultdict(int)
         cons = defaultdict(int)
         total = 0;
@@ -199,7 +198,6 @@ class PairRepeatState(State):
         dx, dy = self.durationSampler(), self.durationSampler()
         # generate consensus
         consensus = self.consensusSampler()
-        print('DEBUG', consensus)
         hmm = self.factory.getHMM(consensus)
         hmm.buildSampleTransitions()
         # generate sequences

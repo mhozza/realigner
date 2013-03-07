@@ -6,8 +6,10 @@ from bin.AgregateTRFOutput import main as AggregateTRFOutput
 from adapters.TRFDriver import TRFDriver
 from adapters.TRFDriver import trf_paths
 from tools.file_wrapper import Open
+from tools import perf
 
 
+@perf.runningTimeDecorator
 def main(files, trf):
     output_files = {
         'emission': [],
@@ -74,7 +76,7 @@ if __name__ == '__main__':
         start = int(os.environ['SGE_TASK_ID'])
     if os.environ.has_key('SGE_STEP_SIZE'):
         step = int(os.environ['SGE_STEP_SIZE'])
-    print start, step
     output_files = main(files[start:start + step], parsed_arg.trf)
     with Open(parsed_arg.output_files.format(index=start), 'w') as f:
         json.dump(output_files, f, indent=4)
+    perf.printAll()

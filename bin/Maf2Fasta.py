@@ -2,6 +2,7 @@ import argparse
 import re
 import gzip
 from tools.file_wrapper import Open
+from tools import perf
 
 reverseDict = {'a': 't', 'c': 'g', 'g': 'c', 't': 'a', 'A': 'T', 'C': 'G',
                    'G': 'C', 'T': 'A'}
@@ -39,6 +40,7 @@ def Maf2FastaGen(input_file):
     yield output
     
 
+@perf.runningTimeDecorator
 def main(input_file, output_file):
     
     with Open(output_file, 'w') as out:
@@ -53,3 +55,4 @@ if __name__ == '__main__':
     parser.add_argument('output', type=str, help="Output file")
     parsed_arg = parser.parse_args()
     main(parsed_arg.input, parsed_arg.output)
+    perf.printAll()

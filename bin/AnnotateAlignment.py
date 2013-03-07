@@ -6,6 +6,7 @@ import os
 from algorithm.aggregations import histogram
 import json
 from tools.file_wrapper import Open
+from tools import perf
 
 def toList(s):
     return [s]
@@ -35,6 +36,7 @@ def compute_annotation_track(alns, repeats):
         yield D
 
 
+@perf.runningTimeDecorator
 def main(input_file, output_file, trf):
     
     # THIS IS ONLY GENERATOR!!!
@@ -73,3 +75,4 @@ if __name__ == '__main__':
          parsed_arg.output,
          parsed_arg.trf,
     )
+    perf.printAll()

@@ -36,20 +36,17 @@ class HMMLoader(ConfigFactory):
             PairRepeatState,
         ]:
 
-            print (obj.__name__ + " added")
             self.addFunction(obj.__name__, getInitializerObject(obj, mathType))
         
         for (name, function) in [
             ("JukesCantorGenerator", JukesCantorGenerator),
             ("backgroundprob", BackgroundProbabilityGenerator),
         ]:
-            print (function.__name__ + " added under name " + name)
             self.addFunction(name, getInitializerFunction(function, mathType))
         
         for (name, constant) in [
             # STUB 
         ]:
-            print (str(constant) + " added under name " + name)
             self.addConstant(name, constant)
 
             

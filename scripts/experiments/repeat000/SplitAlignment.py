@@ -4,7 +4,10 @@ import argparse
 from bin.Maf2Fasta import Maf2FastaGen
 import re
 from tools.file_wrapper import Open
+from tools import perf
 
+
+@perf.runningTimeDecorator
 def main(alignment, working_directory, split_count, output_file, 
          seq_selectors):
     
@@ -78,3 +81,4 @@ if __name__ == '__main__':
     parsed_arg = parser.parse_args()
     main(parsed_arg.alignment, parsed_arg.working_dir, parsed_arg.split_count,
          parsed_arg.output, parsed_arg.sequence_selector)
+    perf.printAll()

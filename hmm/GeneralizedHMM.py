@@ -48,7 +48,6 @@ class GeneralizedState(State):
     
 class GeneralizedHMM(HMM):
     
-        
     #Init -- je riadok 0
     def getForwardTable(self, X, x, dx, memoryPattern=None, initialRow=None):
         if memoryPattern == None:

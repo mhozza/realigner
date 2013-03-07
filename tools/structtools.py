@@ -1,7 +1,7 @@
 import collections
 
 
-def getStructure(value): #TODO: fix this
+def getStructure(value):
     t = type(value)
     if t == type(list()):
         a = set()
