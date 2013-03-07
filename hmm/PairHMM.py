@@ -5,7 +5,6 @@ from hmm.HMM import HMM
 import operator
 from tools.my_rand import rand_generator
 from tools.structtools import recursiveArgMax
-#from tools import visualize
 
 
 class GeneralizedPairState(GeneralizedState):
@@ -122,7 +121,6 @@ class GeneralizedPairHMM(HMM):
         if memoryPattern.next():
             retTable.append((x + _x_prev, rows[dx]))   
         
-        # Finally, done:-)
         return retTable
     
     
@@ -449,4 +447,3 @@ class GeneralizedPairHMM(HMM):
                           forwardTable, backwardTable, positionGenerator)
         assert(len(r) == 2)
         return tuple(r)
-

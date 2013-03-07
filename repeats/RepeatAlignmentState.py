@@ -1,4 +1,3 @@
-#TODO: Skontroluj pre kazdy config objekt ci sa dobre serializuje naspat do JSONu. Budeme to neskor vyuzivat pri ukladani parametrov z experimentov
 from hmm.HMM import State
 from hmm import SpecialHMMs
 from collections import defaultdict

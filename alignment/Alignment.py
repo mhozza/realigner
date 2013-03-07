@@ -32,7 +32,6 @@ class Alignment:
                 self.seq_to_aln[index].append(i)
                 x += 1
             self.aln_to_seq[index].append(x)
-        #Add end of the sequence TODO: maybe we want to remove this
         self.seq_to_aln[index].append(len(self.sequences[index]))
         
     

@@ -12,7 +12,7 @@ def main(model_file, additional_parameters,
          emmisions_file, transitions_file, repeat_consensus_file,
          repeat_length_file, repeat_probability, output_file):
     loader = HMMLoader()
-    #TODO: prestav konstanty
+
     for k, v in additional_parameters.iteritems():
         loader.addDictionary(k, v)
     
@@ -52,8 +52,6 @@ def main(model_file, additional_parameters,
     loader.addDictionary('trans', trans) 
         
     # Parse emissions from trf
-    # TODO: relative to consensus output
-    #print os.path.relpath(os.path.abspath(repeat_consensus_file), os.path.dirname(model_file))
     loader.addFile('consensus.js', 
                    os.path.relpath(os.path.abspath(repeat_consensus_file), 
                                    os.path.dirname(model_file)))
@@ -68,7 +66,6 @@ def main(model_file, additional_parameters,
 
 
 if __name__ == "__main__":    
-    #TODO: PARAMETERS
     parser = \
         argparse.ArgumentParser(description='Create specific model from stats')
     parser.add_argument('model', type=str,
