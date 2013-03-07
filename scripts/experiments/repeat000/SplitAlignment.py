@@ -3,6 +3,7 @@ import os
 import argparse
 from bin.Maf2Fasta import Maf2FastaGen
 import re
+from tools.file_wrapper import Open
 
 def main(alignment, working_directory, split_count, output_file, 
          seq_selectors):
@@ -16,11 +17,11 @@ def main(alignment, working_directory, split_count, output_file,
     
     filename = os.path.basename(alignment)
     extension = filename.split('.')[-1].lower()
-    gzipped = False
+    base = '.'.join(filename.split('.')[:-2])
     if extension == 'gz':
-        gzipped = True
         extension = filename.split('.')[-2].lower()
-    base = filename.split('.')[-2]
+        base = '.'.join(filename.split('.')[:-3])
+        
     if extension == 'fa':
         # fasta_generator = alignment
         assert(False)
@@ -40,7 +41,7 @@ def main(alignment, working_directory, split_count, output_file,
     filenames = ['{dir}/alignment_{index:04d}.fa'.format(dir=parallel_dir, 
                                                          index=i + 1)
                  for i in range(split_count)]
-    files = [open(name, 'w') for name in filenames] 
+    files = [Open(name, 'w') for name in filenames] 
     
     for aln in fasta_generator:
         new_aln = []
@@ -58,7 +59,7 @@ def main(alignment, working_directory, split_count, output_file,
             
     map(lambda x: x.close(), files)
     
-    with open(output_file, 'w') as f:
+    with Open(output_file, 'w') as f:
         json.dump(filenames, f, indent=4)
 
 

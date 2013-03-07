@@ -1,6 +1,7 @@
 import argparse
 from collections import defaultdict
 import json
+from tools.file_wrapper import Open
 
 
 def listConverter(L, *types):
@@ -18,7 +19,7 @@ def main(input_file, length_output, consensus_output):
     statLen = defaultdict(int)
     statStr = defaultdict(int)
     
-    with open(input_file, 'r') as f:
+    with Open(input_file, 'r') as f:
         lines = (listConverter(line.strip().split(' '), (int, 0, 2)) 
                  for line in f if len(line.split(' ')) >= 15)
         for line in lines:    
@@ -28,9 +29,9 @@ def main(input_file, length_output, consensus_output):
                 += 1
             statStr[line[-2]] += 1
         
-    with open(length_output, 'w') as f:
+    with Open(length_output, 'w') as f:
         json.dump(statLen, f, indent=4)
-    with open(consensus_output, 'w') as f:
+    with Open(consensus_output, 'w') as f:
         json.dump(statStr, f, indent=4)
         
     

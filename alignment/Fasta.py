@@ -1,8 +1,9 @@
 #Alignment sa load
 from Alignment import Alignment
+from tools.file_wrapper import Open
 
 def loadGenerator(filename): 
-    with open(filename, 'r') as f:
+    with Open(filename, 'r') as f:
         seq_name = ""
         sequence = ""
         for line in f:
@@ -23,7 +24,7 @@ def load(filename):
     return Alignment(loadGenerator(filename))
    
 def save(alignment, filename, width = 80):
-    f = open(filename, "w")
+    f = Open(filename, "w")
     for (seq_name, sequence) in alignment:
         seq_length = len(sequence)
         f.write(">" + seq_name + "\n")

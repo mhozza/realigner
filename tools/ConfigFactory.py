@@ -2,6 +2,7 @@ from Exceptions import ParseException
 import os.path
 import re
 import json
+from tools.file_wrapper import Open
 
 class ConfigObject:
 
@@ -119,7 +120,6 @@ class ConfigFactory:
     def debugDump(self):
         d = dict()
         d['objects'] = self.objects
-        #d['functions'] = self.functions
         d['constants'] = self.constants
         d['dictionary'] = self.dictionary
         d['files'] = self.files
@@ -128,7 +128,7 @@ class ConfigFactory:
 
     def load(self, filename):
         self.filenameStack.append(filename)
-        f = open(filename, "r")
+        f = Open(filename, "r")
         r = json.load(f, object_hook=self.objectHook)
         self.filenameStack.pop()  
         return r

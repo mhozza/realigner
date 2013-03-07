@@ -5,6 +5,7 @@ from tools.my_rand import normalize_dict, normalize_tuple_dict
 import ast
 from collections import defaultdict
 import os
+from tools.file_wrapper import Open
 
 
 def main(model_file, additional_parameters,
@@ -17,7 +18,7 @@ def main(model_file, additional_parameters,
     
     # Parse emissions
     
-    with open(emmisions_file, 'r') as f:
+    with Open(emmisions_file, 'r') as f:
         emm = normalize_dict(json.load(f))
 
     emm = [(ast.literal_eval(k), v) for k, v in emm.iteritems()]
@@ -32,7 +33,7 @@ def main(model_file, additional_parameters,
     loader.addDictionary('background-probability', background_prob)
     
     # Parse transitions
-    with open(transitions_file, 'r') as f:
+    with Open(transitions_file, 'r') as f:
         __trans = json.load(f)
     trans = dict()
     for k, v in __trans.iteritems():
@@ -61,7 +62,7 @@ def main(model_file, additional_parameters,
     model = loader.load(model_file)
     
     json_prep = {'model': model['model'].toJSON()}
-    with open(output_file, 'w') as f:
+    with Open(output_file, 'w') as f:
         json.dump(json_prep, f, indent=4)
     return output_file
 
@@ -84,7 +85,7 @@ if __name__ == "__main__":
                         help='Additional parameters (in json as dictionary).')
     parsed_arg = parser.parse_args()
     
-    with open(parsed_arg.filenames, 'r') as f:
+    with Open(parsed_arg.filenames, 'r') as f:
         files = dict([(x.split('.')[-2], x) for x in json.load(f)])
     main(
          parsed_arg.model,

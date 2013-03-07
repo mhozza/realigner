@@ -2,6 +2,7 @@ import argparse
 from alignment.Fasta import loadGenerator
 from collections import defaultdict
 import json
+from tools.file_wrapper import Open
     
     
 def getType(pair):
@@ -76,10 +77,10 @@ def main(input_file, index1, index2, emissionOutput, transitionOutput):
     if X != None and Y != None:
         aggregate(X, Y)
         
-    with open(emissionOutput, 'w') as f:
+    with Open(emissionOutput, 'w') as f:
         json.dump(emissions, f, indent=4)
         
-    with open(transitionOutput, 'w') as f:
+    with Open(transitionOutput, 'w') as f:
         json.dump(transitions, f, indent=4)
 
 

@@ -5,6 +5,7 @@ from adapters.TRFDriver import TRFDriver
 import os
 from algorithm.aggregations import histogram
 import json
+from tools.file_wrapper import Open
 
 def toList(s):
     return [s]
@@ -69,7 +70,7 @@ def main(input_file, output_file, trf):
     
     
     A = list(compute_annotation_track(alns, repeats))
-    json.dump(A, open(output_file, 'w'), indent=4)
+    json.dump(A, Open(output_file, 'w'), indent=4)
     # 2. tam kde je trf zarovnane s niecim zaujimavim, dame repeat,
     # 3. Ostatne dame standardne
     # repeats je slovnik listov.

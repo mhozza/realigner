@@ -3,9 +3,9 @@ import argparse
 import os
 from bin.AgregateAnnotation import main as AggregateAnnotation
 from bin.AgregateTRFOutput import main as AggregateTRFOutput
-
 from adapters.TRFDriver import TRFDriver
 from adapters.TRFDriver import trf_paths
+from tools.file_wrapper import Open
 
 
 def main(files, trf):
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     
     parsed_arg = parser.parse_args()
     
-    with open(parsed_arg.files, 'r') as f:
+    with Open(parsed_arg.files, 'r') as f:
         files = json.load(f)
         
     start = parsed_arg.start
@@ -76,5 +76,5 @@ if __name__ == '__main__':
         step = int(os.environ['SGE_STEP_SIZE'])
     print start, step
     output_files = main(files[start:start + step], parsed_arg.trf)
-    with open(parsed_arg.output_files.format(index=start), 'w') as f:
+    with Open(parsed_arg.output_files.format(index=start), 'w') as f:
         json.dump(output_files, f, indent=4)

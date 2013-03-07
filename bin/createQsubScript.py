@@ -2,19 +2,7 @@ import json
 import argparse
 import sys
 from algorithm.Graphs import toposort
-
-
-def Open(filename, mode):
-    if filename == '-':
-        if mode == 'w':
-            return sys.stdout
-        elif mode == 'r':
-            return sys.stderr
-        else: 
-            sys.stderr.write('ERROR: Unknown mode "{0}"'.format(mode))
-            exit(1)
-    else:
-        return open(filename, mode)
+from tools.file_wrapper import Open
 
 
 def main(config_file, output_file):

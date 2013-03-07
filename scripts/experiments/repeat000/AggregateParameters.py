@@ -1,6 +1,7 @@
 import argparse
 import json
 from collections import defaultdict 
+from tools.file_wrapper import Open
 
 def _aggregate(dicts):
     output = defaultdict(int)
@@ -11,7 +12,7 @@ def _aggregate(dicts):
             
 
 def __loadJSON(filename):
-    with open(filename, 'r') as f:
+    with Open(filename, 'r') as f:
         return json.load(f)            
 
 
@@ -25,7 +26,7 @@ def aggregate(filelist):
 def main(filelist_filenames, output_filebase, filelist_output):
     filelist = defaultdict(list)
     for filelist_filename in filelist_filenames:
-        with open(filelist_filename, 'r') as f:
+        with Open(filelist_filename, 'r') as f:
             files = json.load(f)
         for key, value in files.iteritems():
             filelist[key].extend(value)
@@ -34,11 +35,11 @@ def main(filelist_filenames, output_filebase, filelist_output):
     for key, stat in aggregate(filelist).iteritems():
         output_filename = '{base}.{type}.stat'.format(base=output_filebase, 
                                                       type=key)
-        with open(output_filename, 'w') as f:
+        with Open(output_filename, 'w') as f:
             json.dump(stat, f, indent=4)
         files.append(output_filename)
             
-    with open(filelist_output, 'w') as f:
+    with Open(filelist_output, 'w') as f:
         json.dump(files, f, indent=4)
 
 

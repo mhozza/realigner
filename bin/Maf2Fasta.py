@@ -1,6 +1,7 @@
 import argparse
 import re
 import gzip
+from tools.file_wrapper import Open
 
 reverseDict = {'a': 't', 'c': 'g', 'g': 'c', 't': 'a', 'A': 'T', 'C': 'G',
                    'G': 'C', 'T': 'A'}
@@ -10,12 +11,6 @@ def reverseStrand(t):
     ret.reverse()
     return ''.join(ret)
 
-def Open(filename):
-    ext = filename.split('.')[-1]
-    if ext == 'gz':
-        return gzip.open(filename)
-    return open(filename)
-    
 
 def Maf2FastaGen(input_file):
     
@@ -46,7 +41,7 @@ def Maf2FastaGen(input_file):
 
 def main(input_file, output_file):
     
-    with open(output_file, 'w') as out:
+    with Open(output_file, 'w') as out:
         for alignment in Maf2FastaGen(input_file):
             for src, aln_count, text in alignment:
                 out.write('>{0}.{1}\n{2}\n'.format(src, aln_count, text))

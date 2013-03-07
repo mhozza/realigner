@@ -2,6 +2,7 @@ import json
 from alignment import Fasta
 import argparse
 from collections import defaultdict
+from tools.file_wrapper import Open
 
 def main():
     parser = argparse.ArgumentParser(description='Analyze alignment.')
@@ -37,7 +38,7 @@ def main():
     if length > 0:
         segment_length_histogram[x] += 1
     
-    with open(parsed_arg.output, 'w') as f:
+    with Open(parsed_arg.output, 'w') as f:
         json.dump({
             'corect': parsed_arg.correct,
             'alignment': parsed_arg.aln,

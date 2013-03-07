@@ -16,7 +16,13 @@ def Open(filename, mode=None):
         if ext == 'gz':
             if mode == None:
                 return gzip.open(filename)
-            return gzip.open(filename, mode)
+            if len(mode) > 0:
+                if mode[0] == 'r':
+                    return gzip.open(filename, 'rb')
+                elif mode[0] == 'w':
+                    return gzip.open(filename, 'wb')
+                return None
+            return None
     if mode == None:
         return open(filename)
     return open(filename, mode)      
