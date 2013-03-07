@@ -11,22 +11,6 @@ def toList(s):
     return [s]
 
 
-def split_to_multiple_alignments_generator(alignment):
-    out = None
-    category = None
-    for (name, sequence) in zip(alignment.names, alignment.sequences):
-        cat = name.rsplit('.', 1)[-1]
-        if cat != category:
-            if category != None:
-                yield out
-            category = cat
-            out = []
-        category = cat
-        out.append((name, sequence))
-    if len(out) > 0:
-        yield out
-
-      
 def get_annotation(sequence, seq_to_aln, repeats):
     annotation = ['?'] * len(sequence)
     for repeat in repeats:
@@ -54,11 +38,8 @@ def compute_annotation_track(alns, repeats):
 def main(input_file, output_file, trf):
     
     # THIS IS ONLY GENERATOR!!!
-    alns = (
-        Alignment(a) 
-        for a in 
-            split_to_multiple_alignments_generator(Fasta.load(input_file))
-    )
+    alns = (Alignment(a) 
+            for a in Fasta.load(input_file, '[.][0-9]+$', Alignment))
     
     # 1. run trf, 
     for trf_executable in trf:

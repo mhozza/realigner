@@ -1,5 +1,5 @@
 import argparse
-from alignment.Fasta import loadGenerator
+from alignment import Fasta
 from collections import defaultdict
 import json
 from tools.file_wrapper import Open
@@ -46,8 +46,6 @@ def main(input_file, index1, index2, emissionOutput, transitionOutput):
     emissions = defaultdict(int)
     transitions = defaultdict(int)
     
-    count = 0
-    last = ''
     X = None
     Y = None
     
@@ -61,20 +59,14 @@ def main(input_file, index1, index2, emissionOutput, transitionOutput):
         for p in zip(Types, Types[1:]):
             transitions[str(p)] += 1
     
-    for seq_name, sequence in loadGenerator(input_file):
-        a = seq_name.split('.')
-        if a[-1] != last:
-            if X != None and Y != None:
-                aggregate(X, Y)
-            X, Y = None, None
-            count = 0
-            last = a[-1]
-        if count == index1:
-            X = sequence
-        if count == index2:
-            Y = sequence
-        count += 1
-    if X != None and Y != None:
+    for aln in Fasta.load(input_file, '[.][0-9]+$'):
+        count = 0
+        for _, sequence in aln:
+            if count == index1:
+                X = sequence
+            if count == index2:
+                Y = sequence
+            count += 1
         aggregate(X, Y)
         
     with Open(emissionOutput, 'w') as f:

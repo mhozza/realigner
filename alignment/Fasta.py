@@ -1,6 +1,7 @@
 #Alignment sa load
 from Alignment import Alignment
 from tools.file_wrapper import Open
+import re
 
 def loadGenerator(filename): 
     with Open(filename, 'r') as f:
@@ -20,8 +21,23 @@ def loadGenerator(filename):
         if len(sequence) > 0:
             yield (seq_name, sequence)
     
-def load(filename):
-    return Alignment(loadGenerator(filename))
+def load(filename, alignment_separator, output_formatter=lambda x:x):
+    r = re.compile(alignment_separator)
+    output = []
+    lastCategory = None
+    for name, sequence in loadGenerator(filename):
+        res = r.search(name)
+        if not res:
+            continue
+        category= res.group()
+        if lastCategory != category and len(output) > 0:
+            yield output_formatter(output)
+            output = []
+        output.append((name, sequence))
+        lastCategory = category
+    if len(output) > 0:
+        yield output_formatter(output)
+
    
 def save(alignment, filename, width = 80):
     f = Open(filename, "w")

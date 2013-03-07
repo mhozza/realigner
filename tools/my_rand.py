@@ -58,4 +58,3 @@ def dist_to_json(distribution):
         return distribution
     else:
         raise "Not correct distribution type"
-        

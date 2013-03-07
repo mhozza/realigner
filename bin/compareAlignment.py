@@ -3,6 +3,7 @@ from alignment import Fasta
 import argparse
 from collections import defaultdict
 from tools.file_wrapper import Open
+from alignment.Alignment import Alignment
 
 def main():
     parser = argparse.ArgumentParser(description='Analyze alignment.')
@@ -11,35 +12,39 @@ def main():
     parser.add_argument('output_file', type=str, help='Output file')
     parsed_arg = parser.parse_args()
     
-    correct = Fasta.load(parsed_arg.correct)
-    alignment = Fasta.load(parsed_arg.aln)
+    separator = '[.][0-9]+$'
     
-    cc = correct.getCoordPairs(False)
-    ac = alignment.getCoordPairs(False)
+    output = []
     
-    c = set(cc)
-    a = set(ac)
-    
-    intersect = c.intersection(a)
-    not_in_c = c.difference(a)
-    not_in_a = a.difference(c)
-    symm_diff = c.symmetric_difference(a)
-    
-    # Find long segments that are correctly aligned
-    cseg = [1 if x in a else 0 for x in cc]
-    seg_len = []
-    length = 0
-    segment_length_histogram = defaultdict(int)
-    for x in cseg:
-        if x == 0 and length != 0:
+    for correct, alignment in zip(
+        Fasta.load(parsed_arg.correct, separator, Alignment),
+        Fasta.load(parsed_arg.aln, separator, Alignment)
+    ):
+        cc = correct.getCoordPairs(False)
+        ac = alignment.getCoordPairs(False)
+        
+        c = set(cc)
+        a = set(ac)
+        
+        intersect = c.intersection(a)
+        not_in_c = c.difference(a)
+        not_in_a = a.difference(c)
+        symm_diff = c.symmetric_difference(a)
+        
+        # Find long segments that are correctly aligned
+        cseg = [1 if x in a else 0 for x in cc]
+        seg_len = []
+        length = 0
+        segment_length_histogram = defaultdict(int)
+        for x in cseg:
+            if x == 0 and length != 0:
+                segment_length_histogram[x] += 1
+            length = length * x + x
+            seg_len.append(length)
+        if length > 0:
             segment_length_histogram[x] += 1
-        length = length * x + x
-        seg_len.append(length)
-    if length > 0:
-        segment_length_histogram[x] += 1
-    
-    with Open(parsed_arg.output, 'w') as f:
-        json.dump({
+        
+        output.append({
             'corect': parsed_arg.correct,
             'alignment': parsed_arg.aln,
             'c-lenght': len(cc),
@@ -49,7 +54,9 @@ def main():
             'a-c': len(not_in_a),
             'symmetric_difference': len(symm_diff),
             'correct_len_histogram': segment_length_histogram
-        }, f)
-    
+        })
+            
+    with Open(parsed_arg.output, 'w') as f:
+        json.dump(output, f, indent=4)
     
     
