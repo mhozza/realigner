@@ -161,7 +161,6 @@ def main():
         realigner = getRealigner(parsed_arg.algorithm)()
         realigner.prepareData(PHMM, seq1_repeats, seq2_repeats)
         
-        
         # positions
         positionGenerator = \
             list(AlignmentBeamGenerator(aln, width = 10))
