@@ -5,6 +5,7 @@ from bin.AgregateAnnotation import main as AggregateAnnotation
 from bin.AgregateTRFOutput import main as AggregateTRFOutput
 
 from adapters.TRFDriver import TRFDriver
+from adapters.TRFDriver import trf_paths
 
 
 def main(files, trf):
@@ -54,13 +55,8 @@ if __name__ == '__main__':
                         help='Which files to select')
     parser.add_argument('--step', type=int, default=-1,
                         help='How many files to select (-1 to all)')
-    parser.add_argument('--trf', type=toList, default=[
-                           "/cygdrive/c/cygwin/bin/trf407b.dos.exe",
-                           "C:\\cygwin\\bin\\trf407b.dos.exe",
-                           "/home/mic/Vyskum/duplikacie/trf404.linux64",
-                           "/home/mic/bin/trf404.linux64",
-                           "/home/mic/bin/trf407b.linux64",
-                           ], help="Location of tandem repeat finder binary")
+    parser.add_argument('--trf', type=toList, default=trf_paths
+                        , help="Location of tandem repeat finder binary")
     
     parsed_arg = parser.parse_args()
     

@@ -24,7 +24,7 @@ def main(input_file, length_output, consensus_output):
         for line in lines:    
             if line == None:
                 continue    
-            statLen[round(2 * (1 + line[1] - line[0]) / len(line[-2])) / 2.0] \
+            statLen[round(10 * (1 + line[1] - line[0]) / len(line[-2])) / 10.0] \
                 += 1
             statStr[line[-2]] += 1
         

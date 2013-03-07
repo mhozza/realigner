@@ -1,7 +1,7 @@
 from algorithm.LogNum import LogNum
 from hmm.HMMLoader import HMMLoader
 from alignment import Fasta
-from adapters.TRFDriver import TRFDriver
+from adapters.TRFDriver import TRFDriver, trf_paths
 from alignment.AlignmentIterator import AlignmentBeamGenerator
 from repeats.RepeatRealigner import RepeatRealigner
 from tools import perf
@@ -41,21 +41,17 @@ def main():
     parser.add_argument('output_file', type=str, help="Output file")
     parser.add_argument('--model', type=str,
                         default='data/models/repeatHMM.js', help="Model file")
-    parser.add_argument('--trf', type=toList, default=[
-                           "/cygdrive/c/cygwin/bin/trf407b.dos.exe",
-                           "C:\\cygwin\\bin\\trf407b.dos.exe",
-                           "/home/mic/Vyskum/duplikacie/trf404.linux64",
-                           "/home/mic/bin/trf404.linux64",
-                           ], help="Location of tandem repeat finder binary")
+    parser.add_argument('--trf', type=toList, default=trf_paths
+                        , help="Location of tandem repeat finder binary")
     parser.add_argument('--algorithm', type=str, 
                         default='repeat', choices=['repeat'],
                         help="Which realignment algorithm to use")
     parser.add_argument('--bind_file', nargs='*', help='Replace filenames in '
-                        + 'the input_file model.' )
+                        + 'the input_file model.', default=[]) 
     parser.add_argument('--bind_constant', nargs='*', help='Replace constants'
-                         + ' in the input_file model.' )
+                         + ' in the input_file model.', default=[])
     parser.add_argument('--bind_constant_file', nargs='*', help='Replace' + 
-                        ' constants in the input_file model.' )
+                        ' constants in the input_file model.', default=[])
     parser.add_argument('--sample', nargs=3, default=[], type=int, 
                         required=False, metavar=("n-samples", "X-length", 
                                                  "Y-length"),
@@ -65,7 +61,7 @@ def main():
         
     # Parse input_file parameters
     alignment_filename = parsed_arg.alignment
-    output_filename = parsed_arg.output
+    output_filename = parsed_arg.output_file
     if len(parsed_arg.sample) > 0 and output_filename.count("%d") != 1:
         sys.stderr.write('ERROR: If sampling, output_file filename has to contain '
                          + 'at least one "%d".\n')
@@ -78,7 +74,7 @@ def main():
         sys.stderr.write('ERROR: If binding files, the number of arguments has'
                          + 'to be divisible by 2\n')
         exit(1)
-    for i in range(0, len(parsed_arg.bind_c), 2):
+    for i in range(0, len(parsed_arg.bind_constant), 2):
         loader.addFile(parsed_arg.bind_file[i], parsed_arg.bind_file[i + 1])
     
     if len(parsed_arg.bind_constant_file) % 2 != 0:

@@ -4,6 +4,13 @@ Wrapper for tandem repeat finder
 import subprocess
 import os
 
+trf_paths = [
+   "/cygdrive/c/cygwin/bin/trf407b.dos.exe",
+   "C:\\cygwin\\bin\\trf407b.dos.exe",
+   "/home/mic/Vyskum/duplikacie/trf404.linux64",
+   "/home/mic/bin/trf404.linux64",
+   "/home/mic/bin/trf407b.linux64",
+]
 
 class Repeat:
     """
@@ -30,12 +37,12 @@ class TRFDriver:
     """
     def __init__(
             self,
-            path=None,
+            path=trf_paths,
             mathType=float
         ):
-        self.path = 'trf'
+        self.path = None
         self.mathType=mathType
-        if self.path != None:
+        if path != None:
             self.setPath(path)
     
        
@@ -50,6 +57,8 @@ class TRFDriver:
             for p in path:
                 if os.path.exists(p):
                     self.path = p 
+        else:
+            self.path = path
         
     def run(
             self, 
@@ -69,7 +78,8 @@ class TRFDriver:
         #print current_path
         #print os.path.dirname(sequencefile)
         os.chdir(os.path.dirname(sequencefile))
-        #print os.getcwd()
+        print os.getcwd()
+        print pseq
         process = subprocess.Popen(pseq, stdout=subprocess.PIPE, 
                                    stderr=subprocess.STDOUT)
         _, _ = process.communicate()

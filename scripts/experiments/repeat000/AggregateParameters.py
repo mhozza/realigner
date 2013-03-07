@@ -18,7 +18,6 @@ def __loadJSON(filename):
 def aggregate(filelist):
     output = dict()
     for tp, files in filelist.iteritems():
-        print(len(files))
         output[tp] = _aggregate(map(__loadJSON, files))
     return output
 
