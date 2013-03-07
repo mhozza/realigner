@@ -1,5 +1,3 @@
-#Alignment sa load
-from Alignment import Alignment
 from tools.file_wrapper import Open
 import re
 
@@ -20,7 +18,8 @@ def loadGenerator(filename):
                 sequence += line.strip()
         if len(sequence) > 0:
             yield (seq_name, sequence)
-    
+
+
 def load(filename, alignment_separator, output_formatter=lambda x:x):
     r = re.compile(alignment_separator)
     output = []
@@ -38,9 +37,8 @@ def load(filename, alignment_separator, output_formatter=lambda x:x):
     if len(output) > 0:
         yield output_formatter(output)
 
-   
-def save(alignment, filename, width = 80):
-    f = Open(filename, "w")
+
+def saveAlignmentPiece(alignment, f, width=80):
     for (seq_name, sequence) in alignment:
         seq_length = len(sequence)
         f.write(">" + seq_name + "\n")
@@ -48,10 +46,15 @@ def save(alignment, filename, width = 80):
             width = seq_length
         count = seq_length / width
         for i in range(count):
-            f.write(sequence[i * width: (i+1) * width] + "\n")
+            f.write(sequence[i * width: (i + 1) * width] + "\n")
         if count * width < seq_length:
-            f.write(sequence[count * width:] + "\n") 
-    f.close()
-    
+            f.write(sequence[count * width:] + "\n")
+
+
+def save(alignment, filename, width = 80):
+    with Open(filename, "w") as f:
+        saveAlignmentPiece(alignment, f, width)
+
+
 def alnToSeq(sequence):
     return sequence.replace("-","")
