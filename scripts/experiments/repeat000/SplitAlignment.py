@@ -16,6 +16,10 @@ def main(alignment, working_directory, split_count, output_file,
     
     filename = os.path.basename(alignment)
     extension = filename.split('.')[-1].lower()
+    gzipped = False
+    if extension == 'gz':
+        gzipped = True
+        extension = filename.split('.')[-2].lower()
     base = filename.split('.')[-2]
     if extension == 'fa':
         # fasta_generator = alignment
