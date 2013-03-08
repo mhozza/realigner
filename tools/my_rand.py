@@ -37,7 +37,7 @@ def rand_generator(dct, normalize=False, mathType=float):
     L.sort(reverse=True, key=lambda (x, _): x)
     if normalize:
         total = mathType(sum([x for x, _ in L]))
-        L = [(mathType(x) / total, y) for x, y in L]
+        L = [[mathType(x) / total, y] for x, y in L]
     #TODO: vyber spravny algoritmus 
     s = mathType(0.0)
     for i in range(len(L)):

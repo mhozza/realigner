@@ -1,4 +1,3 @@
-import json
 import random
 import math
 from tools.my_rand import rand_generator
@@ -24,9 +23,10 @@ class RepeatLengthDistribution:
         self.samplingConst = math.log(1 - p)
         self.fractionSampler = rand_generator(
             zip(
-                range(len(fractions)),
-                fractions
-            )
+                fractions,
+                range(len(fractions)), 
+            ),
+            normalize=True
         )
         self.start = start
         self.fractions = fractions
@@ -36,10 +36,9 @@ class RepeatLengthDistribution:
         sz = len(self.fractions)
         baselength = math.floor(math.log(1 - random.random()) / 
                                 self.samplingConst)
-        return (baselength * sz + self.fractionSampler()) / sz
+        return (baselength * sz + self.fractionSampler()) / sz + self.start
     
     
-    #TODO: check corner cases and math
     def train(self, dist, fractionsize=10, forcesize=None):
         iterator = dist
         if type(dist) in [dict, defaultdict]:
@@ -64,9 +63,15 @@ class RepeatLengthDistribution:
         X = 0.0
         for k, v in bases.iteritems():
             n += v
-            X += k * v
+            X += (k + 1) * v
         p = n / X
-        self.setParams(p, start, fractions)
+        if p >= 1: 
+            p -= 10e-12
+        self.setParams(p, forcesize, fractions)
+        
+    
+    def getParams(self):
+        return (self.p, self.start, self.fractions)
      
     
     def getitem(self, item):
@@ -78,3 +83,11 @@ class RepeatLengthDistribution:
         base = item / sz
         offset = item % sz
         return self.fractions[offset] * (self.p ** (base - 1)) * (1 - self.p)
+    
+if __name__ == '__main__':
+    D = RepeatLengthDistribution(0.99999, 5, [0.74, 0.23, 0.02, 0.01])
+    X = [(D.sample(), 1) for _ in range(100000)]
+    nD = RepeatLengthDistribution()
+    nD.train(X, 4, 5)
+    print nD.getParams()
+    
