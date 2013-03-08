@@ -108,6 +108,9 @@ def main():
         # We are sampling! WOHOOOOO
         PHMM.buildSampleTransitions()
         n_samples, X_len, Y_len = tuple(parsed_arg.sample)
+        dirname = os.path.dirname(output_filename)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
         for i in range(n_samples):
             seq = PHMM.generateSequence((X_len, Y_len))
             X = ""
