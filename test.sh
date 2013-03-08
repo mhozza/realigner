@@ -37,10 +37,11 @@ time pypy scripts/experiments/repeat000/CreateModel.py \
 	output_file_from_create.txt
 	
 # Sample alignments
-time pypy bin/Realign.py \
-	wtf \
-	working_dir_tmp/sampled_alignments/%d.fa \
-	--model  output_file_from_create.txt \
-	--sample 10 1000 1000
-
+time pypy bin/Sample.py \
+	working_dir_tmp/sampled_alignments/{id}.fa \
+	10 \
+	1000 \
+	1000 \
+	--output_files output_from_sample.txt \
+	--model output_file_from_create.txt
 

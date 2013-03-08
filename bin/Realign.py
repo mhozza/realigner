@@ -53,10 +53,6 @@ def main():
                          + ' in the input_file model.', default=[])
     parser.add_argument('--bind_constant_file', nargs='*', help='Replace' + 
                         ' constants in the input_file model.', default=[])
-    parser.add_argument('--sample', nargs=3, default=[], type=int, 
-                        required=False, metavar=("n-samples", "X-length", 
-                                                 "Y-length"),
-                        help="Sample sequences instead of aligning sequences")
     parser.add_argument('--alignment_regexp', default='[.][0-9]+$', 
                         help="Regular expression used to separate alignment" +
                         'in input file')
@@ -64,10 +60,6 @@ def main():
     mathType = getMathType(parsed_arg.mathType)
       
     # ====== Validate input parameters =========================================
-    if len(parsed_arg.sample) > 0 and parsed_arg.output_file.count("%d") != 1:
-        sys.stderr.write('ERROR: If sampling, output_file filename has to ' +\
-                         'contain at least one "%d".\n')
-        return 1
     if len(parsed_arg.bind_file) % 2 != 0:
         sys.stderr.write('ERROR: If binding files, the number of arguments has'
                          + 'to be divisible by 2\n')
@@ -102,29 +94,7 @@ def main():
         )
     model_filename = parsed_arg.model
     PHMM = loader.load(model_filename)["model"]
-
-    # ====== Sample ============================================================
-    if len(parsed_arg.sample) != 0:
-        # We are sampling! WOHOOOOO
-        PHMM.buildSampleTransitions()
-        n_samples, X_len, Y_len = tuple(parsed_arg.sample)
-        dirname = os.path.dirname(output_filename)
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
-        for i in range(n_samples):
-            seq = PHMM.generateSequence((X_len, Y_len))
-            X = ""
-            Y = ""
-            A = ""
-            for (seq, state) in seq:
-                x, y = seq
-                dx, dy = len(x), len(y)
-                A += PHMM.states[state].getChar() * max(dx, dy)
-                X += x + ('-' * (dy - dx))
-                Y += y + ('-' * (dx - dy))
-            aln = [("sequence1", X), ("alignment", A), ("sequence2", Y)]
-            Fasta.save(aln, output_filename % i)  
-        return 0
+    
     
     # ====== Load alignment ====================================================
     with Open(output_filename, 'r') as output_file_object:
