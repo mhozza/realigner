@@ -2,9 +2,11 @@ import random
 import math
 from tools.my_rand import rand_generator
 from collections import defaultdict
+from tools.ConfigFactory import ConfigObject
+from tools.Exceptions import ParseException
 
 
-class RepeatLengthDistribution:
+class RepeatLengthDistribution(ConfigObject):
     # Mix of indel lenght distribution and arbitrary distribution
     
     def __init__(self, p=0.5, start=2, fractions=[0.5, 0.05, 0.05, 0.05, 
@@ -18,6 +20,41 @@ class RepeatLengthDistribution:
         self.setParams(p, start, fractions)
     
     
+    def load(self, dictionary):
+        ConfigObject.load(self, dictionary)
+        #Detect if user provides the data or not
+        start = 0
+        if 'start' in dictionary:
+            start = float(dictionary['start'])
+        if 'data' not in dictionary:
+            if 'p' not in dictionary:
+                raise ParseException(
+                    'Probability is missing in RepeatLengthDistribution'
+                )
+                p = float(dictionary['p'])
+            if 'fractions' not in dictionary:
+                raise ParseException(
+                    'Fractions are missing in RepeatLengthDistribution'
+                )
+            fractions = dictionary['fractions']
+            self.setParams(p, start, fractions)
+        else:
+            data = dictionary['data']
+            if 'fractionssize' not in dictionary:
+                raise ParseException(
+                    'Number of fractions is missing in RepeatLengthDistribution'
+                )
+            self.train(data, int(dictionary['fractionsize']), start)
+        
+
+    def toJSON(self):
+        ret = ConfigObject.toJSON(self)
+        ret['p'] = self.p
+        ret['start'] = self.start
+        ret['fractions'] = self.fractions
+        return ret         
+
+
     def setParams(self, p, start, fractions):
         self.p = p
         self.samplingConst = math.log(1 - p)

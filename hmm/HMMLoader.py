@@ -5,6 +5,7 @@ from hmm.PairHMM import GeneralizedPairHMM, GeneralizedPairState
 from repeats.RepeatAlignmentState import PairRepeatState
 from hmm.SpecialHMMs import JukesCantorGenerator, \
                                BackgroundProbabilityGenerator
+from repeats.RepeatLengthDistribution import RepeatLengthDistribution
 import json
 
 def getInitializerObject(tp, mathType):
@@ -34,6 +35,7 @@ class HMMLoader(ConfigFactory):
             GeneralizedPairHMM, 
             GeneralizedPairState,
             PairRepeatState,
+            RepeatLengthDistribution,
         ]:
 
             self.addFunction(obj.__name__, getInitializerObject(obj, mathType))
