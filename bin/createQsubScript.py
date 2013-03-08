@@ -16,7 +16,7 @@ def main(config_file, output_file):
     for name, item in config.iteritems():
         graph[name] = [] if "depends" not in item else item['depends']
     
-    with Open(output_file, 'r') as f:
+    with Open(output_file, 'w') as f:
         
         f.write('#!/bin/bash\n\n')
         for job in toposort(graph):
