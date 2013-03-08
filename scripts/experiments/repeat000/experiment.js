@@ -17,6 +17,11 @@
 	"CreateModel": {
 		"params": ["-v", "PYTHONPATH=./", "-b y"],
 		"depends": ["AggregateStatistics"],
-		"cmd": "/usr/bin/pypy scripts/experiments/repeat000/CreateModel.py data/models/repeatHMM.js data/experiments/repeat0001/aggregated_stats.js 0.1 data/experiments/repeat0001/model.js"
+		"cmd": "/usr/bin/pypy scripts/experiments/repeat000/CreateModel.py data/models/repeatHMM.js data/experiments/repeat0001/aggregated_stats.js 0.001 data/experiments/repeat0001/model.js"
+	},
+	"SampleAlignments": {
+		"params": ["-v", "PYTHONPATH=./", "-b y"],
+		"depends": ["CreateModel"],
+		"cmd": "/usr/bin/pypy bin/Sample.py data/experiments/repeat0001/sampled_aln/aln_{id}.fa 100 1000 1000 --output_files data/experiments/repeat0001/sampled_alignments.js --model data/experiments/repeat0001/model.js"
 	}
 }
