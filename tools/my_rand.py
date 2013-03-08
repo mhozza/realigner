@@ -54,7 +54,10 @@ def rand_generator(dct, normalize=False, mathType=float):
     return function
 
 def dist_to_json(distribution):
-    if type(distribution) in [dict, defaultdict]:
+    tp = type(distribution)
+    if tp in [dict, defaultdict]:
         return distribution
+    elif hasattr(distribution, 'toJSON'):
+        return distribution.toJSON()
     else:
         raise "Not correct distribution type"

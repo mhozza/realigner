@@ -73,14 +73,13 @@ class TRFDriver:
             paramSeq = ["2", "7", "7", "80", "10", "0", "500", "-h"]
         pseq = [self.path, os.path.basename(sequencefile)]
         pseq.extend(paramSeq)
-        pseq2 = pseq
+        pseq2 = list(pseq)
         pseq2.pop()
         pseq2.append("dat")   
         output_file = ".".join(pseq2[1:])
-        
-        if not os.path.exists(output_file) or \
-            os.path.getmtime(sequencefile) >= os.path.getmtime(output_file):
-             
+        returned_file = os.path.dirname(sequencefile) + '/' + output_file
+        if not os.path.exists(returned_file) or \
+            os.path.getmtime(sequencefile) >= os.path.getmtime(returned_file):
             current_path = os.getcwd()
             os.chdir(os.path.dirname(sequencefile))
             process = subprocess.Popen(pseq, stdout=subprocess.PIPE, 
@@ -88,9 +87,8 @@ class TRFDriver:
             _, _ = process.communicate()
             process.poll()
             os.chdir(current_path)
-       
         if dont_parse:
-            return os.path.dirname(sequencefile) + '/' + output_file
+            return returned_file
         f = open(output_file, "r")
         output = {}
         sequence_name = ""

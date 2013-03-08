@@ -9,13 +9,14 @@ from tools.Exceptions import ParseException
 class RepeatLengthDistribution(ConfigObject):
     # Mix of indel lenght distribution and arbitrary distribution
     
-    def __init__(self, p=0.5, start=2, fractions=[0.5, 0.05, 0.05, 0.05, 
-                                                  0.05, 0.05, 0.05, 0.05, 
-                                                  0.05, 0.05]):
-        self.p = p
-        self.samplingConst = 0.0
+    def __init__(self, mathType=float, p=0.5, start=2, 
+                 fractions=[0.5, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 
+                            0.05, 0.05]):
+        self.mathType=mathType
+        self.p = self.mathType(p)
+        self.samplingConst = self.mathType(0.0)
         self.fractionSampler = None
-        self.start = 0
+        self.start = self.mathType(0)
         self.fractions = []
         self.setParams(p, start, fractions)
     
@@ -44,7 +45,7 @@ class RepeatLengthDistribution(ConfigObject):
                 raise ParseException(
                     'Number of fractions is missing in RepeatLengthDistribution'
                 )
-            self.train(data, int(dictionary['fractionsize']), start)
+            self.train(data, int(dictionary['fractionssize']), start)
         
 
     def toJSON(self):
@@ -86,6 +87,8 @@ class RepeatLengthDistribution(ConfigObject):
             forcesize = 0
             
         for key, value in iterator:
+            key = float(key)
+            value = float(key)
             k = int(math.floor((key - forcesize) * fractionsize))
             if k < 0: 
                 continue

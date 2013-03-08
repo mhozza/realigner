@@ -121,7 +121,12 @@
  		    	"backgroundprob": {"__name__": "background-probability", "key": "value"},
  		    	"transitionmatrix": {"__name__": "repeat-transitions", "key": "value"},
  		    	"consensusdistribution": {"__name__": "#file(consensus.js)"},
- 		    	"repeatlengthdistribution": {"__name__": "#file(repeatlength.js)"}
+ 		    	"repeatlengthdistribution": {
+ 		    		"__name__": "RepeatLengthDistribution",
+ 		    		"data": {"__name__": "#file(repeatlength.js)"},
+ 		    		"fractionssize": 10,
+ 		    		"start": 2
+ 		    	}
  		    }
  		]	
  	}

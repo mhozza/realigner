@@ -19,5 +19,4 @@
 		"depends": ["AggregateStatistics"],
 		"cmd": "/usr/bin/pypy scripts/experiments/repeat000/CreateModel.py data/models/repeatHMM.js data/experiments/repeat0001/aggregated_stats.js 0.1 data/experiments/repeat0001/model.js"
 	}
-	
 }

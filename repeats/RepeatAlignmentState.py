@@ -78,11 +78,16 @@ class PairRepeatState(State):
                 mathType=self.mathType
             ))
         if 'repeatlengthdistribution' in dictionary:
-            self.repeatLengthDistribution = \
-                default_dist(normalize_dict(
-                    dictionary['repeatlengthdistribution'],
-                    mathType=self.mathType
-                ))
+            tp = type(dictionary['repeatlengthdistribution'])
+            if tp == dict:
+                self.repeatLengthDistribution = \
+                    default_dist(normalize_dict(
+                        dictionary['repeatlengthdistribution'],
+                        mathType=self.mathType
+                    ))
+            else:
+                self.repeatLengthDistribution = \
+                    dictionary['repeatlengthdistribution']
 
 
     def toJSON(self):
