@@ -32,7 +32,7 @@ def getRealigner(s):
 
 #TODO: if sampling, the alignment is not necessary
 @perf.runningTimeDecorator
-def main():
+def main(filename_subst=None):
     
     parser = argparse.ArgumentParser(description='Realign sequence using ' + 
                                      'informations from tandem repeat finder')
@@ -75,8 +75,8 @@ def main():
     
     # ====== Parse parameters ==================================================
         
-    alignment_filename = parsed_arg.alignment
-    output_filename = parsed_arg.output_file
+    alignment_filename_template = parsed_arg.alignment
+    output_filename_template = parsed_arg.output_file
     
     # ====== Load model ========================================================
     loader = HMMLoader(mathType) 
@@ -94,76 +94,95 @@ def main():
         )
     model_filename = parsed_arg.model
     PHMM = loader.load(model_filename)["model"]
-    
-    
-    # ====== Load alignment ====================================================
-    with Open(output_filename, 'r') as output_file_object:
-        for aln in Fasta.load(
-            alignment_filename,
-            parsed_arg.alignment_regexp,
-            Alignment,
-        ):
-        
-            if len(aln.sequences) < 2:
-                sys.stderr.write("ERROR: not enough sequences in file\n")
-                exit(1)
+
+    # ====== Check SGE parameters ==============================================
+    task_ids = [None]
+    if os.environ.has_key('SGE_TASK_ID'):
+        sge_task_id = int(os.environ['SGE_TASK_ID'])
+        sge_step_size = int(os.environ['SGE_STEP_SIZE'])
+        sge_task_last = int(os.environ['SGE_TASK_LAST'])
+        task_ids = range(
+            sge_task_id,
+            min(sge_task_id + sge_step_size, sge_task_last + 1)
+        )
+    for task_id in task_ids:
+        if task_id == None:
+            output_filename = output_filename_template
+            alignment_filename = alignment_filename_template
+        else:
+            output_filename = output_filename_template.format(id=task_id)
+            alignment_filename = alignment_filename_template.format(id=task_id) 
+        # ====== Load alignment ================================================
+        with Open(output_filename, 'r') as output_file_object:
+            for aln in Fasta.load(
+                alignment_filename,
+                parsed_arg.alignment_regexp,
+                Alignment,
+            ):
+            
+                if len(aln.sequences) < 2:
+                    sys.stderr.write("ERROR: not enough sequences in file\n")
+                    exit(1)
+                    
+                # Sequence 1
+                seq1 = Fasta.alnToSeq(aln.sequences[0])
+                seq1_length = len(seq1)
+                seq1_name = aln.names[0]
                 
-            # Sequence 1
-            seq1 = Fasta.alnToSeq(aln.sequences[0])
-            seq1_length = len(seq1)
-            seq1_name = aln.names[0]
-            
-            # Sequence 2
-            seq2 = Fasta.alnToSeq(aln.sequences[1])
-            seq2_length = len(seq2)
-            seq2_name = aln.names[1]
-            
-            perf.msg("Data loaded in {time} seconds.")
-            perf.replace()
-            
-            #TODO: some better way how to cope with additional information
-            # Compute repeat hints
-            for trf_executable in parsed_arg.trf:
-                if os.path.exists(trf_executable):
-                    trf = TRFDriver(trf_executable, mathType=mathType)
-                    break
+                # Sequence 2
+                seq2 = Fasta.alnToSeq(aln.sequences[1])
+                seq2_length = len(seq2)
+                seq2_name = aln.names[1]
                 
-            repeats = trf.run(alignment_filename)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
-            seq1_repeats = repeats[seq1_name]
-            seq2_repeats = repeats[seq2_name]
-            
-            realigner = getRealigner(parsed_arg.algorithm)()
-            realigner.prepareData(PHMM, seq1_repeats, seq2_repeats)
-            
-            # positions
-            positionGenerator = \
-                list(AlignmentBeamGenerator(aln, width = 10))
-            
-            perf.msg("Hints computed in {time} seconds.")
-            perf.replace()
-            
-            # Compute stuff
-            table = PHMM.getPosteriorTable(seq1, 0, seq1_length, seq2, 0, seq2_length,
-                                           positionGenerator = positionGenerator)
-            
-            perf.msg("Posterior table computed in {time} seconds.")
-            perf.replace()
-            
-            aln = ""
-            aln = realigner.realign(
-                seq1_name, seq1, 0, seq1_length,
-                seq2_name, seq2, 0, seq2_length,
-                table,
-                PHMM,
-                positionGenerator,
-                mathType=mathType
-            )
-            
-            perf.msg("Sequence was realigned in {time} seconds.")
-            perf.replace()
-            
-            # Save output_file
-            Fasta.saveAlignmentPiece(aln, output_file_object)
+                perf.msg("Data loaded in {time} seconds.")
+                perf.replace()
+                
+                # TODO: some better way how to cope with additional information
+                # Compute repeat hints
+                for trf_executable in parsed_arg.trf:
+                    if os.path.exists(trf_executable):
+                        trf = TRFDriver(trf_executable, mathType=mathType)
+                        break
+                    
+                repeats = trf.run(alignment_filename)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+                seq1_repeats = repeats[seq1_name]
+                seq2_repeats = repeats[seq2_name]
+                
+                realigner = getRealigner(parsed_arg.algorithm)()
+                realigner.prepareData(PHMM, seq1_repeats, seq2_repeats)
+                
+                # positions
+                positionGenerator = \
+                    list(AlignmentBeamGenerator(aln, width = 10))
+                
+                perf.msg("Hints computed in {time} seconds.")
+                perf.replace()
+                
+                # Compute stuff
+                table = PHMM.getPosteriorTable(
+                    seq1, 0, seq1_length,
+                    seq2, 0, seq2_length,
+                    positionGenerator=positionGenerator
+                )
+                
+                perf.msg("Posterior table computed in {time} seconds.")
+                perf.replace()
+                
+                aln = ""
+                aln = realigner.realign(
+                    seq1_name, seq1, 0, seq1_length,
+                    seq2_name, seq2, 0, seq2_length,
+                    table,
+                    PHMM,
+                    positionGenerator,
+                    mathType=mathType
+                )
+                
+                perf.msg("Sequence was realigned in {time} seconds.")
+                perf.replace()
+                
+                # Save output_file
+                Fasta.saveAlignmentPiece(aln, output_file_object)
 
     
 if __name__ == "__main__":
