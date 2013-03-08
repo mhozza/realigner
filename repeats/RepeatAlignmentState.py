@@ -181,10 +181,11 @@ class PairRepeatState(State):
         cons = defaultdict(int)
         total = 0;
         for rg in [self.repeatGeneratorX, self.repeatGeneratorY]:
-            for rep in rg.repeats:
-                dur[rep.end - rep.start] += 1
-                cons[rep.consensus] += 1
-                total += 1
+            if rg != None:
+                for rep in rg.repeats:
+                    dur[rep.end - rep.start] += 1
+                    cons[rep.consensus] += 1
+                    total += 1
         total = float(total)
         for (key, val) in dur.iteritems():
             dur[key] = float(val) / total
@@ -200,7 +201,10 @@ class PairRepeatState(State):
     
     def sampleEmission(self):
         # generate durations
-        dx, dy = self.durationSampler(), self.durationSampler()
+        consensus = self.consensusSampler()
+        cl = len(consensus)
+        dx = int(self.durationSampler() * cl)
+        dy = int(self.durationSampler() * cl)
         # generate consensus
         consensus = self.consensusSampler()
         hmm = self.factory.getHMM(consensus)

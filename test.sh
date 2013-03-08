@@ -30,10 +30,17 @@ time pypy scripts/experiments/repeat000/AggregateParameters.py \
 	output_file_from_aggregate.txt
 
 # Create model
-time python scripts/experiments/repeat000/CreateModel.py \
+time pypy scripts/experiments/repeat000/CreateModel.py \
 	data/models/repeatHMM.js \
 	output_file_from_aggregate.txt \
-	0.1 \
+	0.01 \
 	output_file_from_create.txt
 	
 # Sample alignments
+time pypy bin/Realign.py \
+	wtf \
+	working_dir_tmp/sampled_alignments/%d.fa \
+	--model  output_file_from_create.txt \
+	--sample 10 1000 1000
+
+

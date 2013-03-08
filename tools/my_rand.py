@@ -30,6 +30,8 @@ def rand_generator(dct, normalize=False, mathType=float):
     according distribution in input distionary (key = element, 
     value = probability). Expects that probabilities sum to 1.
     """
+    if hasattr(dct, 'sample'):
+        return lambda *x: dct.sample()
     L = dct
     if type(dct)==dict or type(dct) == defaultdict:
         L = [[v, k] for (k, v) in dct.iteritems()]

@@ -32,7 +32,7 @@ class RepeatLengthDistribution(ConfigObject):
                 raise ParseException(
                     'Probability is missing in RepeatLengthDistribution'
                 )
-                p = float(dictionary['p'])
+            p = float(dictionary['p'])
             if 'fractions' not in dictionary:
                 raise ParseException(
                     'Fractions are missing in RepeatLengthDistribution'
