@@ -70,7 +70,7 @@ class TRFDriver:
         Run tandem repeat finder and return repeats
         """
         if paramSeq == None:
-            paramSeq = ["2", "7", "7", "80", "10", "0", "500", "-h"]
+            paramSeq = ["2", "3", "3", "80", "10", "0", "2000", "-h"]
         pseq = [self.path, os.path.basename(sequencefile)]
         pseq.extend(paramSeq)
         pseq2 = list(pseq)
@@ -89,7 +89,7 @@ class TRFDriver:
             os.chdir(current_path)
         if dont_parse:
             return returned_file
-        f = open(output_file, "r")
+        f = open(returned_file, "r")
         output = {}
         sequence_name = ""
         repeats = []
@@ -109,6 +109,6 @@ class TRFDriver:
             repeats.append(
                 Repeat(int(line[0]) -1 , int(line[1]), self.mathType(line[3]),
                        line[13], line[14]))
-        if len(repeats) > 0 and sequence_name != "":
+        if sequence_name != "":
             output[sequence_name] = repeats
         return output

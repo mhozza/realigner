@@ -20,4 +20,24 @@
 		<nature>org.eclipse.vjet.core.nature</nature>
 		<nature>org.python.pydev.pythonNature</nature>
 	</natures>
+	<filteredResources>
+		<filter>
+			<id>1363597298812</id>
+			<name>working_dir_tmp</name>
+			<type>22</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-length-largerThan-false-false-5242880</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1363597258201</id>
+			<name>data/alignments</name>
+			<type>22</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-length-largerThan-false-false-1048576</arguments>
+			</matcher>
+		</filter>
+	</filteredResources>
 </projectDescription>

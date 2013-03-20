@@ -67,6 +67,7 @@ def BackgroundProbabilityGenerator(dictionary, mathType):
 
 
 def createProfileHMM(mathType, consensus, time, backgroundProb, trans):
+    print "Using consensus:", consensus
     length = len(consensus)
     states = []
     transitions = []

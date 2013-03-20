@@ -33,7 +33,7 @@ def main():
     parsed_arg = parser.parse_args()
       
     # ====== Validate input parameters =========================================
-    print parsed_arg.output_file_template.count("{id}")
+
     if parsed_arg.output_file_template.count("{id}") < 1:
         sys.stderr.write('ERROR: If sampling, output_file filename has to ' +\
                          'contain at least one "%d".\n')
@@ -82,18 +82,34 @@ def main():
     dirname = os.path.dirname(output_filename)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
+    tandemRepeats = {'sequence1': [], 'sequence2': []}
     for i in range(n_samples):
         seq = PHMM.generateSequence((X_len, Y_len))
         X = ""
         Y = ""
         A = ""
         for (seq, state) in seq:
-            x, y = seq
+            ann_data = None
+            if len(seq) == 2:
+                x, y = seq
+            else: 
+                x, y, ann_data = seq
             dx, dy = len(x), len(y)
+            if ann_data != None:
+                xlen = len(X.replace('-', ''))
+                ylen = len(Y.replace('-', ''))
+                tandemRepeats['sequence1'].append((
+                    xlen, xlen + dx, xlen / ann_data[1], ann_data[0], x
+                ))
+                tandemRepeats['sequence2'].append((
+                    ylen, ylen + dy, ylen / ann_data[2], ann_data[0], y
+                ))
             A += PHMM.states[state].getChar() * max(dx, dy)
             X += x + ('-' * (dy - dx))
             Y += y + ('-' * (dx - dy))
         aln = [("sequence1", X), ("alignment", A), ("sequence2", Y)]
+        json.dump(tandemRepeats, Open(output_filename.format(id=i) + '.repeats',
+                                      'w'), indent=4)
         Fasta.save(aln, output_filename.format(id=i))
         output_files.append(output_filename.format(id=i))
     json.dump(output_files, Open(output_files_filename, 'w'), indent=4)  

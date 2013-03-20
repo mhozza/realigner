@@ -20,21 +20,34 @@ def loadGenerator(filename):
             yield (seq_name, sequence)
 
 
-def load(filename, alignment_separator, output_formatter=lambda x:x):
+def load(filename, alignment_separator, output_formatter=lambda x:x,
+         sequence_selectors=None):
     r = re.compile(alignment_separator)
     output = []
+    if sequence_selectors != None:
+        output = [None] * len(sequence_selectors)
     lastCategory = None
+    if sequence_selectors != None:
+        sequence_selectors = [re.compile(x) for x in sequence_selectors]
     for name, sequence in loadGenerator(filename):
         res = r.search(name)
         if not res:
             continue
         category= res.group()
-        if lastCategory != category and len(output) > 0:
+        if lastCategory != category and lastCategory != None:
             yield output_formatter(output)
             output = []
-        output.append((name, sequence))
+            if sequence_selectors != None:
+                output = [None] * len(sequence_selectors)
+        if sequence_selectors == None:
+            output.append((name, sequence))
+        else:
+            for i in range(len(sequence_selectors)):
+                if sequence_selectors[i].search(name) != None:
+                    output[i] = (name, sequence)
+                    break
         lastCategory = category
-    if len(output) > 0:
+    if len(output) > 0 and sum([1 for x in output if x != None]) > 0:
         yield output_formatter(output)
 
 

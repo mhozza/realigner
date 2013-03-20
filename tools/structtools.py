@@ -1,22 +1,76 @@
 import collections
+import functools
 
+def listToStr(a, indent=0):
+    if len(a) == 0: return '[]'
+    indentStr = ' ' * indent
+    if indent > 1:        
+        return '[\n' + ''.join([indentStr + '{0},\n'.format(x) 
+                              for x in a]) + (' ' * (indent)) + ']'
+    return '[' + ','.join(a) + ']'
 
-def getStructure(value):
+def getStructure(value, indent=0):
+    # zoznamy: list, set
+    # dictionaries: dict, defaultdict
+    # instances
+    # classespyt .__class__.__name__
+    indentStr = " " * indent
+    newIndent = indent + 2
+    if indent < 0: 
+        newIndent = indent
     t = type(value)
-    if t == type(list()):
+    if t == list:
         a = set()
         for x in value:
-            a.add(getStructure(x))
+            a.add(getStructure(x, indent + 2))
         a = list(a)
-        return "list(" + str(a) + ")"
-    elif t == type(dict()) or t == type(collections.defaultdict()):
+        return '{indent}list{content}'.format(
+            indent=indentStr,
+            content=listToStr(a, newIndent)
+        )
+        #return indentStr + "list[\n" + listToStr(a) + '\n' + indentStr + ']'
+    elif t == set:
         a = set()
-        for (key, val) in value.iteritems():
-            a.add((getStructure(key),getStructure(val)))
+        for x in value:
+            a.add(getStructure(x, indent + 2))
         a = list(a)
-        return "dict(" + str(a) + ")"
+        return '{indent}set{content}'.format(
+            indent=indentStr,
+            content=listToStr(a, newIndent)
+        )
+    elif t == dict:
+        a = set()
+        b = set()
+        for (key, val) in value.iteritems():
+            a.add(getStructure(key, indent + 2))
+            b.add(getStructure(val, indent + 2))
+        a = list(a)
+        b = list(b)
+        return '{indent}dict{keys}->{values}'.format(
+            indent=indentStr,
+            keys=listToStr(a, newIndent),
+            values=listToStr(a, newIndent)
+        )
+    elif t == collections.defaultdict:
+        a = set()
+        b = set()
+        for (key, val) in value.iteritems():
+            a.add(getStructure(key, indent + 2))
+            b.add(getStructure(val, indent + 2))
+        a = list(a)
+        b = list(b)
+        c = [getStructure(value.default_factory(), newIndent)]
+        return '{indent}defaultdict(factory: {factory}){keys}->{values}' \
+            .format(
+            indent=indentStr,
+            factory=listToStr(c, newIndent),
+            keys=listToStr(a, newIndent),
+            values=listToStr(b, newIndent)
+        )
+    elif str(t).split("'")[1] == 'instance':
+        return indentStr + value.__class__.__name__
     else:
-        return str(type(value))
+        return indentStr + str(type(value)).split("'")[1]
   
 def getIterable(structure):
     t = type(structure)
@@ -54,7 +108,8 @@ def structToStr(value, rec = -1, indent = ""):
         newindent2 = ""
     st = tp + "(" + newline
     for (i, v) in iterable:
-        st += newindent2 + "  " + str(i) + ": " + structToStr(v, newrec, newindent) + "," + newline
+        st += (newindent2 + "  " + str(i) + ": " + 
+               structToStr(v, newrec, newindent) + "," + newline)
     st += newindent2 + ")"
     return st
     
@@ -69,7 +124,8 @@ def recursiveFold(
         return structure
     return reduce(
         function, 
-        (recursiveFold(struct) for (_, struct) in getIterable(structure))
+        (recursiveFold(struct) for (_, struct) in getIterable(structure)),
+        None
     )
     
     
@@ -77,8 +133,8 @@ def _recursiveArgMax(structure, stop, selector):
     if stop(structure):
         return ([], structure)
     
-    iterable = ((index, recursiveFold(struct)) for (index, struct) in getIterable(structure))
-    x = reduce(max, iterable, key=lambda x: x[1][1])
+    iterable = ((index, _recursiveArgMax(struct, stop, selector)) for (index, struct) in getIterable(structure) if recursiveFold(struct) != None)
+    x = reduce(functools.partial(max, key=lambda x: x[1][1]), iterable)
     l = x[1][0]
     l.append(x[0])
     return l, x[1][1]    
@@ -93,4 +149,4 @@ def recursiveArgMax(
     'maximal' value where max relation is provided in selector
     """
     l, x = _recursiveArgMax(structure, stop, selector)
-    return tuple(l), x
+    return tuple(reversed(l)), x

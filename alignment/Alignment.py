@@ -3,11 +3,16 @@ class Alignment:
     def __init__(self, sequences):
         self.sequences = list()
         self.names = list()
-        self.memoryhints = list()
         self.seq_to_aln = list()
         self.aln_to_seq = list()
         self.addSequences(sequences)
-        
+    
+    
+    def popSequence(self):
+        self.sequences.pop()
+        self.names.pop()
+        self.seq_to_aln.pop()
+        self.aln_to_seq.pop()    
         
     
     def addSequences(self, sequences):

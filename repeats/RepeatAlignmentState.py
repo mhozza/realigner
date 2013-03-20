@@ -4,6 +4,7 @@ from collections import defaultdict
 from tools.my_rand import rand_generator, normalize_dict, default_dist, \
                             dist_to_json
 from tools.Exceptions import ParseException
+from adapters.TRFDriver import Repeat
 
 class RepeatProfileFactory:
             
@@ -35,7 +36,7 @@ class PairRepeatState(State):
     def __init__(self, *p):
         State.__init__(self, *p)
         self.hmm = None
-        self.factory = RepeatProfileFactory()
+        self.factory = RepeatProfileFactory(self.mathType)
         self.repeatGeneratorX = None
         self.repeatGeneratorY = None
         self.consensus = ""
@@ -116,14 +117,17 @@ class PairRepeatState(State):
         X = list(self.repeatGeneratorX.getHints(_x))
         Y = list(self.repeatGeneratorY.getHints(_y))
         for (xlen, xcon) in X:
-            xp = self.repeatLengthDistribution[xlen] * \
+            xrc = float(xlen) / len(xcon)
+            xp =self.repeatLengthDistribution[xrc] * \
                 self.consensusDistribution[xcon]
-            yp = self.repeatLengthDistribution[xlen]
+            yp = self.repeatLengthDistribution[xrc]
             for (ylen, ycon) in Y:
-                xp *= self.repeatLengthDistribution[ylen]
-                yp *= self.repeatLengthDistribution[ylen] * \
+                yrc = float(ylen) / len(ycon)
+                xp *= self.repeatLengthDistribution[yrc]
+                yp *= self.repeatLengthDistribution[yrc] * \
                     self.consensusDistribution[ycon]
                 self.consensus = xcon
+                print 'duration', xcon, xlen, xrc, xp, ycon, ylen, yrc, yp
                 yield((xlen, ylen), xp)
                 self.consensus = ycon
                 yield((xlen, ylen), yp)
@@ -142,12 +146,14 @@ class PairRepeatState(State):
         X = list(self.repeatGeneratorX.getReverseHints(_x))
         Y = list(self.repeatGeneratorY.getReverseHints(_y))
         for (xlen, xcon) in X:
-            xp = self.repeatLengthDistribution[xlen] * \
+            xrc = float(xlen) / len(xcon)
+            xp = self.repeatLengthDistribution[xrc] * \
                 self.consensusDistribution[xcon]
-            yp = self.repeatLengthDistribution[xlen]
+            yp = self.repeatLengthDistribution[xrc]
             for (ylen, ycon) in Y:
-                xp *= self.repeatLengthDistribution[ylen]
-                yp *= self.repeatLengthDistribution[ylen] * \
+                yrc = float(ylen) / len(ycon)
+                xp *= self.repeatLengthDistribution[yrc]
+                yp *= self.repeatLengthDistribution[yrc] * \
                     self.consensusDistribution[ycon]
                 self.consensus = xcon
                 yield((xlen, ylen), xp)
@@ -197,7 +203,7 @@ class PairRepeatState(State):
             cons = self.consensusDistribution
         self.durationSampler = rand_generator(dur)
         self.consensusSampler = rand_generator(cons)
-        
+   
     
     def sampleEmission(self):
         # generate durations
@@ -214,4 +220,5 @@ class PairRepeatState(State):
         X = "".join([x for (x, _) in X])
         Y = "".join([x for (x, _) in Y])
         # Generate Alignment
-        return X, Y
+        return X, Y, (consensus, dx, dy)
+    

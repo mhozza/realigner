@@ -6,7 +6,6 @@ from collections import deque
 from Alignment import Alignment
 #import matplotlib.pyplot as pyplot
 
-
         
 def autoconvDecorator(f):
     def newFunction(*other, **args):
@@ -32,11 +31,10 @@ def AlignmentPositionGenerator(alignment, window=None):
     """
     if window == None:
         window = [(0, seq_len(x)) for x in alignment.sequences]
-    
-    start = max(
+    start = min(
         [alignment.seq_to_aln[i][window[i][0]] for i in range(len(window))]
     )
-    stop  = min(
+    stop  = max(
         [alignment.seq_to_aln[i][window[i][1]] for i in range(len(window))]
     )
     for i in range(start, stop):
@@ -136,39 +134,43 @@ def unzipList(List):
 
 
         
-if __name__ == "__main__":
-    def visualize():
-        """
-        Test function
-        """
-        #=======================================================================
-        # A = TextAlignmentToTupleList("ACGTGCTAC---GATCGAG---CTATCGACGATCGACGATCGA---CGGAGCGACTACT--------AGCTAGCTGATCGAT", "ACGTGCTACAGCTA----GGCTATATCGACG-----CGATCAGCTTTTT---TTTTTCTGCATCGACGTACG---GATCGAT")
-        # maxX = len([a[0] for a in A if a[0] != '-'])
-        # maxY = len([a[1] for a in A if a[1] != '-'])
-        # fig = pyplot.figure()
-        # ax  = fig.add_subplot(111)
-        # (X, Y) = unzipList(AlignmentPositionGenerator(A))
-        # ax.plot(X, Y, "-")
-        # ax.grid(True)
-        # width = 2
-        # (X, Y) = unzipList(AlignmentBeamGenerator(A, width))    
-        # ax.plot(X, Y, "o", color="red")
-        # X = []
-        # Y = []
-        # a = list(AlignmentPositionGenerator(A))
-        # #a.append((maxX, maxY))
-        # for x in a:
-        #    for i in range(-width, width+1):
-        #        for j in range(-width, width+1):
-        #            if x[0] + i < 0 or \
-        #               x[1] + j < 0 or \
-        #               x[0] + i > maxX or \
-        #               x[1] + j > maxY:
-        #                continue
-        #            X.append(x[0]+i+0.2)
-        #            Y.append(x[1]+j)
-        # ax.plot(X, Y, "o", color="green")
-        # pyplot.show()
-        #=======================================================================
-    visualize()    
-    
+#===============================================================================
+# if __name__ == "__main__":
+#    def visualize():
+#        """
+#        Test function
+#        """
+#        A = zip('AATTTTGGGAGTTCAAAA', '--------GATTACAAGA',)
+# 
+#        maxX = len([a[0] for a in A if a[0] != '-'])
+#        maxY = len([a[1] for a in A if a[1] != '-'])
+#        A = unzipList(A)        
+#        A = Alignment([''.join(A[0]), ''.join(A[1])])
+#        print A.sequences
+#        fig = pyplot.figure()
+#        ax  = fig.add_subplot(111)
+#        (X, Y) = unzipList(AlignmentPositionGenerator(A))
+#        ax.plot(X, Y, "-")
+#        ax.grid(True)
+#        width = 2
+#        (X, Y) = unzipList(AlignmentBeamGenerator(A, width))    
+#        ax.plot(X, Y, "o", color="red")
+#        X = []
+#        Y = []
+#        a = list(AlignmentPositionGenerator(A))
+#        #a.append((maxX, maxY))
+#        for x in a:
+#            for i in range(-width, width+1):
+#                for j in range(-width, width+1):
+#                    if x[0] + i < 0 or \
+#                       x[1] + j < 0 or \
+#                       x[0] + i > maxX or \
+#                       x[1] + j > maxY:
+#                        continue
+#                    X.append(x[0]+i+0.2)
+#                    Y.append(x[1]+j)
+#        ax.plot(X, Y, "o", color="green")
+#        pyplot.show()
+#    visualize()    
+#    
+#===============================================================================

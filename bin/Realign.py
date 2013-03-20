@@ -1,8 +1,8 @@
 from algorithm.LogNum import LogNum
 from hmm.HMMLoader import HMMLoader
 from alignment import Fasta
-from adapters.TRFDriver import TRFDriver, trf_paths
-from alignment.AlignmentIterator import AlignmentBeamGenerator
+from adapters.TRFDriver import TRFDriver, trf_paths, Repeat
+from alignment.AlignmentIterator import AlignmentPositionGenerator
 from repeats.RepeatRealigner import RepeatRealigner
 from tools import perf
 import os   
@@ -10,6 +10,10 @@ import argparse
 import sys
 from alignment.Alignment import Alignment
 from tools.file_wrapper import Open
+from alignment.AlignmentCanvas import AlignmentCanvas
+import json
+from alignment.ViterbiRealigner import ViterbiRealigner
+
     
 def getMathType(s):
     if s == 'LogNum':
@@ -27,6 +31,8 @@ def toList(s):
 def getRealigner(s):
     if s == 'repeat':
         return RepeatRealigner
+    elif s == 'viterbi':
+        return ViterbiRealigner
     else:
         raise('Unknown type')
 
@@ -45,7 +51,7 @@ def main(filename_subst=None):
     parser.add_argument('--trf', type=toList, default=trf_paths
                         , help="Location of tandem repeat finder binary")
     parser.add_argument('--algorithm', type=str, 
-                        default='repeat', choices=['repeat'],
+                        default='repeat', choices=['repeat', 'viterbi'],
                         help="Which realignment algorithm to use")
     parser.add_argument('--bind_file', nargs='*', help='Replace filenames in '
                         + 'the input_file model.', default=[]) 
@@ -53,12 +59,44 @@ def main(filename_subst=None):
                          + ' in the input_file model.', default=[])
     parser.add_argument('--bind_constant_file', nargs='*', help='Replace' + 
                         ' constants in the input_file model.', default=[])
-    parser.add_argument('--alignment_regexp', default='[.][0-9]+$', 
-                        help="Regular expression used to separate alignment" +
+    parser.add_argument('--alignment_regexp', default='', 
+                        help='Regular expression used to separate alignment' +
                         'in input file')
+    parser.add_argument('--sequence_regexp', nargs='+', default=None,
+                        help='Regular expressions used to select sequences.')
+    parser.add_argument('--beam_width', default=10, type=int, 
+                        help='Beam width.')
+    parser.add_argument('--repeat_width', default=0, help='Maximum possible' + 
+                        ' error of repeat annotation.', type=int)
+    parser.add_argument('--tracks', help='Comma separated list of ' + \
+                        'annotation tracks (trf, original_repeats)', type=str,
+                        default='trf')
+    parser.add_argument('--intermediate_input_files', help='Comma separated' + 
+                        'list of key value pairs: "key:value". This files ' + 
+                        'used to skip load precomputed data in algorithms.' )
+    parser.add_argument('--intermediate_output_files', help='Comma separated' + 
+                        'list of key value pairs: "key:value". This files ' + 
+                        'used to skip store precomputed data in algorithms.' )
     parsed_arg = parser.parse_args()
     mathType = getMathType(parsed_arg.mathType)
-      
+    annotations = dict()
+    tracks = set(parsed_arg.tracks.split(','))
+    io_files = dict();
+    if parsed_arg.intermediate_input_files != None:
+        io_files['input'] = dict([
+            tuple(x.split(':')) 
+            for x in parsed_arg.intermediate_input_files.split(',')
+        ])
+    else:
+        io_files['input'] = dict()
+    if parsed_arg.intermediate_output_files != None:
+        io_files['output'] = dict([
+            tuple(x.split(':')) 
+            for x in parsed_arg.intermediate_output_files.split(',')
+        ])
+    else:
+        io_files['output'] = dict()
+
     # ====== Validate input parameters =========================================
     if len(parsed_arg.bind_file) % 2 != 0:
         sys.stderr.write('ERROR: If binding files, the number of arguments has'
@@ -79,7 +117,7 @@ def main(filename_subst=None):
     output_filename_template = parsed_arg.output_file
     
     # ====== Load model ========================================================
-    loader = HMMLoader(mathType) 
+    loader = HMMLoader(mathType) # TODO: rename HMMLoader to ModelLoader
     for i in range(0, len(parsed_arg.bind_constant), 2):
         loader.addFile(parsed_arg.bind_file[i], parsed_arg.bind_file[i + 1])
     for i in range(0, len(parsed_arg.bind_constant_file), 2):
@@ -93,7 +131,7 @@ def main(filename_subst=None):
             loader.loads(parsed_arg.bind_constant[i + 1]),
         )
     model_filename = parsed_arg.model
-    PHMM = loader.load(model_filename)["model"]
+    model = loader.load(model_filename)["model"]
 
     # ====== Check SGE parameters ==============================================
     task_ids = [None]
@@ -110,76 +148,116 @@ def main(filename_subst=None):
             output_filename = output_filename_template
             alignment_filename = alignment_filename_template
         else:
-            output_filename = output_filename_template.format(id=task_id)
-            alignment_filename = alignment_filename_template.format(id=task_id) 
+            output_filename = output_filename_template.format(id=task_id - 1)
+            alignment_filename = \
+                alignment_filename_template.format(id=task_id - 1) 
         # ====== Load alignment ================================================
-        with Open(output_filename, 'r') as output_file_object:
+        if len(parsed_arg.sequence_regexp) > 0:
+            parsed_arg.sequence_regexp.append('alignment')
+        with Open(output_filename, 'w') as output_file_object:
             for aln in Fasta.load(
                 alignment_filename,
                 parsed_arg.alignment_regexp,
                 Alignment,
+                sequence_selectors=parsed_arg.sequence_regexp
             ):
-            
                 if len(aln.sequences) < 2:
                     sys.stderr.write("ERROR: not enough sequences in file\n")
                     exit(1)
                     
+                drawer = AlignmentCanvas()
+                original_annotation = aln.sequences[2]
+                aln.popSequence()
+
                 # Sequence 1
                 seq1 = Fasta.alnToSeq(aln.sequences[0])
                 seq1_length = len(seq1)
                 seq1_name = aln.names[0]
+                drawer.add_sequence('X', seq1)
                 
                 # Sequence 2
                 seq2 = Fasta.alnToSeq(aln.sequences[1])
                 seq2_length = len(seq2)
                 seq2_name = aln.names[1]
+                drawer.add_sequence('Y', seq2)
                 
                 perf.msg("Data loaded in {time} seconds.")
                 perf.replace()
                 
-                # TODO: some better way how to cope with additional information
-                # Compute repeat hints
-                for trf_executable in parsed_arg.trf:
-                    if os.path.exists(trf_executable):
-                        trf = TRFDriver(trf_executable, mathType=mathType)
-                        break
+                #====== DRAW ORIGINAL ANNOTATION ===============================
+                # TODO: move it out of here, into drawer class
+                
+                last = ""
+                start = -1
+                original_annotation += "?"
+                for (char, i) in zip(original_annotation,
+                                     range(len(original_annotation))):
+                    if char != last:
+                        if start >=0:
+                            color = (255, 255, 0, 255)
+                            if last == 'R':
+                                color = (255, 0, 0, 255)
+                            elif last == 'M':
+                                color = (0, 255, 0, 255)
+                            if (aln.aln_to_seq[0][start] < 
+                                aln.aln_to_seq[0][i - 1]):
+                                drawer.add_annotation('X', 'O', 
+                                                      (aln.aln_to_seq[0][start],
+                                                       aln.aln_to_seq[0][i - 1],
+                                                       color))
+                            if (aln.aln_to_seq[1][start] < 
+                                aln.aln_to_seq[1][i - 1]):
+                                drawer.add_annotation('Y', 'O',
+                                                      (aln.aln_to_seq[1][start],
+                                                       aln.aln_to_seq[1][i - 1],
+                                                       color))
+                        start = i
+                        last = char
                     
-                repeats = trf.run(alignment_filename)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
-                seq1_repeats = repeats[seq1_name]
-                seq2_repeats = repeats[seq2_name]
+                #====== COMPUTE ANNOTATION TRACKS ==============================
                 
-                realigner = getRealigner(parsed_arg.algorithm)()
-                realigner.prepareData(PHMM, seq1_repeats, seq2_repeats)
-                
-                # positions
-                positionGenerator = \
-                    list(AlignmentBeamGenerator(aln, width = 10))
-                
+                # Compute repeat hints
+                if 'trf' in tracks:
+                    for trf_executable in parsed_arg.trf:
+                        if os.path.exists(trf_executable):
+                            trf = TRFDriver(trf_executable, mathType=mathType)
+                            break
+                    repeats = trf.run(alignment_filename)
+                    annotations['trf'] = repeats
+                                    
+                if 'original_repeats' in tracks:
+                    repeats = json.load(Open(alignment_filename + '.repeats',
+                                             'r'))
+                    print repeats
+                    for k, v in repeats.iteritems():
+                        repeats[k] = [Repeat(_v[0], _v[1], _v[2], _v[3], _v[4]) 
+                                      for _v in v]
+                    
+                    annotations['original_repeats'] = repeats
+                        
                 perf.msg("Hints computed in {time} seconds.")
                 perf.replace()
+        
+                #====== REALIGN ================================================
                 
-                # Compute stuff
-                table = PHMM.getPosteriorTable(
-                    seq1, 0, seq1_length,
-                    seq2, 0, seq2_length,
-                    positionGenerator=positionGenerator
-                )
-                
-                perf.msg("Posterior table computed in {time} seconds.")
-                perf.replace()
-                
-                aln = ""
-                aln = realigner.realign(
-                    seq1_name, seq1, 0, seq1_length,
-                    seq2_name, seq2, 0, seq2_length,
-                    table,
-                    PHMM,
-                    positionGenerator,
-                    mathType=mathType
-                )
-                
+                realigner = getRealigner(parsed_arg.algorithm)()
+                realigner.prepareData(seq1, seq1_name, seq2, seq2_name, 
+                                      aln, parsed_arg.beam_width, drawer, model,
+                                      mathType, annotations, io_files, 
+                                      parsed_arg.repeat_width)
+                aln = realigner.realign(0, seq1_length, 0, seq2_length)
+
                 perf.msg("Sequence was realigned in {time} seconds.")
                 perf.replace()
+
+                drawer.add_alignment_line(
+                    101,
+                    (255, 0, 255, 255),
+                    1,
+                    AlignmentPositionGenerator(Alignment([aln[0], aln[2]]))
+                )
+                drawer.draw('output.png', 2000, 2000)
+                perf.msg("Image was drawn in {time} seconds.")
                 
                 # Save output_file
                 Fasta.saveAlignmentPiece(aln, output_file_object)

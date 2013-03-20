@@ -269,7 +269,9 @@ class HMM(ConfigObject):
             if dim == 1:
                 gen_len = tuple([gen_len[0] + len(em)])
             else:
-                gen_len = tadd(gen_len, tuple([len(x) for x in em]))
+                gen_len = tadd(gen_len, tuple([len(x) 
+                                               for x in em 
+                                               if type(x) != tuple]))
             ret.append((em, state))
             state = self.sampleTransition(state)
         return ret

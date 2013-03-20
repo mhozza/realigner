@@ -156,6 +156,7 @@ class GeneralizedHMM(HMM):
         table = self.getForwardTable(X, x, dx, 
                                      memoryPattern=MemoryPatterns.last(dx + 1))
     
-        return sum([sum([prob for (_, prob) in dct.iteritems()]) * self.states[stateID].getEndProbability() \
-                    for (stateID, dct) in ((l, table[0][1][l]) for l in range(len(table[0][1])))])
-    
+        return sum([sum([prob for (_, prob) in dct.iteritems()]) * 
+                    self.states[stateID].getEndProbability() 
+                    for (stateID, dct) in ((l, table[0][1][l]) 
+                                           for l in range(len(table[0][1])))])

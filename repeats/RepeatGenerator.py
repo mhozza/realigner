@@ -3,12 +3,12 @@ import bisect
 
 class RepeatGenerator:
     
-    def __init__(self, repeats=None):
+    def __init__(self, repeats=None, width=0):
         self.repeats = []
         self.vals = []
         self.rrepeats = []
         self.rvals = []
-        self.width = 0
+        self.width = width
         if repeats != None:
             self.addRepeats(repeats)
             self.buildRepeatDatabase()

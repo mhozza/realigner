@@ -15,7 +15,6 @@ def getType(pair):
         return 'X'
     if x != '-' and y != '-':
         return 'M'
-    sys.stderr.write('{0}\n'.format(pair))
     assert(False)
 
 
@@ -80,10 +79,13 @@ def main(input_file, index1, index2, emissionOutput, transitionOutput):
 
 
 if __name__ == '__name__':
-    parser = argparse.ArgumentParser(description='Aggregate statistics from alignment.')
+    parser = argparse.ArgumentParser(
+        description='Aggregate statistics from alignment.')
     parser.add_argument('input', type=str, help='Program input -- alignment')
-    parser.add_argument('index1', type=int, help='First row of alignment to compare')
-    parser.add_argument('index2', type=int, help='First row of alignment to compare')
+    parser.add_argument('index1', type=int,
+                        help='First row of alignment to compare')
+    parser.add_argument('index2', type=int,
+                        help='First row of alignment to compare')
     parser.add_argument('emissionOutput', type=str, help='Output file')
     parser.add_argument('transitionOutput', type=str, help='Output file')
     parsed_arg = parser.parse_args()

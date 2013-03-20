@@ -4,7 +4,8 @@ from hmm.GeneralizedHMM import GeneralizedState
 from hmm.HMM import HMM
 import operator
 from tools.my_rand import rand_generator
-from tools.structtools import recursiveArgMax
+from tools.structtools import recursiveArgMax, structToStr
+from tools.structtools import getStructure
 
 
 class GeneralizedPairState(GeneralizedState):
@@ -81,7 +82,7 @@ class GeneralizedPairHMM(HMM):
         _x_prev = -1000000 
         retTable = list()
         # Position generator zaruci ze nebudem mat problem menenim 
-        # dictionary za jazdy. Problem to vyraba ak sa vyraba novy stav. 
+        # dictionary za jazdy. Problem to vyraba ak sa vyraba novy stav.
         for (_x, _y) in positionGenerator:
             if ignoreFirstRow and _x == 0: #FIXME: ak ignorujem prvy riadok, pokazi sa mi zapamatavanie
                 continue
@@ -206,8 +207,8 @@ class GeneralizedPairHMM(HMM):
         return retTable
     
     
-    def getViterbiTable(self, X, Y, x, y, dx, dy,
-                        memoryPattern = None, positionGenerator = None, 
+    def getViterbiTable(self, X, x, dx, Y, y, dy,
+                        memoryPattern = None, positionGenerator = None,
                         initialRow = None):
         # NOTICE: toto je len skopirovane z forward Table a upravene
         # Toto by malo byt rovnake ako pred tym 
@@ -225,8 +226,9 @@ class GeneralizedPairHMM(HMM):
             defaultdict(
                 lambda *_:defaultdict(
                     lambda *_:defaultdict(
+                        lambda *_:
                         (
-                            self.mathType, 
+                            self.mathType(0.0), 
                             -1
                         )
                     )
@@ -251,11 +253,11 @@ class GeneralizedPairHMM(HMM):
         # Position generator zaruci ze nebudem mat problem menenim 
         # dictionary za jazdy. Problem to vyraba ak sa vyraba novy stav. 
         for (_x, _y) in positionGenerator:
-            if ignoreFirstRow and _x == 0: #FIXME: ak ignorujem prvy riadok, pokazi sa mi zapamatavanie
+            if ignoreFirstRow and _x == 0: 
                 continue
             for stateID in range(len(self.states)):
-                acc_prob =  reduce(operator.add, 
-                                  [value for (_,value) in
+                acc_prob =  reduce(max, 
+                                  [value[0] for (_,value) in
                                       rows[_x][_y][stateID].iteritems()], 
                                   self.mathType(0.0))
                 state = self.states[stateID]
@@ -267,6 +269,7 @@ class GeneralizedPairHMM(HMM):
                             following.durationGenerator(_x, _y):
                         if _x + _sdx > dx or _y + _sdy > dy:
                             continue
+                        #dprob = self.mathType(1.0)
                         rows[_x + _sdx][_y + _sdy][followingID][(_sdx, _sdy)] \
                             = max(
                                   rows[_x + _sdx][_y + _sdy][followingID][(_sdx, _sdy)],
@@ -282,7 +285,7 @@ class GeneralizedPairHMM(HMM):
                                       ),
                                       stateID
                                   ),
-                                  key=lambda x,_: x                                   
+                                  key=lambda x: x[0]                                   
                             ) 
                             
                             
@@ -299,21 +302,35 @@ class GeneralizedPairHMM(HMM):
             retTable.append((x + _x_prev, rows[dx]))   
         
         # Finally, done:-)
-        return retTable
+        ret = [dict() for _ in range(dx + 1)]
+        for i, _x in retTable:
+            ret[i - x] = _x
+        return ret
     
     
     def getViterbiPath(self, table):
-        (_x, _y, stateID, (_sdx, _sdy)), (prob, previousStateID) = \
+        #table[x][y][state][(sdx,sdy)] = (prob, previousStateId)
+        _x = len(table) - 1
+        _y = max([k for k in table[-1]])
+        (stateID, (_sdx, _sdy)), (prob, previousStateId) = \
             recursiveArgMax(
-                table[-1],
-                function=lambda x, y: max(x, y, key=lambda z, _: z)
+                table[_x][_y],
+                selector=lambda x, y: max(x, y, key=lambda z, _: z)
             )
         path = [(stateID, (_x, _y), (_sdx, _sdy), prob)]
-        while stateID > 0:
-            nx, ny = _x - _sdx, _y - _sdy
-            prob, previousStateID = table[nx][ny][previousStateID]['toto neviem'] 
-            stateID, _x, _y, _sdx, _sdy, prob =  table 
+        stateID = previousStateId
+        while stateID >= 0:
+            _x -= _sdx
+            _y -= _sdy
+            print _x, _y, stateID, table[_x][_y][previousStateId]
+            (_sdx, _sdy), (prob, previousStateId) = max(
+                table[_x][_y][previousStateId].iteritems(),
+                key=lambda (_, (prob, __)): prob
+            )
+            path.append((stateID, (_x, _y), (_sdx, _sdy), prob))
+            stateID = previousStateId 
         path.reverse()
+        print path
         return path
             
 
@@ -321,7 +338,7 @@ class GeneralizedPairHMM(HMM):
         table = self.getForwardTable(X, Y, x, y, dx, dy, 
                                      memoryPattern=MemoryPatterns.last(dx),
                                      positionGenerator=positionGenerator)
-        return sum([i * self.states[stateID].getEndProbabilit()
+        return sum([i * self.states[stateID].getEndProbability()
                     for (stateID, i) in table[0][1][dy]]) 
 
 
@@ -347,6 +364,16 @@ class GeneralizedPairHMM(HMM):
                             prob * B[(_x, _y, state)]
         return retTable
     
+    
+    def probabilityResult(self, X, x, dx, Y, y, dy, ft, bt,
+                             positionGenerator):
+        # Compute probability of sequence
+        ret = self.mathType(0.0)
+        for _, V in ft[dx][dy].iteritems():
+            for _, prob in V.iteritems():
+                ret += prob
+        return ret
+        
     
     def EmissionCountResult(self, X, x, dx, Y, y, dy, ft, bt,
                             positionGenerator):
@@ -393,7 +420,6 @@ class GeneralizedPairHMM(HMM):
         # Potom chcem taku, ktora si bude doratavat chybajuce
         # Potom pridat switch, ktory mi umozni robit optimalizacie.
         # Ale potom bude treba vediet, ci ist od predu, alebo od zadu
-        
         # Fetch tables if they are not provided
         if positionGenerator != None:
             positionGenerator = list(positionGenerator)
@@ -403,7 +429,6 @@ class GeneralizedPairHMM(HMM):
         if backwardTable == None:
             backwardTable = self.getBackwardTable(X, x, dx, Y, y, dy,
                 positionGenerator=positionGenerator)
-
         # Sort tables by first element (just in case)    
         sorted(forwardTable,key=lambda (x,_) : x)
         sorted(backwardTable,key=lambda (x,_) : x)
@@ -417,26 +442,28 @@ class GeneralizedPairHMM(HMM):
         # Flatten backward table
         bt = [dict() for _ in range(dx + 1)]
         for (i, B) in backwardTable:
+            BB = defaultdict(lambda *x: defaultdict(self.mathType))
             for _y in B:
                 for state in B[_y]:
                     # Bug -- razsej by bolo lepsie vymazat povodny zaznam a 
                     # spravit to v inej tabulke. Tak ci tak 
-                    B[_y][state] = reduce(operator.add, 
+                    BB[_y][state] = reduce(operator.add, 
                                           [value for (_,value) in
                                            B[_y][state].iteritems()], 
                                           self.mathType(0.0))
-            bt[i] = B
-        
+            bt[i] = BB
 
-        return [table(self, X, x, dx, Y, y, dy, ft, B) for table in tables]
+        return [table(X, x, dx, Y, y, dy, ft, bt, positionGenerator) 
+                for table in tables]
 
 
     def getPosteriorTable(self, X, x, dx, Y, y, dy,
                  forwardTable = None, backwardTable = None,
                  positionGenerator = None):
-        r = self.getTable(X, x, dx, Y, y, dy, [self.posteriorTableResult], 
+        r = self.getTable(X, x, dx, Y, y, dy, [self.posteriorTableResult,
+                                               self.probabilityResult], 
                           forwardTable, backwardTable, positionGenerator)
-        return r[0]
+        return tuple(r)
     
 
     def getBaumWelchCounts(self, X, x, dx, Y, y, dy,
