@@ -64,23 +64,25 @@ class ViterbiRealigner(Realigner):
         arguments = 0
         
         # Add repeats
-        for (rt, ch) in [('trf', 'R'), ('original_repeats', 'r')]:
-            if rt in self.annotations:
-                self.model.states[
-                    self.model.statenameToID['Repeat']
-                ].addRepeatGenerator(
-                    RepeatGenerator(self.annotations[rt][self.X_name],
-                                    self.repeat_width),
-                    RepeatGenerator(self.annotations[rt][self.Y_name],
-                                    self.repeat_width),
-                )
-                self.drawer.add_repeat_finder_annotation(
-                    'X', ch, self.annotations[rt][self.X_name], 
-                    (255, 0, 0, 255))
-                self.drawer.add_repeat_finder_annotation(
-                    'Y', ch, self.annotations[rt][self.Y_name],
-                    (255, 0, 0, 255))
-                
+	if 'Repeat' in self.model.states:
+	    RX = RepeatGenerator(None, self.repeat_width)
+	    RY = RepeatGenerator(None, self.repeat_width)
+	    for (rt, ch) in [('trf', 'R'), ('original_repeats', 'r')]:
+		if rt in self.annotations:
+		    RX.addRepeats(self.annotations[rt][self.X_name])
+		    RY.addRepeats(self.annotations[rt][self.Y_name])
+		    self.drawer.add_repeat_finder_annotation(
+			'X', ch, self.annotations[rt][self.X_name], 
+			(255, 0, 0, 255))
+		    self.drawer.add_repeat_finder_annotation(
+			'Y', ch, self.annotations[rt][self.Y_name],
+			(255, 0, 0, 255))
+	    RX.buildRepeatDatabase()
+	    RY.buildRepeatDatabase()
+	    self.model.states[
+		self.model.statenameToID['Repeat']
+	    ].addRepeatGenerator(RX, RY)
+		    
         if 'viterbi' not in self.io_files['input']:
             self.table = self.model.getViterbiTable(
                 self.X, 0, len(self.X),
@@ -109,7 +111,7 @@ class ViterbiRealigner(Realigner):
         return data[arguments:]
 
  
-    def realing(self, x, dx, y, dy):
+    def realign(self, x, dx, y, dy):
         if 'viterbi_path' not in self.io_files['input']:
             path = self.model.getViterbiPath(self.table)
             if 'viterbi_path' in self.io_files['output']:
@@ -132,8 +134,8 @@ class ViterbiRealigner(Realigner):
         A = ""
             
         for (state, (_x, _y), (_dx, _dy), _) in path:
-            X += self.X[_x - _dx:_x] + ('-' * (_dx - max(_dx, _dy)))
-            Y += self.Y[_y - _dy:_y] + ('-' * (_dy - max(_dx, _dy)))
+            X += self.X[_x - _dx:_x] + ('-' * (max(_dx, _dy) - _dx))
+            Y += self.Y[_y - _dy:_y] + ('-' * (max(_dx, _dy) - _dy))
             A += self.model.states[state].getChar() * max(_dx, _dy)
             
         return [(self.X_name, X), ("viterbi annotation of " + self.X_name + 

@@ -6,7 +6,9 @@ import operator
 from tools.my_rand import rand_generator
 from tools.structtools import recursiveArgMax, structToStr
 from tools.structtools import getStructure
-
+from alignment.ViterbiRealigner import jsonize
+from tools.file_wrapper import Open
+import json
 
 class GeneralizedPairState(GeneralizedState):
         
@@ -432,6 +434,11 @@ class GeneralizedPairHMM(HMM):
         # Sort tables by first element (just in case)    
         sorted(forwardTable,key=lambda (x,_) : x)
         sorted(backwardTable,key=lambda (x,_) : x)
+
+        with Open('forward.js', 'w') as f:
+            json.dump(jsonize(forwardTable), f, indent=4, sort_keys=True)
+        with Open('backward.js', 'w') as f:
+            json.dump(jsonize(backwardTable), f, indent=4, sort_keys=True)
         
         # Convert forward table into list
         ft = [dict() for _ in range(dx + 1)]

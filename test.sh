@@ -65,7 +65,7 @@ case 'nosample' in
 		--beam_width 30 \
 		--repeat_width 0 \
 		--sequence_regexp sequence1 sequence2 \
-		--tracks original_repeats \
+		--tracks original_repeats  \
 		--intermediate_output_files 'posterior:table.js,viterbi:viterbi.js,viterbi_path:viterbi_path.js' #\
 		#--intermediate_input_files 'posterior:table.js,viterbi:viterbi.js,viterbi_path:viterbi_path.js' 
 				

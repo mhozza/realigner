@@ -3,6 +3,10 @@ from hmm.GeneralizedHMM import GeneralizedState, GeneralizedHMM
 import math
 from tools.Exceptions import ParseException
 from collections import defaultdict
+from tools.file_wrapper import Open
+import json
+from algorithm.LogNum import LogNum
+import hashlib
 
 def JCModelDist(c1, c2, time):
     if c1 == c2:
@@ -82,14 +86,14 @@ def createProfileHMM(mathType, consensus, time, backgroundProb, trans):
             "name": "m" + str(i),
             "startprob": 0.0,
             "emission": JCModel(char, time, "ACGT"),
-            "endprob": 0.0
+            "endprob": 1.0
         })
         insertState.load({
             "__name__": "State",
             "name": "i" + str(i),
             "startprob": 0.0,
             "emission": backgroundProb,
-            "endprob": 0.0
+            "endprob": 1.0
         })
         deleteState1.load({
             "__name__": "GeneralizedState",
@@ -158,7 +162,7 @@ def createProfileHMM(mathType, consensus, time, backgroundProb, trans):
         "name": "i" + str(length),
         "startprob": 0.0,
         "emission": backgroundProb,
-        "endprob": 0.0
+        "endprob": 1.0
     })
     states.append(insertState)
     initState = GeneralizedState(mathType)
@@ -178,4 +182,14 @@ def createProfileHMM(mathType, consensus, time, backgroundProb, trans):
         "transitions": transitions,
     })
     hmm.reorderStatesTopologically()
+    nm = consensus
+    if len(nm) > 20:
+        nm = hashlib.md5(consensus).hexdigest()
+    with Open('submodels/{0}.js'.format(nm), 'w') as f:
+        def LogNumToJson(obj):
+            if isinstance(obj, LogNum):
+                return '{0} {1}'.format(str(float(obj)),str(obj.value))
+            raise TypeError
+        json.dump(hmm.toJSON(), f, indent=4, sort_keys=True, 
+                  default=LogNumToJson)
     return hmm

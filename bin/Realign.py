@@ -77,6 +77,7 @@ def main(filename_subst=None):
     parser.add_argument('--intermediate_output_files', help='Comma separated' + 
                         'list of key value pairs: "key:value". This files ' + 
                         'used to skip store precomputed data in algorithms.' )
+    parser.add_argument('--draw', default='', type=str, help='output file for image')
     parsed_arg = parser.parse_args()
     mathType = getMathType(parsed_arg.mathType)
     annotations = dict()
@@ -256,8 +257,9 @@ def main(filename_subst=None):
                     1,
                     AlignmentPositionGenerator(Alignment([aln[0], aln[2]]))
                 )
-                drawer.draw('output.png', 2000, 2000)
-                perf.msg("Image was drawn in {time} seconds.")
+		if len(parsed_arg.draw) > 0:
+                    drawer.draw(parsed_arg.draw, 2000, 2000)
+		    perf.msg("Image was drawn in {time} seconds.")
                 
                 # Save output_file
                 Fasta.saveAlignmentPiece(aln, output_file_object)

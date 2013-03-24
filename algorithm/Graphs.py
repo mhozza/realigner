@@ -9,19 +9,25 @@ def toposort(graph):
     dictionaries (second can be list), where vertices are used as keys. 
     """
     states = [x for x in graph]
-    visited = defaultdict(bool)
-    for state in states:
-        visited[state] = False
     out_order = list()
-    def __toposort(v):
-        if visited[v]:
-            return
-        visited[v] = True
-        if v in graph:
-            for u in graph[v]:
-                __toposort(u)
-        out_order.append(v)
-    map(__toposort, states)
+    stack = []
+    visited = defaultdict(lambda *_: False)
+    for v in states:
+        stack.append((v, 0))
+        while len(stack) > 0:
+            v, s = stack.pop()
+            if s == 0:
+                if visited[v]:
+                    continue
+                s = graph[v].__iter__()
+            visited[v] = True
+            try:
+                u = s.next()
+                stack.append((v, s))
+                stack.append((u, 0))
+                continue
+            except StopIteration:
+                out_order.append(v)
     return out_order
 
 def orderToDict(permutation):
