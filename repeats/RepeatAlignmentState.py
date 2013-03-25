@@ -127,9 +127,22 @@ class PairRepeatState(State):
 
 
     def __durationGenerator(self, X, Y):
+	# TODO: fix distribution
+	for xlen, xcon in X:
+            xrc = float(xlen) / len(xcon)
+            xp = self.repeatLengthDistribution[xrc] * \
+                self.consensusDistribution[xcon]
+	    self.consensus = xcon
+	    yield (xlen, 0), xp
+	for ylen, ycon in Y:
+            yrc = float(ylen) / len(ycon)
+	    yp = self.repeatLengthDistribution[yrc] * \
+		self.consensusDistribution[ycon]
+	    self.consensus = ycon
+	    yield (0, ylen), yp
         for (xlen, xcon) in X:
             xrc = float(xlen) / len(xcon)
-            xp =self.repeatLengthDistribution[xrc] * \
+            xp = self.repeatLengthDistribution[xrc] * \
                 self.consensusDistribution[xcon]
             yp = self.repeatLengthDistribution[xrc]
             for (ylen, ycon) in Y:
@@ -144,7 +157,8 @@ class PairRepeatState(State):
 
 
     def emission(self, X, x, dx, Y, y, dy):
-        # we expect that we have consensus from last generated duration  
+        # we expect that we have consensus from last generated duration 
+	# TODO: fix distribution
         keyX = (self.consensus, x, dx)
         keyY = (self.consensus, y, dy)
         hmm = None
@@ -152,14 +166,20 @@ class PairRepeatState(State):
             valX = self.memoizeX[keyX]
         else:
             hmm = self.factory.getHMM(self.consensus)
-            valX = hmm.getProbability(X, x, dx)
+	    if dx > 0:
+                valX = hmm.getProbability(X, x, dx)
+	    else:
+		valX = self.mathType(1.0)
             self.memoizeX[keyX] = valX
         if keyY in self.memoizeY:
             valY = self.memoizeY[keyY]
         else:
             if hmm == None:
                 hmm = self.factory.getHMM(self.consensus)
-            valY = hmm.getProbability(Y, y, dy)
+            if dy > 0:
+	        valY = hmm.getProbability(Y, y, dy)
+	    else:
+		valY = self.mathType(1.0)
             self.memoizeY[keyY] = valY
         return valX * valY
 
