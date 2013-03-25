@@ -456,18 +456,9 @@ class GeneralizedPairHMM(HMM):
         for (i, _x) in forwardTable:
             ft[i - x] = _x
             
-        # Flatten backward table
+        # Convert backward table into list
         bt = [dict() for _ in range(dx + 1)]
         for (i, B) in backwardTable:
-            #BB = defaultdict(lambda *x: defaultdict(self.mathType))
-            #for _y in B:
-            #    for state in B[_y]:
-            #        # Bug -- razsej by bolo lepsie vymazat povodny zaznam a 
-            #        # spravit to v inej tabulke. Tak ci tak 
-            #        BB[_y][state] = reduce(operator.add, 
-            #                              [value for (_,value) in
-            #                               B[_y][state].iteritems()], 
-            #                              self.mathType(0.0))
             bt[i] = B
 	perf.msg('Backward table was flattened in {time} seconds.')
 	perf.replace()
