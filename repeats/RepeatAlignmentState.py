@@ -108,46 +108,28 @@ class PairRepeatState(State):
         key = (_x, _y)
         if key in self.dgmemoize:
             return self.dgmemoize[key]
-        val = list(self._durationGenerator(_x, _y))
-        self.dgmemoize[key] = val
-        return val
-
-
-    def _durationGenerator(self, _x, _y):
         X = list(self.repeatGeneratorX.getHints(_x))
         Y = list(self.repeatGeneratorY.getHints(_y))
-        for (xlen, xcon) in X:
-            xrc = float(xlen) / len(xcon)
-            xp =self.repeatLengthDistribution[xrc] * \
-                self.consensusDistribution[xcon]
-            yp = self.repeatLengthDistribution[xrc]
-            for (ylen, ycon) in Y:
-                yrc = float(ylen) / len(ycon)
-                xp *= self.repeatLengthDistribution[yrc]
-                yp *= self.repeatLengthDistribution[yrc] * \
-                    self.consensusDistribution[ycon]
-                self.consensus = xcon
-                print 'duration', xcon, xlen, xrc, xp, ycon, ylen, yrc, yp
-                yield((xlen, ylen), xp)
-                self.consensus = ycon
-                yield((xlen, ylen), yp)
+        val = list(self.__durationGenerator(X, Y))
+        self.dgmemoize[key] = val
+        return val
 
 
     def reverseDurationGenerator(self, _x, _y):
         key = (_x, _y)
         if key in self.rdgmemoize:
             return self.rdgmemoize[key]
-        val = list(self._reverseDurationGenerator(_x, _y))
+	X = list(self.repeatGeneratorX.getReverseHints(_x))
+        Y = list(self.repeatGeneratorY.getReverseHints(_y))
+        val = list(self.__durationGenerator(X, Y))
         self.rdgmemoize[key] = val
         return val
 
 
-    def _reverseDurationGenerator(self, _x, _y):
-        X = list(self.repeatGeneratorX.getReverseHints(_x))
-        Y = list(self.repeatGeneratorY.getReverseHints(_y))
+    def __durationGenerator(self, X, Y):
         for (xlen, xcon) in X:
             xrc = float(xlen) / len(xcon)
-            xp = self.repeatLengthDistribution[xrc] * \
+            xp =self.repeatLengthDistribution[xrc] * \
                 self.consensusDistribution[xcon]
             yp = self.repeatLengthDistribution[xrc]
             for (ylen, ycon) in Y:
