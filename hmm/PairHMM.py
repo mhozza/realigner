@@ -149,8 +149,7 @@ class GeneralizedPairHMM(HMM):
         
         # Initialize table
         rows = [defaultdict(
-                lambda *_:defaultdict(
-                lambda *_:defaultdict(self.mathType))) for _ in range(dx + 1)]
+                lambda *_:defaultdict(self.mathType)) for _ in range(dx + 1)]
         
         # Initialize first row
         ignoreFirstRow = False
@@ -159,7 +158,7 @@ class GeneralizedPairHMM(HMM):
             ignoreFirstRow = True
         else:
             for state in self.states:
-                rows[dx][dy][state.getStateID()] [(0, 0)] = \
+                rows[dx][dy][state.getStateID()] = \
                     state.getEndProbability()
         
         # Main algorithm
@@ -170,10 +169,7 @@ class GeneralizedPairHMM(HMM):
             if ignoreFirstRow and _x == dx:
                 continue
             for stateID in states:
-                acc_prob = reduce(operator.add, 
-                                  [value for (_,value) in
-                                      rows[_x][_y][stateID].iteritems()], 
-                                  self.mathType(0.0))
+                acc_prob = rows[_x][_y][stateID]
                 state = self.states[stateID]
                 if acc_prob <= self.mathType(0.0):
                     continue
@@ -183,8 +179,8 @@ class GeneralizedPairHMM(HMM):
                             previous.reverseDurationGenerator(_x, _y):
                         if _x - _sdx < 0 or _y - _sdy < 0:
                             continue
-                        rows[_x - _sdx][_y - _sdy][previousID][(_sdx, _sdy)] \
-                            += acc_prob * transprob * dprob * \
+                        rows[_x - _sdx][_y - _sdy][previousID] += (
+			    acc_prob * transprob * dprob * 
                             previous.emission(
                                 X,
                                 x + _x - _sdx,
@@ -193,6 +189,7 @@ class GeneralizedPairHMM(HMM):
                                 x + _y - _sdy,
                                 _sdy
                             )
+			)
             
             # Remember last row if necessary
             if _x_prev != _x:
@@ -460,16 +457,16 @@ class GeneralizedPairHMM(HMM):
         # Flatten backward table
         bt = [dict() for _ in range(dx + 1)]
         for (i, B) in backwardTable:
-            BB = defaultdict(lambda *x: defaultdict(self.mathType))
-            for _y in B:
-                for state in B[_y]:
-                    # Bug -- razsej by bolo lepsie vymazat povodny zaznam a 
-                    # spravit to v inej tabulke. Tak ci tak 
-                    BB[_y][state] = reduce(operator.add, 
-                                          [value for (_,value) in
-                                           B[_y][state].iteritems()], 
-                                          self.mathType(0.0))
-            bt[i] = BB
+            #BB = defaultdict(lambda *x: defaultdict(self.mathType))
+            #for _y in B:
+            #    for state in B[_y]:
+            #        # Bug -- razsej by bolo lepsie vymazat povodny zaznam a 
+            #        # spravit to v inej tabulke. Tak ci tak 
+            #        BB[_y][state] = reduce(operator.add, 
+            #                              [value for (_,value) in
+            #                               B[_y][state].iteritems()], 
+            #                              self.mathType(0.0))
+            bt[i] = B
 	perf.msg('Backward table was flattened in {time} seconds.')
 	perf.replace()
 
