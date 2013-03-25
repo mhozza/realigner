@@ -68,8 +68,9 @@ class GeneralizedPairHMM(HMM):
         
         # Initialize table
         rows = [defaultdict(
-                lambda *_:defaultdict(
-                lambda *_:defaultdict(self.mathType))) for _ in range(dx + 1)]
+                lambda *_: [defaultdict(self.mathType)
+			    for _ in range(len(self.states))]) 
+		for _ in range(dx + 1)]
         
         # Initialize first row
         ignoreFirstRow = False
@@ -149,7 +150,9 @@ class GeneralizedPairHMM(HMM):
         
         # Initialize table
         rows = [defaultdict(
-                lambda *_:defaultdict(self.mathType)) for _ in range(dx + 1)]
+                lambda *_: [self.mathType(0.0) 
+			    for _ in range(len(self.states))]) 
+		for _ in range(dx + 1)]
         
         # Initialize first row
         ignoreFirstRow = False
@@ -224,15 +227,14 @@ class GeneralizedPairHMM(HMM):
         # Initialize table
         rows = [
             defaultdict(
-                lambda *_:defaultdict(
-                    lambda *_:defaultdict(
+                lambda *_: [defaultdict(
                         lambda *_:
                         (
                             self.mathType(0.0), 
                             -1
                         )
-                    )
-                )
+                    ) for _ in range(len(self.states))
+                ]
             ) 
             for _ in range(dx + 1)
         ]
@@ -322,7 +324,6 @@ class GeneralizedPairHMM(HMM):
         while stateID >= 0:
             _x -= _sdx
             _y -= _sdy
-            print _x, _y, stateID, table[_x][_y][previousStateId]
             (_sdx, _sdy), (prob, previousStateId) = max(
                 table[_x][_y][previousStateId].iteritems(),
                 key=lambda (_, (prob, __)): prob
@@ -330,7 +331,6 @@ class GeneralizedPairHMM(HMM):
             path.append((stateID, (_x, _y), (_sdx, _sdy), prob))
             stateID = previousStateId 
         path.reverse()
-        print path
         return path
             
 
@@ -338,8 +338,10 @@ class GeneralizedPairHMM(HMM):
         table = self.getForwardTable(X, Y, x, y, dx, dy, 
                                      memoryPattern=MemoryPatterns.last(dx),
                                      positionGenerator=positionGenerator)
-        return sum([i * self.states[stateID].getEndProbability()
-                    for (stateID, i) in table[0][1][dy]]) 
+	r = self.getTable(X, x, dx, Y, y, dy, [self.probabilityResult], 
+                          forwardTable, backwardTable, positionGenerator)
+	return r[0]
+
 
 
     def posteriorTableResult(self, X, x, dx, Y, y, dy, ft, bt,
@@ -358,8 +360,8 @@ class GeneralizedPairHMM(HMM):
                     for _ in range(dx + 1)]
         for _x in range(dx + 1):
             for (_y, V) in ft[_x].iteritems():
-                for (state, VV) in V.iteritems():
-                    for ((_sdx, _sdy), prob) in VV.iteritems():
+                for state in range(len(V)):
+                    for ((_sdx, _sdy), prob) in V[state].iteritems():
                         retTable[_x][_y][(state, _sdx, _sdy)] = \
                             prob * B[(_x, _y, state)]
         return retTable
@@ -369,7 +371,7 @@ class GeneralizedPairHMM(HMM):
                              positionGenerator):
         # Compute probability of sequence
         ret = self.mathType(0.0)
-        for _, V in ft[dx][dy].iteritems():
+        for V in ft[dx][dy]:
             for _, prob in V.iteritems():
                 ret += prob
         return ret
@@ -390,8 +392,8 @@ class GeneralizedPairHMM(HMM):
         # retTable[state][emission] = probability
         for _x in range(dx + 1):
             for (_y, V) in ft[_x].iteritems():
-                for (state, VV) in V.iteritems():
-                    for ((_sdx, _sdy), prob) in VV.iteritems():
+                for state in range(len(V)):
+                    for ((_sdx, _sdy), prob) in V[state].iteritems():
                         retTable[state][(X[x + _x - _sdx:x + _x], 
                                          Y[y + _y - _sdy:y + _y])] \
                             += prob * B[(_x, _y, state)]
@@ -403,8 +405,8 @@ class GeneralizedPairHMM(HMM):
         retTable = defaultdict(lambda *_:defaultdict(self.mathType))
         for _x in range(dx + 1):
             for (_y, V) in ft[_x].iteritems():
-                for (state, VV) in V.iteritems():
-                    for ((_sdx, _sdy), prob) in VV.iteritems():
+                for state in range(len(V)):
+                    for ((_sdx, _sdy), prob) in V[state].iteritems():
                         for stateID in range(len(self.states)):
                             state = self.states[stateID]
                             for (followingID, tprob) in state.followingIDs():
