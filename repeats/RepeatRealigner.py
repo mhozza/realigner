@@ -134,7 +134,6 @@ class RepeatRealigner(Realigner):
 
     
     #TODO: vymysli datovy model pre rozne tracky, refaktoruj
-    #TODO: mio: refaktoruj to pre tento datovy model -- ty ho potrebujes
     #TODO: sklearn ma nejake HMMka v sebe. Mozno by sme chceli porozmyslat ci 
     #      nechceme byt kompatibilny s nimi   
     def realign(self, x, dx, y, dy, ignore=set(), positionGenerator=None):
