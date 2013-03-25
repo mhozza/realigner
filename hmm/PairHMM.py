@@ -8,6 +8,7 @@ from tools.structtools import recursiveArgMax, structToStr
 from tools.structtools import getStructure
 from alignment.ViterbiRealigner import jsonize
 from tools.file_wrapper import Open
+from tools import perf
 import json
 
 class GeneralizedPairState(GeneralizedState):
@@ -425,21 +426,31 @@ class GeneralizedPairHMM(HMM):
         # Fetch tables if they are not provided
         if positionGenerator != None:
             positionGenerator = list(positionGenerator)
+	perf.push()
         if forwardTable == None:
             forwardTable = self.getForwardTable(X, x, dx, Y, y, dy,
                 positionGenerator=positionGenerator)
+	perf.msg('Forward table was computed in {time} seconds.')
+	perf.replace()
         if backwardTable == None:
             backwardTable = self.getBackwardTable(X, x, dx, Y, y, dy,
                 positionGenerator=positionGenerator)
+	perf.msg('Backward table was computed in {time} seconds.')
+	perf.replace()
         # Sort tables by first element (just in case)    
         sorted(forwardTable,key=lambda (x,_) : x)
         sorted(backwardTable,key=lambda (x,_) : x)
+	perf.msg('Tables were sorted in {time} seconds.')
+	perf.replace()
 
         with Open('forward.js', 'w') as f:
             json.dump(jsonize(forwardTable), f, indent=4, sort_keys=True)
         with Open('backward.js', 'w') as f:
             json.dump(jsonize(backwardTable), f, indent=4, sort_keys=True)
         
+	perf.msg('Tables were saved in {time} seconds.')
+	perf.replace()
+
         # Convert forward table into list
         ft = [dict() for _ in range(dx + 1)]
         
@@ -459,9 +470,14 @@ class GeneralizedPairHMM(HMM):
                                            B[_y][state].iteritems()], 
                                           self.mathType(0.0))
             bt[i] = BB
+	perf.msg('Backward table was flattened in {time} seconds.')
+	perf.replace()
 
-        return [table(X, x, dx, Y, y, dy, ft, bt, positionGenerator) 
+        ret = [table(X, x, dx, Y, y, dy, ft, bt, positionGenerator) 
                 for table in tables]
+	perf.msg('Posterior table was computed in {time} seconds.')
+	perf.pop()
+	return ret
 
 
     def getPosteriorTable(self, X, x, dx, Y, y, dy,
