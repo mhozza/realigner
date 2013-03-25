@@ -1,20 +1,34 @@
 import bisect
+import copy
+
+
+def expand_repeat(repeat, count):
+    clen = len(repeat.consensus)
+    for s in range(-count, count + 1):
+	for e in range(-count, count + 1):
+	    nr = copy.copy(repeat)
+	    nr.start += clen * s
+	    nr.end += clen * e
+	    if nr.start < nr.end:
+		yield nr
 
 
 class RepeatGenerator:
     
-    def __init__(self, repeats=None, width=0):
+    def __init__(self, repeats=None, width=0, cons_count=1):
         self.repeats = []
         self.vals = []
         self.rrepeats = []
         self.rvals = []
         self.width = width
+	self.cons_count = cons_count
         if repeats != None:
             self.addRepeats(repeats)
             self.buildRepeatDatabase()
-        
+
     def addRepeats(self, repeats):
-        self.repeats.extend(repeats)
+	for repeat in repeats:
+	    self.repeats.extend(expand_repeat(repeat, self.cons_count))
         
     def deleteRepeats(self):
         self.repeats = []
