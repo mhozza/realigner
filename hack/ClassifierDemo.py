@@ -8,10 +8,7 @@ import sys
 from numpy import array
 from collections import defaultdict
 from copy import deepcopy
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.datasets import make_blobs
-from sklearn.cross_validation import cross_val_score
 
 SEQ_COUNT = 2
 SEQ_DIMENSION = 2
