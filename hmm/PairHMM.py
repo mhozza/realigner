@@ -46,6 +46,56 @@ class GeneralizedPairState(GeneralizedState):
         self._sampleEmission = rand_generator(em)
          
 
+class PosteriorTableProcessor:
+    
+    def __init__(self, dx, model):
+	self.retTable = [defaultdict(lambda *_:defaultdict(model.mathType))
+                    for _ in range(dx + 1)]
+	self.model = model
+
+    def processRow(self, X, x, dx, Y, y, dy, i, row, bt, positionGenerator):
+	B = defaultdict(self.model.mathType)
+#	print positionGenerator
+	for (_x, _y) in positionGenerator:
+	    for stateID in range(len(self.model.states)):
+		state = self.model.states[stateID]
+		acc = self.model.mathType(0.0)
+		for (followingID, prob) in state.followingIDs():
+#		    print _x, _y, followingID
+#		    print len(bt), dx, i, x
+#		    print len(bt[_x])
+#		    print len(bt[_x][_y])
+#		    print bt[_x][_y][followingID]
+		    acc += prob * bt[_x][_y][followingID]
+		B[(_y, stateID)] = acc
+	for (_y, V) in row.iteritems():
+	    for state in range(len(V)):
+                for ((_sdx, _sdy), prob) in V[state].iteritems():
+                    self.retTable[i][_y][(state, _sdx, _sdy)] = \
+                        prob * B[(_y, state)]
+	del B
+
+    def getData(self):
+	return self.retTable
+
+   
+class ProbabilityProcessor:
+
+    def __init__(self, dx, model):
+	self.ret = model.mathType(0.0)
+	pass
+
+    def processRow(self, X, x, dx, Y, y, dy, i, row, bt, positionGenerator):
+	if i != dx:
+	    return;
+	for V in row[dy]:
+	    for _, prob in V.iteritems():
+		self.ret += prob
+
+    def getData(self):
+	return self.ret
+
+
 class GeneralizedPairHMM(HMM):
     
     def setAnnotations(self):
@@ -127,6 +177,78 @@ class GeneralizedPairHMM(HMM):
             retTable.append((x + _x_prev, rows[dx]))   
         
         return retTable
+
+    def getForwardTableGenerator(self, X, x, dx, Y, y, dy,
+        memoryPattern = None, positionGenerator = None, initialRow = None):
+        # Default position generator
+        if positionGenerator == None:
+            positionGenerator = \
+                ((i,j) for i in range(dx + 1) for j in range(dy + 1))
+        
+        # Default memory pattern (everything)
+        if memoryPattern == None:
+            memoryPattern = MemoryPatterns.every(dx + 1)
+        
+        # Initialize table
+        rows = [defaultdict(
+                lambda *_: [defaultdict(self.mathType)
+			    for _ in range(len(self.states))]) 
+		for _ in range(dx + 1)]
+        
+        # Initialize first row
+        ignoreFirstRow = False
+        if initialRow != None:
+            rows[0] = initialRow
+            ignoreFirstRow = True
+        else:
+            for state in self.states:
+                rows[0][0][state.getStateID()][(0, 0)] = \
+                    state.getStartProbability()
+        
+        # Main algorithm
+        _x_prev = -1000000 
+        retTable = list()
+        # Position generator zaruci ze nebudem mat problem menenim 
+        # dictionary za jazdy. Problem to vyraba ak sa vyraba novy stav.
+        for (_x, _y) in positionGenerator:
+            if ignoreFirstRow and _x == 0: #FIXME: ak ignorujem prvy riadok, pokazi sa mi zapamatavanie
+                continue
+            for stateID in range(len(self.states)):
+                acc_prob =  reduce(operator.add, 
+                                  [value for (_,value) in
+                                      rows[_x][_y][stateID].iteritems()], 
+                                  self.mathType(0.0))
+                state = self.states[stateID]
+                if acc_prob <= self.mathType(0.0):
+                    continue
+                for (followingID, transprob) in state.followingIDs():
+                    following = self.states[followingID]
+                    for ((_sdx, _sdy), dprob) in \
+                            following.durationGenerator(_x, _y):
+                        if _x + _sdx > dx or _y + _sdy > dy:
+                            continue
+                        rows[_x + _sdx][_y + _sdy][followingID][(_sdx, _sdy)] \
+                            += acc_prob * transprob * dprob * \
+                            following.emission(
+                                X, 
+                                x + _x,
+                                _sdx,
+                                Y, 
+                                y + _y, 
+                                _sdy
+                            )
+            # If rows were changed, remember it
+            if _x_prev != _x:
+                if _x_prev >= 0 and _x_prev <= dx:
+                    if memoryPattern.next():
+                        yield x + _x_prev, rows[_x_prev]
+                    rows[_x_prev] = list()
+            _x_prev = _x
+        
+        # Remember last row if necessary
+        if memoryPattern.next():
+            yield x + _x_prev, rows[dx]
+
     
     
     # Basically copy of the getForwardTable. Might share bugs
@@ -427,7 +549,7 @@ class GeneralizedPairHMM(HMM):
             positionGenerator = list(positionGenerator)
 	perf.push()
         if forwardTable == None:
-            forwardTable = self.getForwardTable(X, x, dx, Y, y, dy,
+            forwardTable = self.getForwardTableGenerator(X, x, dx, Y, y, dy,
                 positionGenerator=positionGenerator)
 	perf.msg('Forward table was computed in {time} seconds.')
 	perf.replace()
@@ -437,24 +559,24 @@ class GeneralizedPairHMM(HMM):
 	perf.msg('Backward table was computed in {time} seconds.')
 	perf.replace()
         # Sort tables by first element (just in case)    
-        sorted(forwardTable,key=lambda (x,_) : x)
+        #sorted(forwardTable,key=lambda (x,_) : x)
         sorted(backwardTable,key=lambda (x,_) : x)
 	perf.msg('Tables were sorted in {time} seconds.')
 	perf.replace()
 
-        with Open('forward.js', 'w') as f:
-            json.dump(jsonize(forwardTable), f, indent=4, sort_keys=True)
-        with Open('backward.js', 'w') as f:
-            json.dump(jsonize(backwardTable), f, indent=4, sort_keys=True)
+        #with Open('forward.js', 'w') as f:
+        #    json.dump(jsonize(forwardTable), f, indent=4, sort_keys=True)
+        #with Open('backward.js', 'w') as f:
+        #    json.dump(jsonize(backwardTable), f, indent=4, sort_keys=True)
         
 	perf.msg('Tables were saved in {time} seconds.')
 	perf.replace()
 
         # Convert forward table into list
-        ft = [dict() for _ in range(dx + 1)]
+        #ft = [dict() for _ in range(dx + 1)]
         
-        for (i, _x) in forwardTable:
-            ft[i - x] = _x
+        #for (i, _x) in forwardTable:
+        #    ft[i - x] = _x
             
         # Convert backward table into list
         bt = [dict() for _ in range(dx + 1)]
@@ -463,8 +585,23 @@ class GeneralizedPairHMM(HMM):
 	perf.msg('Backward table was flattened in {time} seconds.')
 	perf.replace()
 
-        ret = [table(X, x, dx, Y, y, dy, ft, bt, positionGenerator) 
-                for table in tables]
+	States = [table(dx, self) for table in tables]
+	index = 0
+	for i, row in forwardTable:
+	    #slice position generator
+	    pg = []
+	    while index < len(positionGenerator) and positionGenerator[index][0] < i:
+		index += 1
+	    start = index
+	    while index < len(positionGenerator) and positionGenerator[index][0] <= i:
+		index += 1
+
+	    for table in States:
+		table.processRow(X, x, dx, Y, y, dy, i, row, bt, positionGenerator[start:index])
+	ret = [table.getData() for table in States]
+
+#        ret = [table(X, x, dx, Y, y, dy, ft, bt, positionGenerator) 
+#                for table in tables]
 	perf.msg('Posterior table was computed in {time} seconds.')
 	perf.pop()
 	return ret
@@ -473,8 +610,8 @@ class GeneralizedPairHMM(HMM):
     def getPosteriorTable(self, X, x, dx, Y, y, dy,
                  forwardTable = None, backwardTable = None,
                  positionGenerator = None):
-        r = self.getTable(X, x, dx, Y, y, dy, [self.posteriorTableResult,
-                                               self.probabilityResult], 
+        r = self.getTable(X, x, dx, Y, y, dy, [PosteriorTableProcessor,
+                                               ProbabilityProcessor], 
                           forwardTable, backwardTable, positionGenerator)
         return tuple(r)
     
