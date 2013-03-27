@@ -5,10 +5,9 @@ Created on Mar 22, 2013
 '''
 
 import sys
-from numpy import array
-from collections import defaultdict
+from numpy import array, mean
 from copy import deepcopy
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier
 
 SEQ_COUNT = 2
 SEQ_DIMENSION = 2
@@ -86,24 +85,22 @@ def prepare_data():
 
     return (array(train_data),array(target_data))
 
-
-def printTwo(x,y):
-    print(x,y, abs(x-y))
-
+def printMulti(*i):    
+    print(i)
 
 
 X, y = prepare_data()
 
-# clf = RandomForestClassifier(n_estimators=10, max_depth=None, min_samples_split=1, random_state=0)
-clf = RandomForestRegressor(n_estimators=111, min_samples_split=1, random_state=1)
+clf = RandomForestClassifier(n_estimators=10, max_depth=None, min_samples_split=1, random_state=0)
 clf.fit(X, y)
-
 s,e = (45,95)
-yy = clf.predict(X[s:e])
+testSet = X[s:e]
+hits = array([tree.predict(testSet) for tree in clf.estimators_])
+means = [mean(hits[:,i]) for i in range(len(testSet))]
+yy = clf.predict_proba(testSet)[:,1]
 
-
-map(printTwo, y[s:e], yy)
+#print table
+map(printMulti, y[s:e], means, yy)
 
 # scores = cross_val_score(clf, X, y)
 # print scores.mean()
-
