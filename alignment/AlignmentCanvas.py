@@ -54,6 +54,7 @@ class AlignmentCanvas():
     def add_posterior_table(self, table):
         colors = [(255, 255, 0, 255), (0, 255, 0, 255), (0, 0, 255, 255),
                   (255, 0, 0, 255)]
+        inf = float("-inf");
         for x in range(len(table)):
             for y, val in table[x].iteritems():
                 for (state, dx, dy), prob in val.iteritems():
@@ -61,9 +62,10 @@ class AlignmentCanvas():
                     if dd == 0:
                         weight = -99999999999
                     else:
-                        weight = prob.value / dd
-                    self.add_line((weight, colors[state], 1,
-                                   [(x, y), (x - dx, y - dy)]))
+                        weight = prob * dd
+                    if weight > inf: 
+                        self.add_line((weight, colors[state], 1,
+                                       [(x, y), (x - dx, y - dy)]))
     
     
     def draw(self, output_filename, width, height,
