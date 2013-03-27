@@ -15,10 +15,11 @@ def listConverter(L, *types):
         
 
 @perf.runningTimeDecorator
-def main(input_file, length_output, consensus_output):
+def main(input_file, length_output, consensus_output, full_length_output):
     
     statLen = defaultdict(int)
     statStr = defaultdict(int)
+    statFull = defaultdict(int)
     
     with Open(input_file, 'r') as f:
         lines = (listConverter(line.strip().split(' '), (int, 0, 2)) 
@@ -29,22 +30,27 @@ def main(input_file, length_output, consensus_output):
             statLen[round(10 * (1 + line[1] - line[0]) / len(line[-2])) / 10.0] \
                 += 1
             statStr[line[-2]] += 1
+	    statFull[1 + line[1] - line[0]] += 1
         
     with Open(length_output, 'w') as f:
         json.dump(statLen, f, indent=4)
     with Open(consensus_output, 'w') as f:
         json.dump(statStr, f, indent=4)
-        
-    
+    with Open(full_length_output, 'w') as f:
+        json.dump(statFull, f, indent=4)
+   
+   
 if __name__ == "__main__":    
     parser = argparse.ArgumentParser(description='Aggregate stats from TRF output.')
     parser.add_argument('input', type=str, help='Program input -- output from TRF')
     parser.add_argument('lengthOutput', type=str, help='Output file')
     parser.add_argument('consensusOutput', type=str, help='Output file')
+    parser.add_argument('fullLengthOutput', type=str, help='Output file')
     parsed_arg = parser.parse_args()
     main(
          parsed_arg.input,
          parsed_arg.lengthOutput,
-         parsed_arg.consensusOutput
+         parsed_arg.consensusOutput,
+	 parsed_arg.fullLengthOutput,
     ) 
     perf.printAll()
