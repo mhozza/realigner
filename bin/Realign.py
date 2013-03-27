@@ -254,7 +254,7 @@ def main(filename_subst=None):
                 drawer.add_alignment_line(
                     101,
                     (255, 0, 255, 255),
-                    1,
+                    2,
                     AlignmentPositionGenerator(Alignment([aln[0], aln[2]]))
                 )
 		if len(parsed_arg.draw) > 0:
