@@ -58,7 +58,7 @@ class RepeatLengthDistribution(ConfigObject):
 
     def setParams(self, p, start, fractions):
         self.p = self.mathType(p)
-        self.samplingConst = math.log(p)
+        self.samplingConst = math.log(1.0 - p)
         fractions = [self.mathType(x) for x in fractions]
         self.fractionSampler = rand_generator(
             zip(
@@ -124,8 +124,8 @@ class RepeatLengthDistribution(ConfigObject):
         item = int(math.floor(item * sz))
         base = item / sz
         offset = item % sz
-        return self.fractions[offset] * (self.p ** (base - 1)) * \
-            (self.mathType(1) - self.p)
+        return self.fractions[offset] * self.p * \
+            ((self.mathType(1) - self.p) ** (base))
     
 if __name__ == '__main__':
     D = RepeatLengthDistribution(0.99999, 5, [0.74, 0.23, 0.02, 0.01])
