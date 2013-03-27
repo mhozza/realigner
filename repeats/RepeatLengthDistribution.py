@@ -9,7 +9,7 @@ from tools.Exceptions import ParseException
 class RepeatLengthDistribution(ConfigObject):
     # Mix of indel lenght distribution and arbitrary distribution
     
-    def __init__(self, mathType=float, p=0.5, start=2, 
+    def __init__(self, mathType=float, p=0.5, start=0, 
                  fractions=[0.5, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 
                             0.05, 0.05]):
         self.mathType=mathType
@@ -46,7 +46,7 @@ class RepeatLengthDistribution(ConfigObject):
                     'Number of fractions is missing in RepeatLengthDistribution'
                 )
             self.train(data, int(dictionary['fractionssize']), start)
-        
+
 
     def toJSON(self):
         ret = ConfigObject.toJSON(self)
@@ -58,7 +58,7 @@ class RepeatLengthDistribution(ConfigObject):
 
     def setParams(self, p, start, fractions):
         self.p = self.mathType(p)
-        self.samplingConst = math.log(1 - p)
+        self.samplingConst = math.log(p)
         fractions = [self.mathType(x) for x in fractions]
         self.fractionSampler = rand_generator(
             zip(
@@ -89,7 +89,7 @@ class RepeatLengthDistribution(ConfigObject):
             
         for key, value in iterator:
             key = float(key)
-            value = float(key)
+            value = float(value)
             k = int(math.floor((key - forcesize) * fractionsize))
             if k < 0: 
                 continue
@@ -107,7 +107,7 @@ class RepeatLengthDistribution(ConfigObject):
             X += (k + 1) * v
         p = n / X
         if p >= 1: 
-            p -= 10e-12
+            p = 1.0 - 10e-12
         self.setParams(p, forcesize, fractions)
         
     
