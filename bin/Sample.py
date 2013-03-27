@@ -99,10 +99,10 @@ def main():
                 xlen = len(X.replace('-', ''))
                 ylen = len(Y.replace('-', ''))
                 tandemRepeats['sequence1'].append((
-                    xlen, xlen + dx, xlen / ann_data[1], ann_data[0], x
+                    xlen, xlen + dx, dx / ann_data[1], ann_data[0], x
                 ))
                 tandemRepeats['sequence2'].append((
-                    ylen, ylen + dy, ylen / ann_data[2], ann_data[0], y
+                    ylen, ylen + dy, dy / ann_data[2], ann_data[0], y
                 ))
             A += PHMM.states[state].getChar() * max(dx, dy)
             X += x + ('-' * (dy - dx))
