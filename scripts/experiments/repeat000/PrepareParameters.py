@@ -15,7 +15,8 @@ def main(files, trf):
         'emission': [],
         'transition': [],
         'trf_length': [],
-        'trf_consensus': []
+        'trf_consensus': [],
+	'trf_fulllength': [],
     }
     for filename in files:
         # AggregateAnnotation
@@ -23,6 +24,7 @@ def main(files, trf):
         tr_file = filename + '.transition.stat'
         le_file = filename + '.trf_length.stat'
         co_file = filename + '.trf_consensus.stat'
+        lef_file = filename + '.trf_fulllength.stat'
         AggregateAnnotation(
             filename, 0, 1,
             em_file,
@@ -35,12 +37,14 @@ def main(files, trf):
         AggregateTRFOutput(
             trf_output_filename,
             le_file,
-            co_file
+            co_file,
+	    lef_file,
         )
         output_files['emission'].append(em_file)
         output_files['transition'].append(tr_file)
         output_files['trf_length'].append(le_file)
         output_files['trf_consensus'].append(co_file)
+        output_files['trf_fulllength'].append(co_file)
     return output_files
 
 
