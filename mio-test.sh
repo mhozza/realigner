@@ -1,7 +1,7 @@
-#!/Bin/bash
+#!/bin/bash
 
 export PYTHONPATH=./ #\:/usr/lib/python2.7/dist-packages
-PYTHON=pypy-env/bin/pypy
+PYTHON=/usr/bin/python
 # Select sequences from alignment and split it into files, save as fasta
 export SGE_TASK_FIRST=1
 export SGE_TASK_ID=1

@@ -219,12 +219,14 @@ def main(filename_subst=None):
                 
                 # Compute repeat hints
                 if 'trf' in tracks:
+                    trf = None
                     for trf_executable in parsed_arg.trf:
                         if os.path.exists(trf_executable):
                             trf = TRFDriver(trf_executable, mathType=mathType)
                             break
-                    repeats = trf.run(alignment_filename)
-                    annotations['trf'] = repeats
+                    if trf:
+                        repeats = trf.run(alignment_filename)
+                        annotations['trf'] = repeats
                                     
                 if 'original_repeats' in tracks:
                     repeats = json.load(Open(alignment_filename + '.repeats',
