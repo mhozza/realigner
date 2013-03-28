@@ -1,5 +1,5 @@
 from hmm.GeneralizedHMM import GeneralizedState
-from ClassifierDemo import AnnotatedBaseCouple
+from PairClassifier import AnnotatedBaseCouple
 
 
 class RandomForestState(GeneralizedState):

@@ -5,44 +5,12 @@ Created on Mar 22, 2013
 '''
 
 import sys
-from numpy import array, mean
-from copy import deepcopy
-from sklearn.ensemble import RandomForestClassifier
+from numpy import array
+
+from PairClassifier import AnnotatedBase, AnnotatedBaseCouple, PairClassifier
 
 SEQ_COUNT = 2
 SEQ_DIMENSION = 2
-
-
-class AnnotatedBase:
-    def __init__(self):
-        self.base = -1
-        self.annotations = {}
-
-    def copy(self, ab):
-        self.base = ab.base
-        self.annotations = deepcopy(ab.annotations)
-
-
-class AnnotatedBaseCouple:
-    def __init__(self, annotations = []):
-        self.annotations = annotations
-        self.X = AnnotatedBase()
-        self.Y = AnnotatedBase()
-
-    def toArray(self):
-        a = [self.X.base, self.Y.base]
-
-        for annotation in self.annotations:
-            try:
-                a.append(self.X.annotations[annotation])
-            except KeyError, e:
-                a.append(-1)
-
-            try:
-                a.append(self.Y.annotations[annotation])
-            except KeyError, e:
-                a.append(-1)
-        return a
 
 
 def fill_data(seq_data, last, i, seqnum):
@@ -88,20 +56,11 @@ def prepare_data():
 def printMulti(*i):    
     print(i)
 
-
+clf = PairClassifier()
 X, y = prepare_data()
-
-clf = RandomForestClassifier(n_estimators=1000, n_jobs=4)
-clf.fit(X, y)
-
+clf.fit(X,y)
 s,e = (45,95)
 testSet = X[s:e]
-hits = array([tree.predict(testSet) for tree in clf.estimators_])
-means = [mean(hits[:,i]) for i in range(len(testSet))]
-yy = clf.predict_proba(testSet)[:,1]
+yy = clf.predict(testSet)
+map(printMulti, y[s:e], yy)
 
-#print table
-map(printMulti, y[s:e], means, yy)
-
-# scores = cross_val_score(clf, X, y)
-# print scores.mean()
