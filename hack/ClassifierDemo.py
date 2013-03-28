@@ -91,8 +91,9 @@ def printMulti(*i):
 
 X, y = prepare_data()
 
-clf = RandomForestClassifier(n_estimators=10, max_depth=None, min_samples_split=1, random_state=0)
+clf = RandomForestClassifier(n_estimators=1000, n_jobs=4)
 clf.fit(X, y)
+
 s,e = (45,95)
 testSet = X[s:e]
 hits = array([tree.predict(testSet) for tree in clf.estimators_])
