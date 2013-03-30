@@ -19,6 +19,14 @@
 	        "RY": 0.03,
 	        "RR": 0.03
         },
+	{
+	    "__name__": "@trackemi?",
+	    "value": {
+		"RR": 0.32,
+		"MR": 0.34,
+		"RM": 0.34
+	    }
+	},
         {
         	"__name__": "@times?",
         	"jukes-cantor-pair-state-time-X": 0.00005,
@@ -117,6 +125,7 @@
  		    	"durations": [],
  		    	"emission": [],
  		    	"onechar": "R",
+			"trackemissions": {"__name__": "trackemi", "key": "value"},
  		    	"time": {"__name__": "times", "key": "jukes-cantor-repeat-state-time"},
  		    	"backgroundprob": {"__name__": "background-probability", "key": "value"},
  		    	"transitionmatrix": {"__name__": "repeat-transitions", "key": "value"},

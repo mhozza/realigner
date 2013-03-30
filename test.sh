@@ -22,9 +22,6 @@ case 'nosample' in
 		'hg19.*' \
 		'canFam2.*'
 
-		;&
-*)	
-
 # Compute statistics from input alignment
 	time $PYTHON scripts/experiments/repeat000/PrepareParameters.py \
 		output_file_from_split.txt \
@@ -48,13 +45,15 @@ case 'nosample' in
 		working_dir_tmp/stat \
 		output_file_from_aggregate.txt
 
+		;&
+*)	
+
 
 
 # Create model
 	time $PYTHON scripts/experiments/repeat000/CreateModel.py \
 		data/models/repeatHMM.js \
 		output_file_from_aggregate.txt \
-		0.01 \
 		output_file_from_create.txt
 
 # Sample alignments
