@@ -5,6 +5,11 @@ from algorithm.Graphs import toposort
 from tools.file_wrapper import Open
 from tools import perf
 
+def cmd_to_string(cmd):
+    if type(cmd) == list:
+	return ' '.join(cmd)
+    return cmd
+
 @perf.runningTimeDecorator
 def main(config_file, output_file):
     
@@ -33,7 +38,7 @@ def main(config_file, output_file):
                 param.append(
                     ''.join([
                         ''.join(x) 
-                        for x in zip(map(str, item['array']), ['-', ':', ''])
+                        for x in zip(['', '-', ':'], map(str, item['array']))
                     ])
                 )
             
@@ -47,12 +52,12 @@ def main(config_file, output_file):
             if "params" in item:
                 assert(len(item['params']) > 0)
                 param.append(' '.join(item['params']))
-            
-            query = ("{jobname}=`qsub {parameters} {command} " + \
+            query = ("{jobname}=`qsub -N '{name}' {parameters} {command} " + \
                 "| sed -e 's/[.].*$//'`").format(
+		name=job,
                 jobname=job,
                 parameters=' '.join(param),
-                command=item['cmd']
+                command=cmd_to_string(item['cmd'])
             )
             f.write(query + '\n')
 
