@@ -51,6 +51,7 @@ class PairRepeatState(State):
         self.transitionMatrix = None
         self.consensusDistribution = None
         self.repeatLengthDistribution = None
+	self.trackEmissions = None
         
     
     def addRepeatGenerator(self, repeatGeneratorX, repeatGeneratorY):
@@ -89,6 +90,9 @@ class PairRepeatState(State):
             else:
                 self.repeatLengthDistribution = \
                     dictionary['repeatlengthdistribution']
+	if 'trackemissions' not in dictionary:
+	    raise ParseException('Track emissions were not found in state.')
+	self.trackEmissions = dictionary['trackemissions']
 
 
     def toJSON(self):
@@ -100,6 +104,7 @@ class PairRepeatState(State):
             dist_to_json(self.consensusDistribution)
         ret['repeatlengthdistribution'] = \
             dist_to_json(self.repeatLengthDistribution)
+	ret['trackemissions'] = self.trackEmissions
         #TODO: save consensus distribution
         return ret
 
@@ -130,21 +135,25 @@ class PairRepeatState(State):
 	# TODO: fix distribution
 	for xlen, xcon in X:
             xrc = float(xlen) / len(xcon)
-            xp = self.repeatLengthDistribution[xrc] * \
-                self.consensusDistribution[xcon]
+            xp = (self.repeatLengthDistribution[xrc] * 
+                  self.consensusDistribution[xcon] *
+		  self.trackEmissions['RM'])
 	    self.consensus = xcon
 	    yield (xlen, 0), xp
 	for ylen, ycon in Y:
             yrc = float(ylen) / len(ycon)
-	    yp = self.repeatLengthDistribution[yrc] * \
-		self.consensusDistribution[ycon]
+	    yp = (self.repeatLengthDistribution[yrc] * 
+		  self.consensusDistribution[ycon] *
+		  self.trackEmissions['MR'])
 	    self.consensus = ycon
 	    yield (0, ylen), yp
         for (xlen, xcon) in X:
             xrc = float(xlen) / len(xcon)
-            xp = self.repeatLengthDistribution[xrc] * \
-                self.consensusDistribution[xcon]
-            yp = self.repeatLengthDistribution[xrc]
+            xp = (self.repeatLengthDistribution[xrc] * 
+                  self.consensusDistribution[xcon] *
+		  self.trackEmissions['RR'])
+            yp = (self.repeatLengthDistribution[xrc] *
+		  self.trackEmissions['RR'])
             for (ylen, ycon) in Y:
                 yrc = float(ylen) / len(ycon)
                 xp *= self.repeatLengthDistribution[yrc]
@@ -205,6 +214,7 @@ class PairRepeatState(State):
             cons = self.consensusDistribution
         self.durationSampler = rand_generator(dur)
         self.consensusSampler = rand_generator(cons)
+	self.trackEmissionsSampler = rand_generator(self.trackEmissions)
    
     
     def sampleEmission(self):
@@ -219,6 +229,11 @@ class PairRepeatState(State):
         hmm.buildSampleTransitions()
         # generate sequences
         X, Y = hmm.generateSequence(dx), hmm.generateSequence(dy)
+	tracks = self.trackEmissionsSampler()
+	if tracks == 'MR':
+	    X = []
+	if tracks == 'RM':
+	    Y = []
         X = "".join([x for (x, _) in X])
         Y = "".join([x for (x, _) in Y])
         # Generate Alignment
