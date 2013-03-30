@@ -22,24 +22,32 @@ case 'nosample' in
 		'hg19.*' \
 		'canFam2.*'
 
+		;&
+*)	
 
 # Compute statistics from input alignment
 	time $PYTHON scripts/experiments/repeat000/PrepareParameters.py \
 		output_file_from_split.txt \
 		output_file_from_prepare.{index}.txt \
 		--start 0 \
-		--step 2
+		--step 2 \
+		--sequence_regexp 'hg19.*' 'canFam2.*' \
+		--alignment_regexp '\.[0-9]*$'
 	time $PYTHON scripts/experiments/repeat000/PrepareParameters.py \
 		output_file_from_split.txt \
 		output_file_from_prepare.{index}.txt \
 		--start 2 \
-		--step 2
+		--step 2 \
+		--sequence_regexp 'hg19.*' 'canFam2.*' \
+		--alignment_regexp '\.[0-9]*$'
+
 	
 # Agregate statistics
 	time $PYTHON scripts/experiments/repeat000/AggregateParameters.py \
 		output_file_from_prepare.*.txt \
 		working_dir_tmp/stat \
 		output_file_from_aggregate.txt
+
 
 
 # Create model
@@ -58,9 +66,6 @@ case 'nosample' in
 		--output_files output_from_sample.txt \
 		--model output_file_from_create.txt
 
-		;&
-*)	
-
 
 	export SGE_TASK_FIRST=1
 	export SGE_TASK_ID=1
@@ -78,7 +83,7 @@ case 'nosample' in
 		--repeat_width 0 \
 		--sequence_regexp sequence1 sequence2 \
 		--tracks original_repeats,trf  \
-		--draw output.png #\
+		--draw output.png \
 		--intermediate_output_files 'posterior:table.js,viterbi:viterbi.js,viterbi_path:viterbi_path.js' #\
 		#--intermediate_input_files 'posterior:table.js,viterbi:viterbi.js,viterbi_path:viterbi_path.js' 
 	
