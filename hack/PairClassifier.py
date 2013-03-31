@@ -3,13 +3,13 @@ Created on Mar 28, 2013
 
 @author: Michal Hozza
 '''
-from alignment import Fasta, Alignment
+from alignment import Fasta
+from alignment.Alignment import Alignment
 from copy import deepcopy
 from os import path, listdir
 from sklearn.ensemble import RandomForestClassifier
 import pickle
 import sys
-#from numpy import mean
 
 
 class AnnotatedBase:
@@ -74,29 +74,23 @@ class DataLoader:
         pass
 
     def _getAnnotations(self, fname):
-        pass
+        return (None,None)
 
     def _getSequencesAlignment(self, fname):
         alignment_regexp = ""
-        sequence_regexp = "alignment"
+        sequence_regexp = ["sequence1", "sequence2"]
+
         #pre zaciatok berieme len prve zarovnanie
-        aln = Fasta.load(fname, alignment_regexp, Alignment, sequence_regexp )[0]
-        if len(aln.sequences) < 2:
+        aln = Fasta.load(fname, alignment_regexp, Alignment, sequence_regexp ).next()
+        if aln==None or len(aln.sequences) < 2:
             sys.stderr.write("ERROR: not enough sequences in file\n")
             exit(1)
 
-#        original_annotation = aln.sequences[2]
-        aln.popSequence()
-
         # Sequence 1
-        seq1 = Fasta.alnToSeq(aln.sequences[0])
-#        seq1_length = len(seq1)
-#        seq1_name = aln.names[0]
+        seq1 = aln.sequences[0]
 
         # Sequence 2
-        seq2 = Fasta.alnToSeq(aln.sequences[1])
-#        seq2_length = len(seq2)
-#        seq2_name = aln.names[1]
+        seq2 = aln.sequences[1]
 
         return (seq1, seq2)
 
@@ -123,3 +117,13 @@ class DataLoader:
                 sequences.append(self.loadSequence(fname))
         return sequences
 
+
+if __name__ == "__main__":
+    fname = "../working_dir_tmp/sampled_alignments/0.fa"
+    if not path.isfile(fname):
+        sys.stderr.write("ERROR: invalid file name\n")
+        exit(1)
+
+    d = DataLoader()
+    d.loadSequence(fname)
+    print (d._getSequencesAlignment(fname))
