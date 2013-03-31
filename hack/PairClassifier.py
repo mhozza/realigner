@@ -68,6 +68,13 @@ class PairClassifier:
 
 
 class DataLoader:
+    def _getAnotationsAt(self, annotations, i):
+        baseAnnotation = dict()
+        if annotations != None:            
+            for key in annotations.keys():
+                baseAnnotation[key] = annotations[key][i]
+        return baseAnnotation
+    
     def _SequenceToAnnotatedBaseCoupleList(self, annotations, seqX, annotationsX,
                                            seqY, annotationsY):
         if len(seqX) != len(seqY):
@@ -81,16 +88,31 @@ class DataLoader:
         for i in range(len(seqX)):
             b = AnnotatedBaseCouple(annotations)
             b.X.base = seqX[i]
-#            b.X.annotations = annotationsX[:,i]
+            b.X.annotations = self._getAnotationsAt(annotationsX, i)
             b.Y.base = seqY[i]
-#            b.Y.annotations = annotationsY[:,i]
+            b.Y.annotations = self._getAnotationsAt(annotationsY, i)
             data.append(b)
 
         return data
 
 
     def _getAnnotations(self, fname):
-        return (None,None)
+        annotationsCount = 0
+        annotationNames = list()
+        annotationsX, annotationsY = dict(), dict()
+        if path.isfile(fname):
+            f = open(fname,'r')
+            for i, line in enumerate(f):
+                if i==0:
+                    annotationsCount = int(line)
+                elif i<=annotationsCount:
+                    annotationNames.append(line)
+                elif i<=2*annotationsCount:
+                    annotationsX[annotationNames[i-1-annotationsCount]] = line
+                else:
+                    annotationsY[annotationNames[i-1-2*annotationsCount]] = line
+            f.close()
+        return (annotationsX, annotationsY)
 
     def _getSequencesAlignment(self, fname):
         alignment_regexp = ""
