@@ -1,10 +1,12 @@
-from hmm.GeneralizedHMM import GeneralizedState
+from hmm.PairHMM import GeneralizedPairState
 from PairClassifier import AnnotatedBaseCouple
+from hack.PairClassifier import PairClassifier
 
 
-class RandomForestState(GeneralizedState):
-    def __init__(self, clf):
-        self.clf = clf            
+class ClassifierState(GeneralizedPairState):
+    def __init__(self, *p):
+        GeneralizedPairState.__init__(self, *p)
+        self.clf = PairClassifier()           
       
     def emission(self, X, x, dx, Y, y, dy):
         #if(dx!=1 && dy!=1) throw Some Exception 

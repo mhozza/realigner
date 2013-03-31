@@ -11,7 +11,7 @@ export SGE_STEP_SIZE=1
 time $PYTHON bin/Realign.py \
 	working_dir_tmp/sampled_alignments/{id}.fa \
 	working_dir_tmp/sampled_alignments/{id}.realigned.fa \
-	--model data/models/SimpleHMM.js\
+	--model data/models/ClassificationHMM.js\
 	--mathType LogNum \
 	--beam_width 30 \
 	--sequence_regexp sequence1 sequence2 \
