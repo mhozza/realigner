@@ -10,6 +10,7 @@ from numpy import array
 from os import path, listdir
 from sklearn.ensemble import RandomForestClassifier
 import itertools
+import os
 import pickle
 import sys
 
@@ -48,14 +49,44 @@ class AnnotatedBaseCouple:
 
 
 class PairClassifier:
-    def __init__(self):
-        self.classifier = RandomForestClassifier(n_estimators=10, n_jobs=4)
+    def __init__(self, filename="../data/random_forest.clf",
+                 trainingDataDir="../data/train_sequences",
+                 params={"n_estimators":10, "n_jobs":4}):
+        self.defaultFilename = filename
+        self.trainingDataDir = trainingDataDir
+        self.params = params
 
-    def load(self, f):
+        if path.exists(self.defaultFilename):
+            if path.isfile(self.defaultFilename):
+                self.load(self.defaultFilename)
+        else:
+            self.classifier = RandomForestClassifier(**self.params)
+            dl = DataLoader()
+            data, target = (list(), list())
+            for seq in dl.loadDirectory(self.trainingDataDir):
+                d, t = dl.prepareTrainingData(seq)
+                data += d
+                target += t
+            self.fit(data, target)
+            self.save(self.defaultFilename)
+
+    def load(self, fname):
+        f = open(fname,'r')
         self.classifier = pickle.load(f)
+        f.close()
 
-    def save(self, f):
+    def save(self, fname):
+        f = open(fname,'w')
         pickle.dump(self.classifier, f)
+        f.close()
+
+    def removeDefaultFile(self):
+        os.remove(self.defaultFilename)
+
+    def reset(self):
+        if self.classifier:
+            del self.classifier
+        self.classifier = RandomForestClassifier(**self.params)
 
     def fit(self, data, target):
         self.classifier.fit(data, target)
@@ -64,17 +95,17 @@ class PairClassifier:
 #    	return self.classifier.predict(data)
 #        hits = array([tree.predict(data) for tree in self.classifier.estimators_])
 #        return [mean(hits[:,i]) for i in range(len(data))]
-        return self.classifier.predict_proba(data)
+        return self.classifier.predict_proba(data)[:,1]
 
 
 class DataLoader:
     def _getAnotationsAt(self, annotations, i):
         baseAnnotation = dict()
-        if annotations != None:            
+        if annotations != None:
             for key in annotations.keys():
                 baseAnnotation[key] = annotations[key][i]
         return baseAnnotation
-    
+
     def _SequenceToAnnotatedBaseCoupleList(self, annotations, seqX, annotationsX,
                                            seqY, annotationsY):
         if len(seqX) != len(seqY):
@@ -162,15 +193,19 @@ class DataLoader:
 
 
 if __name__ == "__main__":
-    dirname = name = "../data/train_sequences"
+    dirname = "../data/train_sequences"
     if not path.isdir(dirname):
         sys.stderr.write("ERROR: invalid directory name\n")
         exit(1)
 
-    d = DataLoader()
-    seqs = d.loadDirectory(dirname)
-    seq = seqs[0]
-    data, target = d.prepareTrainingData(seq)
-    for i,j,s in zip(data, target, seq):
-        print i, s.X.base, s.X.annotations, s.Y.base, s.Y.annotations, j
+    c = PairClassifier()
+
+    print c.predict([0, 0, 1, 1])
+    print c.predict([0, 0, 1, 0])
+    print c.predict([0, 0, 0, 1])
+    print c.predict([0, 0, 0, 0])
+    print c.predict([1, 0, 1, 1])
+    print c.predict([1, 0, 1, 0])
+    print c.predict([1, 0, 0, 1])
+    print c.predict([1, 0, 0, 0])
     # print (d._getSequencesAlignment(fname))
