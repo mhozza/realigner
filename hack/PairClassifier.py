@@ -29,8 +29,8 @@ class AnnotatedBase:
         if(self.base!='-'):
             last.copy(self)
         res = [m[last.base]]
-        for i in self.annotations:
-            res.append(i)
+        for i in self.annotations.keys():
+            res.append(self.annotations[i])
         return res
 
 
@@ -106,11 +106,11 @@ class DataLoader:
                 if i==0:
                     annotationsCount = int(line)
                 elif i<=annotationsCount:
-                    annotationNames.append(line)
+                    annotationNames.append(line.strip())
                 elif i<=2*annotationsCount:
-                    annotationsX[annotationNames[i-1-annotationsCount]] = line
+                    annotationsX[annotationNames[i-1-annotationsCount]] = line.strip()
                 else:
-                    annotationsY[annotationNames[i-1-2*annotationsCount]] = line
+                    annotationsY[annotationNames[i-1-2*annotationsCount]] = line.strip()
             f.close()
         return (annotationsX, annotationsY)
 
@@ -153,22 +153,24 @@ class DataLoader:
         return train_data
 
     def loadDirectory(self, dirname):
-        sequences = []
-        for fname in listdir(dirname):
+        sequences = list()
+        for fn in listdir(dirname):
+            fname = path.join(dirname, fn)
             if path.isfile(fname):
                 sequences.append(self.loadSequence(fname))
         return sequences
 
 
 if __name__ == "__main__":
-    fname = "../working_dir_tmp/sampled_alignments/0.fa"
-    if not path.isfile(fname):
-        sys.stderr.write("ERROR: invalid file name\n")
+    dirname = name = "../data/train_sequences"
+    if not path.isdir(dirname):
+        sys.stderr.write("ERROR: invalid directory name\n")
         exit(1)
 
     d = DataLoader()
-    seq = d.loadSequence(fname)
+    seqs = d.loadDirectory(dirname)
+    seq = seqs[0]
     data, target = d.prepareTrainingData(seq)
     for i,j,s in zip(data, target, seq):
-        print i, s.X.base, s.Y.base, j
+        print i, s.X.base, s.X.annotations, s.Y.base, s.Y.annotations, j
     # print (d._getSequencesAlignment(fname))
