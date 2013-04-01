@@ -19,7 +19,7 @@ def brainwash(className):
     dct = dict();
     for key, value in className.__dict__.iteritems():
         dct[key] = lambda *_, **__: None
-    return type('Lobotomized' + className.__name__, (object,), dct)
+    return type('Brainwashed' + className.__name__, (object,), dct)
 
 
 def alignment_column_to_annotation(column):
