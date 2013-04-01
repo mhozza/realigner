@@ -14,7 +14,6 @@ import os
 import pickle
 import sys
 
-
 class AnnotatedBase:
     def __init__(self):
         self.base = '-'
@@ -30,7 +29,7 @@ class AnnotatedBase:
         if(self.base!='-'):
             last.copy(self)
         res = [m[last.base]]
-        for i in self.annotations.keys():
+        for i in self.annotations:
             res.append(self.annotations[i])
         return res
 
@@ -55,6 +54,7 @@ class PairClassifier:
         self.defaultFilename = filename
         self.trainingDataDir = trainingDataDir
         self.params = params
+        self.mem = dict()
 
         if path.exists(self.defaultFilename):
             if path.isfile(self.defaultFilename):
@@ -92,17 +92,23 @@ class PairClassifier:
         self.classifier.fit(data, target)
 
     def predict(self, data):
+        d = tuple(data)
+        if d in self.mem:
+            return self.mem[d]
+                
 #    	return self.classifier.predict(data)
 #        hits = array([tree.predict(data) for tree in self.classifier.estimators_])
 #        return [mean(hits[:,i]) for i in range(len(data))]
-        return self.classifier.predict_proba(data)[:,1]
+        res =  self.classifier.predict_proba(data)[:,1]
+        self.mem[d] = res
+        return res
 
 
 class DataLoader:
     def getAnnotationsAt(self, annotations, i):
         baseAnnotation = dict()
         if annotations != None:
-            for key in annotations.keys():
+            for key in annotations:
                 baseAnnotation[key] = annotations[key][i]
         return baseAnnotation
 
