@@ -1,2 +1,4 @@
 *.pyc
 /working_dir_tmp
+/data/sequences
+/tmp
