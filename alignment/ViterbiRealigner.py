@@ -64,7 +64,7 @@ class ViterbiRealigner(Realigner):
         arguments = 0
         
         # Add repeats
-	if 'Repeat' in self.model.states:
+	if 'Repeat' in self.model.statenameToID:
 	    RX = RepeatGenerator(None, self.repeat_width)
 	    RY = RepeatGenerator(None, self.repeat_width)
 	    for (rt, ch) in [('trf', 'R'), ('original_repeats', 'r')]:
