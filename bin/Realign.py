@@ -81,7 +81,7 @@ def main(filename_subst=None):
     parser.add_argument('--alignment_regexp', default='', 
                         help='Regular expression used to separate alignment' +
                         'in input file')
-    parser.add_argument('--sequence_regexp', nargs='+', default=None,
+    parser.add_argument('--sequence_regexp', nargs='+', default=["sequence1", "sequence2"],
                         help='Regular expressions used to select sequences.')
     parser.add_argument('--beam_width', default=10, type=int, 
                         help='Beam width.')
@@ -157,7 +157,10 @@ def main(filename_subst=None):
     task_ids = [None]
     if os.environ.has_key('SGE_TASK_ID'):
         sge_task_id = int(os.environ['SGE_TASK_ID'])
-        sge_step_size = int(os.environ['SGE_STEP_SIZE'])
+        if 'SGE_STEP_SIZE' not in os.environ:
+            sge_step_size = 1
+        else:
+            sge_step_size = int(os.environ['SGE_STEP_SIZE'])
         sge_task_last = int(os.environ['SGE_TASK_LAST'])
         task_ids = range(
             sge_task_id,
