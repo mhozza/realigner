@@ -6,6 +6,8 @@ if [ `uname -n` == 'panda-cub' ]; then
         exit 1
 fi
 
+mkdir -p tmp
+
 export PYTHONPATH=./ #\:/usr/lib/python2.7/dist-packages
 PYTHON=pypy-env/bin/pypy
 # Select sequences from alignment and split it into files, save as fasta
@@ -18,21 +20,21 @@ case 'nosample' in
 		data/alignments/7way-chr15.maf \
 		working_dir_tmp \
 		4 \
-		output_file_from_split.txt \
+		tmp/output_file_from_split.txt \
 		'hg19.*' \
 		'canFam2.*'
 
 # Compute statistics from input alignment
 	time $PYTHON scripts/experiments/repeat000/PrepareParameters.py \
-		output_file_from_split.txt \
-		output_file_from_prepare.{index}.txt \
+		tmp/output_file_from_split.txt \
+		tmp/output_file_from_prepare.{index}.txt \
 		--start 0 \
 		--step 2 \
 		--sequence_regexp 'hg19.*' 'canFam2.*' \
 		--alignment_regexp '\.[0-9]*$'
 	time $PYTHON scripts/experiments/repeat000/PrepareParameters.py \
-		output_file_from_split.txt \
-		output_file_from_prepare.{index}.txt \
+		tmp/output_file_from_split.txt \
+		tmp/output_file_from_prepare.{index}.txt \
 		--start 2 \
 		--step 2 \
 		--sequence_regexp 'hg19.*' 'canFam2.*' \
@@ -41,9 +43,9 @@ case 'nosample' in
 	
 # Agregate statistics
 	time $PYTHON scripts/experiments/repeat000/AggregateParameters.py \
-		output_file_from_prepare.*.txt \
+		tmp/output_file_from_prepare.*.txt \
 		working_dir_tmp/stat \
-		output_file_from_aggregate.txt
+		tmp/output_file_from_aggregate.txt
 
 		;&
 *)	
@@ -53,8 +55,8 @@ case 'nosample' in
 # Create model
 	time $PYTHON scripts/experiments/repeat000/CreateModel.py \
 		data/models/repeatHMM.js \
-		output_file_from_aggregate.txt \
-		output_file_from_create.txt
+		tmp/output_file_from_aggregate.txt \
+		tmp/output_file_from_create.txt
 
 # Sample alignments
 	time $PYTHON bin/Sample.py \
@@ -62,8 +64,8 @@ case 'nosample' in
 		10 \
 		1000 \
 		1000 \
-		--output_files output_from_sample.txt \
-		--model output_file_from_create.txt
+		--output_files tmp/output_from_sample.txt \
+		--model tmp/output_file_from_create.txt
 
 
 	export SGE_TASK_FIRST=1
@@ -76,15 +78,15 @@ case 'nosample' in
 	time $PYTHON bin/Realign.py \
 		working_dir_tmp/sampled_alignments/{id}.fa \
 		working_dir_tmp/sampled_alignments/{id}.realigned.fa \
-		--model output_file_from_create.txt \
+		--model tmp/output_file_from_create.txt \
 		--mathType LogNum \
 		--beam_width 30 \
 		--repeat_width 0 \
 		--sequence_regexp sequence1 sequence2 \
 		--tracks original_repeats,trf  \
 		--draw output.png \
-		--intermediate_output_files 'posterior:table.js,viterbi:viterbi.js,viterbi_path:viterbi_path.js' #\
-		#--intermediate_input_files 'posterior:table.js,viterbi:viterbi.js,viterbi_path:viterbi_path.js' 
+		--intermediate_output_files 'posterior:tmp/table.js,viterbi:tmp/viterbi.js,viterbi_path:tmp/viterbi_path.js' #\
+		#--intermediate_input_files 'posterior:tmp/table.js,viterbi:tmp/viterbi.js,viterbi_path:tmp/viterbi_path.js' 
 	
 	killall -9 track.sh
 	wait
