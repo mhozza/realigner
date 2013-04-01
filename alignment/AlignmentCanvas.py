@@ -22,8 +22,39 @@ class AlignmentCanvas():
         
     def add_line(self, param):
         self.lines.append(param)
-        
-        
+    
+    def add_original_alignment(self, aln):
+        last = ""
+        start = -1
+        original_annotation = map(
+            alignment_column_to_annotation,
+            zip(aln.sequences[0], aln.sequences[1])
+        )
+        original_annotation += "?"
+        for (char, i) in zip(original_annotation,
+                             range(len(original_annotation))):
+            if char != last:
+                if start >=0:
+                    color = (255, 255, 0, 255)
+                    if last == 'R':
+                        color = (255, 0, 0, 255)
+                    elif last == 'M':
+                        color = (0, 255, 0, 255)
+                    if (aln.aln_to_seq[0][start] < 
+                        aln.aln_to_seq[0][i - 1]):
+                        self.add_annotation('X', 'O', 
+                                              (aln.aln_to_seq[0][start],
+                                               aln.aln_to_seq[0][i - 1],
+                                               color))
+                    if (aln.aln_to_seq[1][start] < 
+                        aln.aln_to_seq[1][i - 1]):
+                       self.add_annotation('Y', 'O',
+                                              (aln.aln_to_seq[1][start],
+                                               aln.aln_to_seq[1][i - 1],
+                                               color))
+                start = i
+                last = char
+                 
     def add_repeat_finder_annotation(self, strand, track, annotation, color):
         for TRF in annotation:
             self.add_annotation(

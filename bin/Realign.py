@@ -14,6 +14,25 @@ from alignment.AlignmentCanvas import AlignmentCanvas
 import json
 from alignment.ViterbiRealigner import ViterbiRealigner
 
+
+def brainwash(className):
+    dct = dict();
+    for key, value in className.__dict__.iteritems():
+        dct[key] = lambda *_, **__: None
+    return type('Lobotomized' + className.__name__, (object,), dct)
+
+
+def alignment_column_to_annotation(column):
+    column = tuple([x if x == '-' else 'M' for x in column])
+    if column == ('-', 'M'):
+        return 'Y'
+    elif column == ('M', '-'):
+        return 'X'
+    elif column == ('M', 'M'):
+        return 'M'
+    else:
+        return '-'
+
     
 def getMathType(s):
     if s == 'LogNum':
@@ -152,9 +171,6 @@ def main(filename_subst=None):
             output_filename = output_filename_template.format(id=task_id - 1)
             alignment_filename = \
                 alignment_filename_template.format(id=task_id - 1) 
-        # ====== Load alignment ================================================
-        if len(parsed_arg.sequence_regexp) > 0:
-            parsed_arg.sequence_regexp.append('alignment')
         with Open(output_filename, 'w') as output_file_object:
             for aln in Fasta.load(
                 alignment_filename,
@@ -166,10 +182,10 @@ def main(filename_subst=None):
                     sys.stderr.write("ERROR: not enough sequences in file\n")
                     exit(1)
                     
-                drawer = AlignmentCanvas()
-                original_annotation = aln.sequences[2]
-                aln.popSequence()
-
+                if len(parsed_arg.draw) == 0:
+                    drawer = brainwash(AlignmentCanvas)()
+                else:
+                    drawer = AlignmentCanvas()
                 # Sequence 1
                 seq1 = Fasta.alnToSeq(aln.sequences[0])
                 seq1_length = len(seq1)
@@ -186,35 +202,8 @@ def main(filename_subst=None):
                 perf.replace()
                 
                 #====== DRAW ORIGINAL ANNOTATION ===============================
-                # TODO: move it out of here, into drawer class
-                
-                last = ""
-                start = -1
-                original_annotation += "?"
-                for (char, i) in zip(original_annotation,
-                                     range(len(original_annotation))):
-                    if char != last:
-                        if start >=0:
-                            color = (255, 255, 0, 255)
-                            if last == 'R':
-                                color = (255, 0, 0, 255)
-                            elif last == 'M':
-                                color = (0, 255, 0, 255)
-                            if (aln.aln_to_seq[0][start] < 
-                                aln.aln_to_seq[0][i - 1]):
-                                drawer.add_annotation('X', 'O', 
-                                                      (aln.aln_to_seq[0][start],
-                                                       aln.aln_to_seq[0][i - 1],
-                                                       color))
-                            if (aln.aln_to_seq[1][start] < 
-                                aln.aln_to_seq[1][i - 1]):
-                                drawer.add_annotation('Y', 'O',
-                                                      (aln.aln_to_seq[1][start],
-                                                       aln.aln_to_seq[1][i - 1],
-                                                       color))
-                        start = i
-                        last = char
-                    
+                drawer.add_original_alignment(aln) 
+                   
                 #====== COMPUTE ANNOTATION TRACKS ==============================
                 
                 # Compute repeat hints
@@ -231,7 +220,6 @@ def main(filename_subst=None):
                 if 'original_repeats' in tracks:
                     repeats = json.load(Open(alignment_filename + '.repeats',
                                              'r'))
-                    print repeats
                     for k, v in repeats.iteritems():
                         repeats[k] = [Repeat(_v[0], _v[1], _v[2], _v[3], _v[4]) 
                                       for _v in v]
