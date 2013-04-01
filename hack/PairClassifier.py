@@ -49,8 +49,8 @@ class AnnotatedBaseCouple:
 
 
 class PairClassifier:
-    def __init__(self, filename="../data/random_forest.clf",
-                 trainingDataDir="../data/train_sequences",
+    def __init__(self, filename="data/random_forest.clf",
+                 trainingDataDir="data/train_sequences",
                  params={"n_estimators":10, "n_jobs":4}):
         self.defaultFilename = filename
         self.trainingDataDir = trainingDataDir
@@ -99,7 +99,7 @@ class PairClassifier:
 
 
 class DataLoader:
-    def _getAnotationsAt(self, annotations, i):
+    def getAnnotationsAt(self, annotations, i):
         baseAnnotation = dict()
         if annotations != None:
             for key in annotations.keys():
@@ -119,15 +119,15 @@ class DataLoader:
         for i in range(len(seqX)):
             b = AnnotatedBaseCouple(annotations)
             b.X.base = seqX[i]
-            b.X.annotations = self._getAnotationsAt(annotationsX, i)
+            b.X.annotations = self.getAnnotationsAt(annotationsX, i)
             b.Y.base = seqY[i]
-            b.Y.annotations = self._getAnotationsAt(annotationsY, i)
+            b.Y.annotations = self.getAnnotationsAt(annotationsY, i)
             data.append(b)
 
         return data
 
 
-    def _getAnnotations(self, fname):
+    def getAnnotations(self, fname):
         annotationsCount = 0
         annotationNames = list()
         annotationsX, annotationsY = dict(), dict()
@@ -145,7 +145,7 @@ class DataLoader:
             f.close()
         return (annotationsX, annotationsY)
 
-    def _getSequencesAlignment(self, fname):
+    def getSequences(self, fname):
         alignment_regexp = ""
         sequence_regexp = ["sequence1", "sequence2"]
 
@@ -168,8 +168,8 @@ class DataLoader:
         directory = path.dirname(fname)
         annotationsFname = path.join(directory,annotationsSubdirName,base)
 
-        seqX, seqY = self._getSequencesAlignment(fname)
-        annotationsX, annotationsY = self._getAnnotations(annotationsFname)
+        seqX, seqY = self.getSequences(fname)
+        annotationsX, annotationsY = self.getAnnotations(annotationsFname)
         return self._SequenceToAnnotatedBaseCoupleList(annotations,
                                                        seqX, annotationsX,
                                                        seqY, annotationsY)
@@ -208,4 +208,4 @@ if __name__ == "__main__":
     print c.predict([1, 0, 1, 0])
     print c.predict([1, 0, 0, 1])
     print c.predict([1, 0, 0, 0])
-    # print (d._getSequencesAlignment(fname))
+    # print (d.getSequences(fname))
