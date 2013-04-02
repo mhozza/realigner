@@ -7,12 +7,15 @@ from alignment import Fasta
 from alignment.Alignment import Alignment
 from copy import deepcopy
 from numpy import array
+from numpy.ma.core import mean
 from os import path, listdir
 from sklearn.ensemble import RandomForestClassifier
 import itertools
 import os
 import pickle
 import sys
+from sklearn import svm
+from sklearn.ensemble.forest import RandomForestRegressor
 
 class AnnotatedBase:
     def __init__(self):
@@ -29,8 +32,13 @@ class AnnotatedBase:
         if(self.base!='-'):
             last.copy(self)
         res = [m[last.base]]
-        for i in self.annotations:
-            res.append(self.annotations[i])
+        
+        gap_val = -1  # hodnota kotrou sa ma nahradit '-'
+        for i in self.annotations.values():
+            if i=='-':
+                res.append(gap_val)
+            else:                            
+                res.append(float(i))
         return res
 
 
@@ -40,17 +48,24 @@ class AnnotatedBaseCouple:
         self.X = AnnotatedBase()
         self.Y = AnnotatedBase()
 
-    def toTrainData(self, lastX, lastY):
+    def toTrainData(self, lastX, lastY):        
         return array(list(itertools.chain(*zip(self.X.toTrainData(lastX), self.Y.toTrainData(lastY)))))
 
     def isAligned(self):
-        return self.X.base != '-' != self.Y.base
+        if(self.X.base != '-' != self.Y.base):
+            return 1
+        else:
+            return 0
 
 
 class PairClassifier:
-    def __init__(self, filename="data/random_forest.clf",
+    def _getClassifier(self):
+        return RandomForestRegressor(**self.params)
+        
+    
+    def __init__(self, filename="data/randomforest.clf",
                  trainingDataDir="data/train_sequences",
-                 params={"n_estimators":10, "n_jobs":4}):
+                 params={"n_estimators":1000, "n_jobs":4}):
         self.defaultFilename = filename
         self.trainingDataDir = trainingDataDir
         self.params = params
@@ -60,7 +75,7 @@ class PairClassifier:
             if path.isfile(self.defaultFilename):
                 self.load(self.defaultFilename)
         else:
-            self.classifier = RandomForestClassifier(**self.params)
+            self.classifier = self._getClassifier()
             dl = DataLoader()
             data, target = (list(), list())
             for seq in dl.loadDirectory(self.trainingDataDir):
@@ -86,21 +101,21 @@ class PairClassifier:
     def reset(self):
         if self.classifier:
             del self.classifier
-        self.classifier = RandomForestClassifier(**self.params)
+        self.classifier = self._getClassifier()
 
     def fit(self, data, target):
         self.classifier.fit(data, target)
 
     def predict(self, data):
-        d = tuple(data)
-        if d in self.mem:
-            return self.mem[d]
+#        d = tuple(data)
+#        if d in self.mem:
+#            return self.mem[d]
                 
-#    	return self.classifier.predict(data)
+    	return self.classifier.predict(data)
 #        hits = array([tree.predict(data) for tree in self.classifier.estimators_])
-#        return [mean(hits[:,i]) for i in range(len(data))]
-        res =  self.classifier.predict_proba(data)[:,1]
-        self.mem[d] = res
+#        res = [mean(hits[:,i]) for i in range(len(data))]
+#        res =  self.classifier.predict_proba(data)[:,1]
+#        self.mem[d] = res
         return res
 
 
@@ -111,6 +126,12 @@ class DataLoader:
             for key in annotations:
                 baseAnnotation[key] = annotations[key][i]
         return baseAnnotation
+    
+    def alnToAnnotation(self, annotations):
+        newannotations = dict()        
+        for key in annotations:
+            newannotations[key] =  annotations[key].replace("-","")
+        return newannotations
 
     def _SequenceToAnnotatedBaseCoupleList(self, annotations, seqX, annotationsX,
                                            seqY, annotationsY):
@@ -199,19 +220,15 @@ class DataLoader:
 
 
 if __name__ == "__main__":
-    dirname = "../data/train_sequences"
-    if not path.isdir(dirname):
-        sys.stderr.write("ERROR: invalid directory name\n")
-        exit(1)
+    c = PairClassifier(filename="../data/randomforest.clf", trainingDataDir="../data/train_sequences")
+    c.reset()
+    d = DataLoader()
+#    x,y = d.prepareTrainingData(d.loadSequence("../data/sequences/simulated_alignment.fa")) 
+    x,y = d.prepareTrainingData(d.loadSequence("../data/train_sequences/s4.fa"))
+    c.fit(x,y)
+    p = [array((i,j,k,l)) for i in range(4) for j in range(4) for k in range(2) for l in range(2)]
+    yy = c.predict(p)
+    for i in zip(p,yy):
+        print i
 
-    c = PairClassifier()
-
-    print c.predict([0, 0, 1, 1])
-    print c.predict([0, 0, 1, 0])
-    print c.predict([0, 0, 0, 1])
-    print c.predict([0, 0, 0, 0])
-    print c.predict([1, 0, 1, 1])
-    print c.predict([1, 0, 1, 0])
-    print c.predict([1, 0, 0, 1])
-    print c.predict([1, 0, 0, 0])
-    # print (d.getSequences(fname))
+    

@@ -9,13 +9,14 @@ export SGE_TASK_LAST=10
 export SGE_STEP_SIZE=1
 
 time $PYTHON bin/Realign.py \
-	data/sequences/simulated_alignment.fa\
-	data/sequences/simulated_alignment.realigned.fa\
-	--model data/models/ClassificationHMM.js\
 	--mathType LogNum \
 	--beam_width 30 \
 	--sequence_regexp sequence1 sequence2 \
-	--algorithm viterbi
+	--algorithm viterbi\
+	--model data/models/ClassificationHMM.js\
+	data/sequences/simulated_alignment.fa\
+	data/sequences/simulated_alignment.realigned.fa
 				
-	#working_dir_tmp/sampled_alignments/{id}.fa \
-	#working_dir_tmp/sampled_alignments/{id}.realigned.fa \
+	# working_dir_tmp/sampled_alignments/{id}.fa \
+	# working_dir_tmp/sampled_alignments/{id}.realigned.fa \
+	# --model data/models/SimpleHMM.js\
