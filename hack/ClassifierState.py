@@ -23,5 +23,9 @@ class ClassifierState(GeneralizedPairState):
         xy.Y.base = Y[y]
         xy.X.annotations = self.dl.getAnnotationsAt(self.aX, x)
         xy.Y.annotations = self.dl.getAnnotationsAt(self.aY, y)
-#        todo annotations
-        return self.clf.predict(xy.toTrainData(AnnotatedBase(), AnnotatedBase()))
+        return self.clf.predict(xy.toTrainData())
+
+
+class SimpleState(GeneralizedPairState):
+    def emission(self, X, x, dx, Y, y, dy):
+        return 1

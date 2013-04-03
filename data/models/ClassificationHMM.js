@@ -43,7 +43,7 @@
 			"onechar": "M"
 		    },
 		    {
-			"__name__": "ClassifierState",
+			"__name__": "SimpleState",
 			"name": "InsertX",
 			"startprob": 0.33,
 			"endprob": 1.0,
@@ -53,7 +53,7 @@
 			"onechar": "X"    	
 		    },
 		    {
-			"__name__": "ClassifierState",
+			"__name__": "SimpleState",
 			"name": "InsertY",
 			"startprob": 0.33,
 			"endprob": 1.0,
