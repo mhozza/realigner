@@ -102,15 +102,15 @@ class PairClassifier:
         self.classifier.fit(data, target)
 
     def predict(self, data):
-#        d = tuple(data)
-#        if d in self.mem:
-#            return self.mem[d]
+        d = tuple(data)
+        if d in self.mem:
+            return self.mem[d]
 
 #    	return self.classifier.predict(data)
 #        hits = array([tree.predict(data) for tree in self.classifier.estimators_])
 #        res = [mean(hits[:,i]) for i in range(len(data))]
         res =  self.classifier.predict_proba(data)[:,1]
-#        self.mem[d] = res
+        self.mem[d] = res
         return res
 
 
