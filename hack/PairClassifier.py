@@ -59,11 +59,12 @@ class PairClassifier:
 
     def __init__(self, filename="data/randomforest.clf",
                  trainingDataDir="data/train_sequences",
-                 params={"n_estimators":1000, "n_jobs":4}, autotrain=True):
+                 params={"n_estimators":500, "n_jobs":4}, autotrain=True, memoization=True):
         self.defaultFilename = filename
         self.trainingDataDir = trainingDataDir
         self.params = params
         self.mem = dict()
+        self.memoization = memoization
 
         if autotrain and path.exists(self.defaultFilename):
             if path.isfile(self.defaultFilename):
@@ -102,15 +103,17 @@ class PairClassifier:
         self.classifier.fit(data, target)
 
     def predict(self, data):
-        d = tuple(data)
-        if d in self.mem:
-            return self.mem[d]
+        if self.memoization:
+            d = tuple(data)
+            if d in self.mem:
+                return self.mem[d]
 
 #    	return self.classifier.predict(data)
 #        hits = array([tree.predict(data) for tree in self.classifier.estimators_])
 #        res = [mean(hits[:,i]) for i in range(len(data))]
         res =  self.classifier.predict_proba(data)[:,1]
-        self.mem[d] = res
+        if self.memoization:
+            self.mem[d] = res
         return res
 
 
@@ -203,15 +206,19 @@ class DataLoader:
                 train_data[1].append(1)
 
         seq_size = len(train_data[0])
-        for i in range(seq_size):
-            x = (randint(0,seq_size-1))
-            y = (randint(0,seq_size-1))
-            if x!=y:
-                b = AnnotatedBaseCouple(abcList[0].annotations)
-                b.X = abcList[x].X
-                b.Y = abcList[y].Y
-                train_data[0].append(b.toTrainData())
-                train_data[1].append(0)
+        for i in range(seq_size):                        
+            x = None
+            while x == None or abcList[x].X.base == '-':
+                x = (randint(0,seq_size-1))
+            y = None
+            while y == None or y==x or abcList[y].Y.base == '-' :
+                y = (randint(0,seq_size-1))
+            
+            b = AnnotatedBaseCouple(abcList[0].annotations)
+            b.X = abcList[x].X
+            b.Y = abcList[y].Y
+            train_data[0].append(b.toTrainData())
+            train_data[1].append(0)
 
         return train_data
 
@@ -225,12 +232,12 @@ class DataLoader:
 
 
 if __name__ == "__main__":
-    c = PairClassifier(autotrain=False)    
-    d = DataLoader()
+    c = PairClassifier(memoization=False)    
+#    d = DataLoader()
 #    x,y = d.prepareTrainingData(d.loadSequence("data/sequences/simulated_alignment.fa"))
-    x,y = d.prepareTrainingData(d.loadSequence("data/sequences/short.fa"))
+#    x,y = d.prepareTrainingData(d.loadSequence("data/sequences/short.fa"))
         
-    c.fit(x,y)
+#    c.fit(x,y)
     p = [array((i,j,k,l)) for i in range(4) for j in range(4) for k in range(2) for l in range(2)]
     yy = c.predict(p)
     for i in zip(p,yy):
