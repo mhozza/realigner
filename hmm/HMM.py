@@ -252,7 +252,7 @@ class HMM(ConfigObject):
             newstates[state.getStateID()] = state
         self.states = newstates
         
-    def generateSequence(self, seq_len):
+    def generateSequence(self, seq_len, generateLength=False):
         #TODO: nefunguje pre viacrozmerne a generalizovane HMM (pre silent stavy
         #      to funguje) a ak vsetky stavy su koncove. Aby to fungovalo je 
         #      treba zlozitejsi algoritmus (ak chceme specifikovat dlzku)
@@ -263,8 +263,13 @@ class HMM(ConfigObject):
         dim = len(seq_len)
         gen_len = tuple([0] * dim)
         state = self.initStateSampler()
-        ret = list() 
-        while tlesssome(gen_len, seq_len):
+        ret = list()
+        zero = self.mathType(0.0)
+        def condition():
+            if generateLength:
+                return not self.states[state].endProbability > zero
+            return tlesssome(gen_len, seq_len)
+        while condition():
             em = self.states[state].sampleEmission()
             if dim == 1:
                 gen_len = tuple([gen_len[0] + len(em)])

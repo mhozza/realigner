@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 if [ `uname -n` == 'panda-cub' ]; then 
         echo -e '\e[1;31mNa notebooku sa nespustim!'
         tput sgr0

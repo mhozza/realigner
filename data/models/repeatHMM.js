@@ -135,7 +135,8 @@
  		    		"data": {"__name__": "#file(repeatlength.js)"},
  		    		"fractionssize": 10,
  		    		"start": 2
- 		    	}
+ 		    	},
+ 		    	"version": "v2"
  		    }
  		]	
  	}

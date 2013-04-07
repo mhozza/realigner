@@ -25,18 +25,6 @@ def brainwash(className):
     return type('Brainwashed' + className.__name__, (object,), dct)
 
 
-def alignment_column_to_annotation(column):
-    column = tuple([x if x == '-' else 'M' for x in column])
-    if column == ('-', 'M'):
-        return 'Y'
-    elif column == ('M', '-'):
-        return 'X'
-    elif column == ('M', 'M'):
-        return 'M'
-    else:
-        return '-'
-
-
 def get_model(args):
     loader = HMMLoader(args.mathType) # TODO: rename HMMLoader to ModelLoader
     for i in range(0, len(args.bind_constant), 2):
@@ -223,6 +211,7 @@ def main(filename_subst=None):
                     drawer = brainwash(AlignmentCanvas)()
                 else:
                     drawer = AlignmentCanvas()
+                    drawer.add_original_alignment(aln) 
                 
                 seq1, seq2 = tuple(map(Fasta.alnToSeq, aln.sequences[:2]))
                 
@@ -246,7 +235,6 @@ def main(filename_subst=None):
                 if len(args.draw) > 0:
                     drawer.add_sequence('X', seq1)
                     drawer.add_sequence('Y', seq2)
-                    drawer.add_original_alignment(aln) 
                     drawer.add_alignment_line(
                         101,
                         (255, 0, 255, 255),

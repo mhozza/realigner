@@ -98,12 +98,14 @@ def main():
             if ann_data != None:
                 xlen = len(X.replace('-', ''))
                 ylen = len(Y.replace('-', ''))
-                tandemRepeats['sequence1'].append((
-                    xlen, xlen + dx, dx / ann_data[1], ann_data[0], x
-                ))
-                tandemRepeats['sequence2'].append((
-                    ylen, ylen + dy, dy / ann_data[2], ann_data[0], y
-                ))
+                if dx > 0:
+                    tandemRepeats['sequence1'].append((
+                        xlen, xlen + dx, dx / ann_data[1], ann_data[0], x
+                    ))
+                if dy > 0:
+                    tandemRepeats['sequence2'].append((
+                        ylen, ylen + dy, dy / ann_data[2], ann_data[0], y
+                    ))
             A += PHMM.states[state].getChar() * max(dx, dy)
             X += x + ('-' * (dy - dx))
             Y += y + ('-' * (dx - dy))

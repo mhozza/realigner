@@ -2,6 +2,17 @@ from PIL import Image, ImageDraw
 import functools
 from collections import defaultdict
 
+def alignment_column_to_annotation(column):
+    column = tuple([x if x == '-' else 'M' for x in column])
+    if column == ('-', 'M'):
+        return 'Y'
+    elif column == ('M', '-'):
+        return 'X'
+    elif column == ('M', 'M'):
+        return 'M'
+    else:
+        return '-'
+    
 
 class AlignmentCanvas():
     

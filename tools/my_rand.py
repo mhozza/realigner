@@ -48,7 +48,7 @@ def rand_generator(dct, normalize=False, mathType=float):
     def function():
         r = random.random()
         i = 0
-        while 0 < len(L) and r > L[i][0]:
+        while i < len(L) and r > L[i][0]:
             i += 1
         if i >= len(L): 
             i = len(L) - 1
