@@ -59,7 +59,7 @@ class AlignmentCanvas():
                                                color))
                     if (aln.aln_to_seq[1][start] < 
                         aln.aln_to_seq[1][i - 1]):
-                       self.add_annotation('Y', 'O',
+                        self.add_annotation('Y', 'O',
                                               (aln.aln_to_seq[1][start],
                                                aln.aln_to_seq[1][i - 1],
                                                color))

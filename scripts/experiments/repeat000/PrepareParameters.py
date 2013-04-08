@@ -92,7 +92,7 @@ if __name__ == '__main__':
         step = int(os.environ['SGE_STEP_SIZE'])
     output_files = main(files[start:start + step], parsed_arg.trf,
                         parsed_arg.alignment_regexp,
-			parsed_arg.sequence_regexp)
+                        parsed_arg.sequence_regexp)
     with Open(parsed_arg.output_files.format(index=start), 'w') as f:
         json.dump(output_files, f, indent=4)
     perf.printAll()

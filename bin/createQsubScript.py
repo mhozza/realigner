@@ -58,7 +58,7 @@ def main(config_file, output_file):
                 param.append(' '.join(item['params']))
             query = ("{jobname}=`qsub -N '{name}' {parameters} {command} " + \
                 "| sed -e 's/[.].*$//'`").format(
-		name=job,
+                name=job,
                 jobname=job,
                 parameters=' '.join(param),
                 command=cmd_to_string(item['cmd'])

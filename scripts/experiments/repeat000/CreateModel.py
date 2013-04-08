@@ -17,17 +17,17 @@ def main(model_file, additional_parameters,
     with Open(trf_cover_file, 'r') as f:
         trf_cover = json.load(f)
     repeat_probability = (float(trf_cover['R_segment_count']) / 
-			  (trf_cover['R_segment_count'] +
-			   trf_cover['M_count']))
+                          (trf_cover['R_segment_count'] +
+                           trf_cover['M_count']))
     repeat_count = sum([trf_cover[x] for x in ['RR', 'RM', 'MR']])
     repeat_repeat_probability = float(trf_cover['RR']) / repeat_count
     nothing_repeat_probability = float(trf_cover['MR']) / repeat_count
     repeat_nothing_probability = float(trf_cover['RM']) / repeat_count
 
     loader.addDictionary('trackemi', {"value": {
-	'RR': repeat_repeat_probability,
-	'RM': repeat_nothing_probability,
-	'MR': nothing_repeat_probability,
+        'RR': repeat_repeat_probability,
+        'RM': repeat_nothing_probability,
+        'MR': nothing_repeat_probability,
     }})
 
     for k, v in additional_parameters.iteritems():
@@ -106,7 +106,7 @@ if __name__ == "__main__":
          files['transition'],
          files['trf_consensus'],
          files['trf_length'],
-	 files['trf_cover'],
+         files['trf_cover'],
          parsed_arg.output
     )
     perf.printAll()

@@ -165,23 +165,23 @@ class PairRepeatState(State):
             xrc = float(xlen) / len(xcon)
             xp = (self.repeatLengthDistribution[xrc] * 
                   self.consensusDistribution[xcon] *
-		  self.trackEmissions['RM'])
+                  self.trackEmissions['RM'])
             self.consensus = xcon
             yield (xlen, 0), xp
         for ylen, ycon in Y:
             yrc = float(ylen) / len(ycon)
             yp = (self.repeatLengthDistribution[yrc] * 
-		  self.consensusDistribution[ycon] *
-		  self.trackEmissions['MR'])
+                  self.consensusDistribution[ycon] *
+                  self.trackEmissions['MR'])
             self.consensus = ycon
             yield (0, ylen), yp
         for (xlen, xcon) in X:
             xrc = float(xlen) / len(xcon)
             xp = (self.repeatLengthDistribution[xrc] * 
                   self.consensusDistribution[xcon] *
-		  self.trackEmissions['RR'])
+                  self.trackEmissions['RR'])
             yp = (self.repeatLengthDistribution[xrc] *
-		  self.trackEmissions['RR'])
+                  self.trackEmissions['RR'])
             for (ylen, ycon) in Y:
                 yrc = float(ylen) / len(ycon)
                 xp *= self.repeatLengthDistribution[yrc]

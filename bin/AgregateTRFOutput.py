@@ -30,7 +30,7 @@ def main(input_file, length_output, consensus_output, full_length_output):
             statLen[round(10 * (1 + line[1] - line[0]) / len(line[-2])) / 10.0] \
                 += 1
             statStr[line[-2]] += 1
-	    statFull[1 + line[1] - line[0]] += 1
+            statFull[1 + line[1] - line[0]] += 1
         
     with Open(length_output, 'w') as f:
         json.dump(statLen, f, indent=4)
@@ -51,6 +51,6 @@ if __name__ == "__main__":
          parsed_arg.input,
          parsed_arg.lengthOutput,
          parsed_arg.consensusOutput,
-	 parsed_arg.fullLengthOutput,
+         parsed_arg.fullLengthOutput,
     ) 
     perf.printAll()
