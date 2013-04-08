@@ -1,4 +1,4 @@
-from bin.Realign import worker
+from bin.Realign import worker, compute_annotations
 from tools import perf
 from tools.file_wrapper import Open
 from alignment import Fasta
@@ -6,9 +6,14 @@ from alignment.Alignment import Alignment
 import sys
 from alignment.AlignmentIterator import AlignmentBeamGenerator
 import json
+from repeats.RepeatGenerator import RepeatGenerator
+
+# aj tak potrebujem pridať nejaký "realigner", lebo tam potrebujem pridat vselijake dalsie data
+# trenovatko si zoberie consenzus s hintov. Nebude to sice ciste, ale bude to funkcne.
+# Este by sa dalo zistit pravdepodobnosti a podla toho to zarovnat. To je ale grc, ale asi to tak spravim:-(
 
 
-def expectation_generator(args, model, alignment_filename):
+def expectation_generator(args, model, alignment_filename, annotations):
     for aln in Fasta.load(
         alignment_filename, 
         args.alignment_regexp, 
@@ -21,6 +26,19 @@ def expectation_generator(args, model, alignment_filename):
         positionGenerator = list(
             AlignmentBeamGenerator(aln, args.beam_width)
         )
+        
+        RX = RepeatGenerator(None, args.repeat_width)
+        RY = RepeatGenerator(None, args.repeat_width)
+        for rt in ['trf', 'original_repeats']:
+            if rt in annotations:
+                RX.addRepeats(annotations[rt][aln.names[0]])
+                RY.addRepeats(annotations[rt][aln.names[1]])
+        RX.buildRepeatDatabase()
+        RY.buildRepeatDatabase()
+        model.states[
+            model.statenameToID['Repeat']
+        ].addRepeatGenerator(RX, RY)
+        
         (transitions, emissions), probability = model.getBaumWelchCounts(
             seq1, 0, len(seq1),
             seq2, 0, len(seq2),
@@ -34,8 +52,10 @@ def expectation_generator(args, model, alignment_filename):
 
 
 def compute_expectations(args, model, output_filename, alignment_filename):
+    annotations = compute_annotations(args, alignment_filename)
     with Open(output_filename, 'w') as fp:
-        json.dump(list(expectation_generator(args, model, alignment_filename)),
+        json.dump(list(expectation_generator(args, model, alignment_filename,
+                                             annotations)),
                   fp ,indent=4)
 
 
