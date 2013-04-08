@@ -1,13 +1,12 @@
 import json
 import argparse
-import sys
 from algorithm.Graphs import toposort
 from tools.file_wrapper import Open
 from tools import perf
 
 def cmd_to_string(cmd):
     if type(cmd) == list:
-	return ' '.join(cmd)
+        return ' '.join(cmd)
     return cmd
 
 @perf.runningTimeDecorator
