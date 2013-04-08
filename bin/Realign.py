@@ -174,14 +174,21 @@ def realign_file(args, model, output_filename, alignment_filename):
             perf.msg("Data loaded in {time} seconds.")
             perf.replace()
             realigner = getRealigner(args.algorithm)()
-            realigner.prepareData(seq1, aln.names[0], seq2, aln.names[1], aln, args.beam_width, drawer, model, args.mathType, annotations, {'input':args.intermediate_input_files, 'output':args.intermediate_output_files}, args.repeat_width)
+            realigner.prepareData(seq1, aln.names[0], seq2, aln.names[1], aln, 
+                                  args.beam_width, drawer, model, args.mathType,
+                                  annotations, 
+                                  {'input':args.intermediate_input_files,
+                                   'output':args.intermediate_output_files},
+                                  args.repeat_width)
             aln = realigner.realign(0, len(seq1), 0, len(seq2))
             perf.msg("Sequence was realigned in {time} seconds.")
             perf.replace()
             if len(args.draw) > 0:
                 drawer.add_sequence('X', seq1)
                 drawer.add_sequence('Y', seq2)
-                drawer.add_alignment_line(101, (255, 0, 255, 255), 2, AlignmentPositionGenerator(Alignment([aln[0], aln[2]])))
+                drawer.add_alignment_line(101, (255, 0, 255, 255), 2, 
+                                          AlignmentPositionGenerator(
+                                              Alignment([aln[0], aln[2]])))
                 drawer.draw(args.draw, 2000, 2000)
                 perf.msg("Image was drawn in {time} seconds.")
             # Save output_file
