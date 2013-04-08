@@ -1,6 +1,8 @@
 {
 	"SplitAlignment": {
 		"params": ["-v", "PYTHONPATH=./", "-b y"],
+		"stdout": "output",
+		"stderr": "output",
 		"cmd": ["pypy-env/bin/pypy", 
 			"scripts/experiments/repeat000/SplitAlignment.py",
 			"/projects/ucsc-alignments/7way/chr15.maf.gz",
@@ -12,6 +14,8 @@
 	},
 	"ComputeStatistics": {
 		"params": ["-v", "PYTHONPATH=./", "-b y"],
+		"stdout": "output",
+		"stderr": "output",
 		"depends": ["SplitAlignment"],
 		"array": [1, 400, 20],
 		"cmd": ["pypy-env/bin/pypy",
@@ -23,6 +27,8 @@
 	},
 	"AggregateStatistics": {
 		"params": ["-v", "PYTHONPATH=./", "-b y"],
+		"stdout": "output",
+		"stderr": "output",
 		"depends": ["ComputeStatistics"],
 		"cmd": ["pypy-env/bin/pypy",
 			"scripts/experiments/repeat000/AggregateParameters.py",
@@ -32,6 +38,8 @@
 	},	
 	"CreateModel": {
 		"params": ["-v", "PYTHONPATH=./", "-b y"],
+		"stdout": "output",
+		"stderr": "output",
 		"depends": ["AggregateStatistics"],
 		"cmd": ["pypy-env/bin/pypy",
 			"scripts/experiments/repeat000/CreateModel.py",
@@ -41,6 +49,8 @@
 	},
 	"SampleAlignments": {
 		"params": ["-v", "PYTHONPATH=./", "-b y"],
+		"stdout": "output",
+		"stderr": "output",
 		"depends": ["CreateModel"],
 		"cmd": ["pypy-env/bin/pypy",
 			"bin/Sample.py",
@@ -53,6 +63,8 @@
 	},
 	"RunRepeatRealigner": {
 		"params": ["-v", "PYTHONPATH=./", "-b y"],
+		"stdout": "output",
+		"stderr": "output",
 		"depends": ["SampleAlignments"],
 		"array": [1, 100],
 		"cmd": ["pypy-env/bin/pypy",
@@ -68,6 +80,8 @@
 	},
 	"RunRepeatRealignerOriginalRepeats": {
 		"params": ["-v", "PYTHONPATH=./", "-b y"],
+		"stdout": "output",
+		"stderr": "output",
 		"depends": ["SampleAlignments"],
 		"array": [1, 100],
 		"cmd": ["pypy-env/bin/pypy",
@@ -83,6 +97,8 @@
 	},
 	"RunViterbi": {
 		"params": ["-v", "PYTHONPATH=./", "-b y"],
+		"stdout": "output",
+		"stderr": "output",
 		"depends": ["RunRepeatRealigner"],
 		"array": [1, 100],
 		"cmd": ["pypy-env/bin/pypy",
@@ -99,6 +115,8 @@
 	},
 	"RunViterbiOriginalRepeats": {
 		"params": ["-v", "PYTHONPATH=./", "-b y"],
+		"stdout": "output",
+		"stderr": "output",
 		"depends": ["SampleAlignments"],
 		"array": [1, 100],
 		"cmd": ["pypy-env/bin/pypy",

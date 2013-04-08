@@ -41,7 +41,12 @@ def main(config_file, output_file):
                         for x in zip(['', '-', ':'], map(str, item['array']))
                     ])
                 )
-            
+            if 'stdout' in item:
+                param.append('-o')
+                param.append("'{}'".format(item['stdout']))
+            if 'stderr' in item:
+                param.append('-e')
+                param.append("'{}'".format(item['stderr']))
             if "resources" in item:
                 assert(len(item['resources']) > 0)
                 param.append('-l')
