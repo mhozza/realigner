@@ -275,3 +275,32 @@ class PairRepeatState(State):
         # Generate Alignment
         return X, Y, (consensus, dx, dy)
     
+    
+    def getCons(self, x, dx, y, dy):
+        ret = []
+        if dx > 0:
+            for ln, consensus in self.repeatGeneratorX.getHints(x):
+                if ln == dx:
+                    ret.append(consensus)
+        if dy > 0:
+            for ln, consensus in self.repeatGeneratorY.getHints(y):
+                if ln == dy:
+                    ret.append(consensus)
+        return ret
+            
+    
+    def augmentSequences(self, A, B):
+        # Expecting that these values are cached. If not, it will not work
+        X, x, dx = A
+        Y, y, dy = B
+        ret = defaultdict(self.mathType)
+        for consensus in self.getCons(x, dx, y, dy):
+            keyX = (consensus, x, dx)
+            keyY = (consensus, y, dy)
+            prob = self.mathType(1.0)
+            if keyX in self.memoizeX:
+                prob *= self.memoizeX[keyX]
+            if keyY in self.memoizeY:
+                prob *= self.memoizeY[keyY]
+            ret[consensus] += prob 
+        return X[x:x + dx], Y[y:y + dy], list(ret.iteritems())

@@ -44,6 +44,9 @@ class GeneralizedPairState(GeneralizedState):
         for (key, _) in em.iteritems():
             em[key] *= duration_dict[(len(key[0]), len(key[1]))]
         self._sampleEmission = rand_generator(em)
+        
+    def augmentSequences(self, A, B):
+        return A[0][A[1]:A[1] + A[2]], B[0][B[1], B[1] + B[2]] 
          
 
 class PosteriorTableProcessor:
@@ -106,10 +109,11 @@ class BaumWelchProcessor:
         for (_y, V) in row.iteritems():
             for state in range(len(V)):
                 for ((_sdx, _sdy), prob) in V[state].iteritems():
-                    self.emissionCount[ # TODO: consensus
-                        state,
-                        X[x + i - _sdx: x + i],
-                        Y[y + _y - _sdy: y + _y]
+                    self.emissionCount[state][
+                        self.states[state].augmentSequences(
+                            (X, x + i - _sdx, _sdx),
+                            (Y, y + _y - _sdy, _sdy),
+                        )
                     ] += prob * B[(_y, state)]
         del B
     

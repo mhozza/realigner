@@ -35,9 +35,10 @@ def expectation_generator(args, model, alignment_filename, annotations):
                 RY.addRepeats(annotations[rt][aln.names[1]])
         RX.buildRepeatDatabase()
         RY.buildRepeatDatabase()
-        model.states[
-            model.statenameToID['Repeat']
-        ].addRepeatGenerator(RX, RY)
+        if 'Repeat' in model.statenameToID:
+            model.states[
+                model.statenameToID['Repeat']
+            ].addRepeatGenerator(RX, RY)
         
         (transitions, emissions), probability = model.getBaumWelchCounts(
             seq1, 0, len(seq1),
