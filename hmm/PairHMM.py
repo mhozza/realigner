@@ -55,19 +55,12 @@ class PosteriorTableProcessor:
 
     def processRow(self, X, x, dx, Y, y, dy, i, row, bt, positionGenerator):
         B = defaultdict(self.model.mathType)
-#        print positionGenerator
         for (_x, _y) in positionGenerator:
             for stateID in range(len(self.model.states)):
                 state = self.model.states[stateID]
-                acc = self.model.mathType(0.0)
-                for (followingID, prob) in state.followingIDs():
-#                    print _x, _y, followingID
-#                    print len(bt), dx, i, x
-#                    print len(bt[_x])
-#                    print len(bt[_x][_y])
-#                    print bt[_x][_y][followingID]
-                    acc += prob * bt[_x][_y][followingID]
-                B[(_y, stateID)] = acc
+                acc = sum([prob * bt[_x][_y][followingID]
+                           for (followingID, prob) in state.followingIDs()])
+                B[(_y, stateID)] = acc    
         for (_y, V) in row.iteritems():
             for state in range(len(V)):
                 for ((_sdx, _sdy), prob) in V[state].iteritems():
@@ -77,6 +70,51 @@ class PosteriorTableProcessor:
 
     def getData(self):
         return self.retTable
+    
+    
+class BaumWelchProcessor:
+    
+    def __init__(self, dx, model):
+        self.transitionCount = defaultdict(model.mathType)
+        self.emissionCount = [defaultdict(model.mathType) 
+                              for _ in range(len(model.states))]
+    
+    def processRow(self, X, x, dx, Y, y, dy, i, row, bt, positionGenerator):
+        F = defaultdict(self.model.mathType)
+        for _y, V in row.iteritems():
+            for state in range(len(V)):
+                for ((_sdx, _sdy), prob) in V[state].iteritems():
+                    F[_y, state] += prob
+        
+        B = defaultdict(self.model.mathType)
+        for (_x, _y) in positionGenerator:
+            for stateID in range(len(self.model.states)):
+                state = self.model.states[stateID]
+                acc = self.model.mathType(0.0)
+                for (followingID, prob) in state.followingIDs():
+                    acc += prob * bt[_x][_y][followingID]
+                B[(_y, stateID)] = acc
+        
+        for _x, _y in positionGenerator:
+            for stateID in range(len(self.model.states)):
+                state = self.model.states[stateID]
+                for followingID, prob in state.followingIDs():
+                    self.transitionCount[stateID, followingID] += (
+                        F[_y, stateID] * prob * bt[_x][_y][followingID])
+        del F
+        
+        for (_y, V) in row.iteritems():
+            for state in range(len(V)):
+                for ((_sdx, _sdy), prob) in V[state].iteritems():
+                    self.emissionCount[ # TODO: consensus
+                        state,
+                        X[x + i - _sdx: x + i],
+                        Y[y + _y - _sdy: y + _y]
+                    ] += prob * B[(_y, state)]
+        del B
+    
+    def getData(self):
+        return self.transitionCount, self.emissionCount
 
    
 class ProbabilityProcessor:
@@ -207,7 +245,6 @@ class GeneralizedPairHMM(HMM):
         
         # Main algorithm
         _x_prev = -1000000 
-        retTable = list()
         # Position generator zaruci ze nebudem mat problem menenim 
         # dictionary za jazdy. Problem to vyraba ak sa vyraba novy stav.
         for (_x, _y) in positionGenerator:
@@ -589,15 +626,17 @@ class GeneralizedPairHMM(HMM):
         index = 0
         for i, row in forwardTable:
             #slice position generator
-            pg = []
-            while index < len(positionGenerator) and positionGenerator[index][0] < i:
+            while (index < len(positionGenerator) and 
+                   positionGenerator[index][0] < i):
                 index += 1
             start = index
-            while index < len(positionGenerator) and positionGenerator[index][0] <= i:
+            while (index < len(positionGenerator) and
+                   positionGenerator[index][0] <= i):
                 index += 1
 
             for table in States:
-                table.processRow(X, x, dx, Y, y, dy, i, row, bt, positionGenerator[start:index])
+                table.processRow(X, x, dx, Y, y, dy, i, row, bt, 
+                                 positionGenerator[start:index])
         ret = [table.getData() for table in States]
 
 #        ret = [table(X, x, dx, Y, y, dy, ft, bt, positionGenerator) 
@@ -613,14 +652,15 @@ class GeneralizedPairHMM(HMM):
         r = self.getTable(X, x, dx, Y, y, dy, [PosteriorTableProcessor,
                                                ProbabilityProcessor], 
                           forwardTable, backwardTable, positionGenerator)
+        assert(len(r) == 2)
         return tuple(r)
     
 
     def getBaumWelchCounts(self, X, x, dx, Y, y, dy,
                  forwardTable = None, backwardTable = None,
                  positionGenerator = None):
-        r = self.getTable(X, x, dx, Y, y, dy, [self.EmissionCountResult,
-                                               self.TransitionCountResult],
+        r = self.getTable(X, x, dx, Y, y, dy, [BaumWelchProcessor,
+                                               ProbabilityProcessor],
                           forwardTable, backwardTable, positionGenerator)
         assert(len(r) == 2)
         return tuple(r)
