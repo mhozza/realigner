@@ -254,43 +254,26 @@ def createProfileHMMv2(mathType, consensus, time, backgroundProb, trans):
             {"from": "i" + str(i), "to": "m" + str(i), "prob": trans['IM']},
             {"from": "i" + str(i), "to": "1d" + str(i), "prob": trans['ID']},
         ])
-    one = mathType(1.0)
     for k, v in trans.iteritems():
         trans[k] = mathType(v)
     transitions.extend([
-        {"from": "Init", "to": "m0", "prob": trans['_M'] * (one - trans['_E'])},
-        {"from": "Init", "to": "i0", "prob": trans['_I'] * (one - trans['_E'])},
-        {"from": "Init", "to": "1d0", "prob": trans['_D'] *
-         (one - trans['_E'])},
+        {"from": "Init", "to": "m0", "prob": trans['_M']},
+        {"from": "Init", "to": "i0", "prob": trans['_I']},
+        {"from": "Init", "to": "1d0", "prob": trans['_D']},
         {"from": "Init", "to": "End", "prob": trans['_E']},
-        {"from": "1d" + str(length - 1), "to": "m0", "prob": trans['_M'] * 
-         (one - trans['_E'])},
-        {"from": "1d" + str(length - 1), "to": "End", "prob": trans['_M'] * 
-         trans['_E']},
-        {"from": "1d" + str(length - 1), "to": "i0", "prob": trans['_I'] * 
-         (one - trans['_E'])},
-        {"from": "1d" + str(length - 1), "to": "End", "prob": trans['_I'] * 
-         trans['_E']},
-        {"from": "1d" + str(length - 1), "to": "2d0", "prob": trans['_D'] * 
-         (one - trans['_E'])},
-        {"from": "1d" + str(length - 1), "to": "End", "prob": trans['_D'] * 
-         trans['_E']},
-        {"from": "m" + str(length - 1), "to": "Init", "prob": 
-         (one - trans['MI']) * (one - trans['_E'])},
-        {"from": "m" + str(length - 1), "to": "End", "prob": (one - trans['MI'])
-         * trans['_E']},
-        {"from": "m" + str(length - 1), "to": "i" + str(length),
+        {"from": "1d" + str(length - 1), "to": "m0", "prob": trans['DRM']},
+        {"from": "1d" + str(length - 1), "to": "End", "prob": trans['DE']},
+        {"from": "1d" + str(length - 1), "to": "i0", "prob": trans['DRI']},
+        {"from": "1d" + str(length - 1), "to": "End", "prob": trans['DE']},
+        {"from": "1d" + str(length - 1), "to": "2d0", "prob": trans['DRD']},
+        {"from": "m" + str(length - 1), "to": "Init", "prob": trans['M_']},
+        {"from": "m" + str(length - 1), "to": "End", "prob": trans['ME']},
+        {"from": "m" + str(length - 1), "to": "i" + str(length), 
          "prob": trans['MI']},
         {"from": "i" + str(length), "to": "i" + str(length),
          "prob": trans['II']},
-        {"from": "i" + str(length), "to": "Init", "prob": (one - trans['II']) *
-         (one - trans['_E'])},
-        {"from": "i" + str(length), "to": "End", "prob": (one - trans['II']) *
-         trans['_E']},
-        {"from": "2d" + str(length - 1), "to": "m0",
-         "prob": trans['_M'] / (trans['_M'] + trans['_I'])},
-        {"from": "2d" + str(length - 1), "to": "i0",
-         "prob": trans['_I'] / (trans['_M'] + trans['_I'])},
+        {"from": "i" + str(length), "to": "Init", "prob": trans['I_']},
+        {"from": "i" + str(length), "to": "End", "prob": trans['IE']},
     ])
     insertState = State(mathType)
     insertState.load({
@@ -321,12 +304,18 @@ def createProfileHMMv2(mathType, consensus, time, backgroundProb, trans):
         "durations": [(0, 1.0)],
     })
     states.append(endState)
+    remstate = '2d' + str(length - 1)
+    states = [state for state in states if state.stateName != remstate]
+    transitions = [tran for tran in transitions 
+                   if tran['to'] != remstate and tran['from'] != remstate]
     hmm = GeneralizedHMM(mathType)
     hmm.load({
         "__name__": "GeneralizedHMM",
         "states": states,
         "transitions": transitions,
     })
+    for i in range(len(states)):
+        hmm.states[i].normalizeTransitions()
     hmm.reorderStatesTopologically()
     nm = consensus
     if len(nm) > 20:

@@ -5,6 +5,7 @@ from tools.my_rand import rand_generator, normalize_dict, default_dist, \
                             dist_to_json
 from tools.Exceptions import ParseException
 from adapters.TRFDriver import Repeat
+import math
 
 class RepeatProfileFactory:
             
@@ -33,12 +34,41 @@ class RepeatProfileFactory:
     def getHMM(self, consensus):
         if consensus in self.cache:
             return self.cache[consensus]
-        if '_E' not in self.transitionMatrix:
+        if '_E' not in self.transitionMatrix: # TODO: neskor chceme iny system detekcie
+            one = self.mathType(1.0)
+            self.transitionMatrix['_M'] = (self.transitionMatrix['_M'] * 
+                                           (one - self.repProb))
+            self.transitionMatrix['_I'] = (self.transitionMatrix['_I'] * 
+                                           (one - self.repProb))
+            self.transitionMatrix['_D'] = (self.transitionMatrix['_D'] * 
+                                           (one - self.repProb))
+            self.transitionMatrix['_E'] = self.repProb
+            self.transitionMatrix['DE'] = (self.transitionMatrix['_M'] * 
+                                           self.repProb)
+            self.transitionMatrix['DRM'] = (self.transitionMatrix['_M'] * 
+                                            (one - self.repProb))
+            self.transitionMatrix['DRI'] = (self.transitionMatrix['_I'] * 
+                                            (one - self.repProb))
+            self.transitionMatrix['DE'] = (self.transitionMatrix['_I'] * 
+                                           self.repProb)
+            self.transitionMatrix['DRD'] = (self.transitionMatrix['_D'] * 
+                                            (one - self.repProb))
+            self.transitionMatrix['M_'] = ((one - self.transitionMatrix['MI']) 
+                                           * (one - self.repProb))
+            self.transitionMatrix['ME'] = ((one - self.transitionMatrix['MI']) 
+                                           * self.repProb)
+            self.transitionMatrix['I_'] = ((one - self.transitionMatrix['II']) 
+                                           * (one - self.repProb))
+            self.transitionMatrix['IE'] = ((one - self.transitionMatrix['II'])
+                                           * self.repProb)
             self.transitionMatrix['_E'] = self.repProb
         self.cache[consensus] = self.factory(self.mathType, 
             consensus, self.time, self.backgroudProbability,
             self.transitionMatrix)
         return self.cache[consensus]
+    
+    def clearCache(self):
+        self.cache = dict()
     
 
 class PairRepeatState(State):
@@ -131,8 +161,10 @@ class PairRepeatState(State):
         ret['repeatlengthdistribution'] = \
             dist_to_json(self.repeatLengthDistribution)
         ret['trackemissions'] = self.trackEmissions
-        ret['version'] = self.version
-        ret['repprob'] = self.repProb 
+        if self.version != None:
+            ret['version'] = self.version
+        if self.repProb != None:
+            ret['repprob'] = self.repProb 
         #TODO: save consensus distribution
         return ret
 
@@ -303,4 +335,92 @@ class PairRepeatState(State):
             if keyY in self.memoizeY:
                 prob *= self.memoizeY[keyY]
             ret[consensus] += prob 
-        return X[x:x + dx], Y[y:y + dy], list(ret.iteritems())
+        return X[x:x + dx], Y[y:y + dy], tuple(ret.iteritems())
+    
+    def clearCache(self):
+        self.memoizeX = dict()
+        self.memoizeY = dict()
+        self.dgmemoize = dict()
+        self.rdgmemoize = dict()
+        self.factory.clearCache()
+    
+    def combineExpectations(self, emissions):
+        def name_to_type(name):
+            d = {'Init': '_', 'End': 'E'}
+            d1 = {'m': 'M', 'i': 'I'}
+            d2 = {'1d': 'D', '2d': 'D'} 
+            if name in d:
+                return d[name], -1
+            if name[0] in d1:
+                return d1[name[0]], int(name[1:])
+            if name[:2] in d2:
+                return d2[name[:2]], int(name[2:])
+            raise 'Unknown state name'
+        
+        def emission_to_realemission(state, emission, char):
+            if state == 'M':
+                return 1 if char == emission else 0
+            return emission
+        # TODO: zmen na dicty
+        transitions = defaultdict(self.mathType(0.0))
+        emissions = defaultdict(lambda *_:defaultdict(self.mathType(0.0)))
+        like = self.mathType(0.0)
+        for (x, y, consensus), prob in emissions.iteritems():
+            hmm = self.factory.getHMM(consensus)
+            for sequence in [x, y]:
+                trans, emiss, likelihood = hmm.getBaumWelchCount(sequence, 0, len(sequence))
+                # TODO: Netreba tie veci nahodou uz normalizovat tu? alebo vydelit expectations likelihoodom? 
+                like += likelihood * prob
+                for fi in range(len(self.states)):
+                    fname = self.states[fi].stateName
+                    fn, findex = name_to_type(fname)
+                    #Transitions for state fi
+                    for ti, p in trans[fi].iteritems():
+                        tname = self.states[ti].stateName
+                        tn, tindex = name_to_type(tname)
+                        if tindex == 0 and findex > 0:
+                            transitions[fn + 'R' + tn] += prob * p
+                        else:
+                            transitions[fn + tn] += prob * p
+                    #Emissions for state fi
+                    for em, p in emiss[fi].iteritems():
+                        if len(em) == 0: 
+                            continue
+                        em = emission_to_realemission(fn, em, consensus[findex])
+                        emissions[fn][em] += prob * p
+        return transitions, emissions, like
+    
+    def improveModel(self, transitions, emissions):  
+        self.clearCache()
+        back = normalize_dict(emissions['I'])
+        self.backgroundProbability = back
+        self.factory.backgroudProbability = back
+        eqprob = emissions['M'][1] / sum(emissions['M'].values())
+        time = -3.0/4.0 * (math.log((4.0 * eqprob - 1.0)/3.0))
+        self.time = time
+        self.factory.time = time
+        for state in transitions:
+            transitions[state] = normalize_dict(transitions[state])
+        self.transitionMatrix = transitions
+        self.factory.transitionMatrix = transitions
+         
+    
+    def trainEmissions(self, emissions):
+        
+        lastLike = self.mathType(0.0)
+        
+        transitions, emissions, like = self.expectationMaximization(emissions)
+        def diff(like, lastLike):
+            if like > lastLike:
+                return like - lastLike
+            print 'Warning: last likelihood was smaller then previous', like, lastLike
+            return lastLike - like
+        while diff(like, lastLike) > 1e-6:
+            lastLike = like
+            self.improveModel(transitions, emissions)
+            transitions, emissions, like = self.expectationMaimization(emissions)
+        self.improveModel(transitions, emissions)
+        # musim zlepsit modely
+        #for (x, y, consensus), prob in emissions.iteritems():
+        #    print 'train repeat state', x, y, consensus, prob
+            
