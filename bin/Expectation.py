@@ -7,6 +7,7 @@ import sys
 from alignment.AlignmentIterator import AlignmentBeamGenerator
 import json
 from repeats.RepeatGenerator import RepeatGenerator
+from repeats.RepeatRealigner import jsonize
 
 # aj tak potrebujem pridať nejaký "realigner", lebo tam potrebujem pridat vselijake dalsie data
 # trenovatko si zoberie consenzus s hintov. Nebude to sice ciste, ale bude to funkcne.
@@ -55,8 +56,9 @@ def expectation_generator(args, model, alignment_filename, annotations):
 def compute_expectations(args, model, output_filename, alignment_filename):
     annotations = compute_annotations(args, alignment_filename)
     with Open(output_filename, 'w') as fp:
-        json.dump(list(expectation_generator(args, model, alignment_filename,
-                                             annotations)),
+        json.dump(jsonize(list(expectation_generator(args, model, 
+                                                     alignment_filename,
+                                                     annotations))),
                   fp ,indent=4)
 
 
