@@ -47,6 +47,12 @@ class GeneralizedPairState(GeneralizedState):
         
     def augmentSequences(self, A, B):
         return A[0][A[1]:A[1] + A[2]], B[0][B[1], B[1] + B[2]] 
+    
+    def trainEmissions(self, emissions):
+        total = self.mathType(sum(emissions.values()))
+        self.emissions = defaultdict(self.mathType)
+        for k, v in emissions.iteritems():
+            self.emissions[k] = self.mathType(v) / total
          
 
 class PosteriorTableProcessor:
@@ -109,7 +115,7 @@ class BaumWelchProcessor:
         for (_y, V) in row.iteritems():
             for state in range(len(V)):
                 for ((_sdx, _sdy), prob) in V[state].iteritems():
-                    self.emissionCount[state][
+                    self.emissionCount[state][# spadne na unhashable
                         self.states[state].augmentSequences(
                             (X, x + i - _sdx, _sdx),
                             (Y, y + _y - _sdy, _sdy),
