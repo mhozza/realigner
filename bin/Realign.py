@@ -27,17 +27,17 @@ def brainwash(className):
 
 def get_model(args):
     loader = HMMLoader(args.mathType) # TODO: rename HMMLoader to ModelLoader
-    for i in range(0, len(args.bind_constant), 2):
+    for i in range(0, len(args.bind_file), 2):
         loader.addFile(args.bind_file[i], args.bind_file[i + 1])
     for i in range(0, len(args.bind_constant_file), 2):
         loader.addConstant(
             args.bind_constant_file[i],
             loader.load(args.bind_constant_file[i + 1])
         )
-    for i in range(0, len(args.bind_constant), 2):
+    for i in range(0, len(args.bind_constant_file), 2):
         loader.addConstant(
-            args.bind_constant[i],
-            loader.loads(args.bind_constant[i + 1]),
+            args.bind_constant_file[i],
+            loader.loads(args.bind_constant_file[i + 1]),
         )
     return loader.load(args.model)["model"]
 
