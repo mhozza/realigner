@@ -104,6 +104,15 @@ class State(ConfigObject):
         self.transitions = list()
         self.reverseTransitions = list()
 
+    def normalizeTransitions(self):
+        if len(self.transitions) == 0:
+            return
+        total = sum([p for _, p in self.transitions])
+        self.transitions = [(state, prob/total) 
+                            for state, prob in self.transitions]  
+        self.reverseTransitions = [(state, prob/total) 
+                                   for state, prob in self.reverseTransitions]  
+
  
     def followingIDs(self):
         return self.transitions
