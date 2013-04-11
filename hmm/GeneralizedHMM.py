@@ -97,18 +97,17 @@ class GeneralizedHMM(HMM):
             if _x < 0:
                 continue
             if memoryPattern.next():
-                retTable.append((x + _x, rows[_x]))
+                retTable.append((_x, rows[_x]))
             rows[_x] = list()
                 
         return retTable
    
     
     def getBackwardTable(self, X, x, dx, memoryPattern=None, initialRow=None):
-        
         if memoryPattern == None:
             memoryPattern = MemoryPatterns.every(dx + 1)
          
-        rows = [[defaultdict(self.mathType) 
+        rows = [[self.mathType(0.0) 
                  for _ in range(len(self.states))] 
                      for _ in range(dx+1)]    
         
@@ -120,7 +119,7 @@ class GeneralizedHMM(HMM):
             for state in self.states:
                 prob = state.getEndProbability()
                 if prob > self.mathType(0.0):
-                    rows[dx][state.getStateID()][1] = prob
+                    rows[dx][state.getStateID()] = prob
         
         # Main algorithm
         retTable = list()
@@ -128,33 +127,56 @@ class GeneralizedHMM(HMM):
             if ignoreFirstRow and _x == dx:
                 continue
             for stateID in range(len(self.states)):
-                acc_prob = reduce(operator.add,
-                                  [value for (_,value) in
-                                      rows[_x][stateID].iteritems()],
-                                  self.mathType(0.0))
                 state = self.states[stateID]
                 for (previousID, transprob) in state.previousIDs():
                     previous = self.states[previousID]
-                    acc_trans_prob = acc_prob * transprob
+                    acc_trans_prob = rows[_x][stateID] * transprob
                     for (_sdx, dprob) in previous.durationGenerator():
                         if _x-_sdx < 0:
                             continue
-                        rows[_x - _sdx][previousID][_sdx] += \
-                            state.emission(X, x + _x - _sdx, _sdx) \
+                        rows[_x - _sdx][previousID] += \
+                            previous.emission(X, x + _x - _sdx, _sdx) \
                             * acc_trans_prob * dprob
             if _x>dx:
                 continue 
             if memoryPattern.next():
-                retTable.append((x + _x, rows[_x]))
+                retTable.append((_x, rows[_x]))
             rows[_x] = list()
                 
         return retTable
     
-    
-    # TODO: check if this even works
-    def getProbability(self, X, x, dx, positionGenerator = None): 
-        table = self.getForwardTable(X, x, dx, 
-                                     memoryPattern=MemoryPatterns.last(dx + 1))
+    def getBaumWelchCount(self, X, x, dx, memoryPattern=None, initialRow=None):
+        transitions = [defaultdict(self.mathType)
+                       for _ in range(len(self.states))]
+        emissions = [defaultdict(self.mathType)
+                     for _ in range(len(self.states))]
+        forwardTable = self.getForwardTable(X, x, dx, memoryPattern, initialRow)
+        ft = [[] for _ in range(len(forwardTable))]
+        for i, t in forwardTable:
+            ft[i] = t
+        backwardTable = self.getBackwardTable(X, x, dx, memoryPattern,
+                                              initialRow)
+        bt = [[] for _ in range(len(backwardTable))]
+        for i, t in backwardTable:
+            bt[i] = t
+        probability = self.getProbability(X, x, dx, table=forwardTable)
+
+        for i in range(len(dx + 1)):
+            for stateID in range(len(self.states)):
+                state = self.states[stateID]
+                for followingID, transprob in state.followingIDs():
+                    for sdx, prob in ft[i][stateID].iteritems():
+                        transitions[stateID][followingID] += (
+                            prob * transprob * bt[i][followingID])
+                        emissions[stateID][X[x + i - sdx: x + i]] += (
+                            prob * transprob * bt[i][followingID])
+            
+        return transitions, emissions, probability
+
+    def getProbability(self, X, x, dx, positionGenerator=None, table=None):
+        if table == None: 
+            table = self.getForwardTable(
+                X, x, dx, memoryPattern=MemoryPatterns.last(dx + 1))
     
         return sum([sum([prob for (_, prob) in dct.iteritems()]) * 
                     self.states[stateID].getEndProbability() 
