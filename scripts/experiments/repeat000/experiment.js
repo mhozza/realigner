@@ -91,7 +91,7 @@
 	        "--beam_width 30",
 	        "--repeat_width 0",
 	        "--sequence_regexp sequence1 sequence2",
-	        "-tracks trf"
+	        "--tracks trf"
 	    ]
 	},
 	"Maximize_1": {
@@ -157,7 +157,7 @@
 	        "--beam_width 30",
 	        "--repeat_width 0",
 	        "--sequence_regexp sequence1 sequence2",
-	        "-tracks trf"
+	        "--tracks trf"
 	    ]
 	},
 	"Maximize_3": {
@@ -190,7 +190,7 @@
 	        "--beam_width 30",
 	        "--repeat_width 0",
 	        "--sequence_regexp sequence1 sequence2",
-	        "-tracks trf"
+	        "--tracks trf"
 	    ]
 	},
 	"Maximize_4": {
