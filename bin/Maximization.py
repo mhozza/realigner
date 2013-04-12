@@ -6,8 +6,17 @@ import argparse
 from bin.Realign import get_model, getMathType
 from collections import defaultdict
 import json
+from algorithm.LogNum import LogNum
 
-
+def destroy_lognum(structure):
+    t = type(structure)
+    if t in [dict, defaultdict]:
+        return dict([(k, destroy_lognum(v)) for k, v in structure.iteritems()])
+    elif t in [list, tuple]:
+        return t([destroy_lognum(v) for v in structure])
+    elif t in [type(LogNum())]:
+        return float(structure) 
+    return structure 
 
 @perf.runningTimeDecorator
 def main():
@@ -38,44 +47,57 @@ def main():
     for filename in args.expectations:
         with Open(filename, 'r') as f:
             for exp in json.load(f):
-                prob = exp.probability
-                for k, v  in exp['transitions'].iteritems():
-                    x, y = tuple(map(int,k.strip('()').split(',')))
-                    expectations['transitions'][x][y] += prob * v
-                for stateID in range(len(exp['emissions'].iteritems())):
-                    for k, v in exp['emissions'][stateID].iteritems():
-                        k = tuple(k[1:len(k) - 1].split(',', 2))
+                exp = dict(exp)
+                if args.mathType == float:
+                    prob = exp['probability']
+                else:
+                    prob = args.mathType(exp['probability'], False)
+                for k, v  in exp['transitions']:
+                    x, y = tuple(k)
+                    if args.mathType == float:
+                        expectations['transitions'][x][y] += prob * v
+                    else:
+                        expectations['transitions'][x][y] += (
+                            prob * args.mathType(v, False))
+                for stateID in range(len(exp['emissions'])):
+                    for k, v in exp['emissions'][stateID]:
+                        k = tuple(k)
+                        if args.mathType != float:
+                            v = args.mathType(v, False)                            
                         if len(k) == 2:
                             expectations['emissions'][stateID][k] += prob * v
                         else:
                             x, y, cons = k
-                            cons = [tuple(z.strip('()').split(','))
-                                    for z in cons[1:len(cons) - 1].split('),(')]
-                            cons = [(c, args.mathType(p)) for c, p in cons]
+                            cons = [tuple(_) for _ in cons]
+                            if args.mathType == float:
+                                cons = [(c, args.mathType(p)) for c, p in cons]
+                            else:
+                                cons = [(c, args.mathType(p, False)) 
+                                        for c, p in cons]
                             if len(cons) == 0:
                                 continue
                             total = sum([p for _, p in cons])
                             for c, p in cons:
                                 expectations['emissions'][stateID][x, y, c] = (
-                                    prob * p / total)
+                                    prob * v * p / total)
                 
     # Compute maximization step for transitions (no smoothing)
     for k, v in expectations['transitions'].iteritems():
         total = sum(v.values())
         for kk in v:
             v[kk] /= total
-    for stateID in range(len(model.states)):
-        model.states[stateID].clearTransitions()
+    model.clearTransitions()
     for fromID in range(len(model.states)):
         for toID in range(len(model.states)):
             prob = expectations['transitions'][fromID][toID]
-            model.states[fromID].addTransition(toID, prob)
-            model.states[toID].addTransition(fromID, prob)
+            model.addTransition(fromID, toID, prob)
     # Compute maximization step for emissions (no smoothing)
     for stateID in range(len(model.states)):
         model.states[stateID].trainEmissions(expectations['emissions'][stateID])    
     # Output new model
-    
+    json_prep = {"model": destroy_lognum(model.toJSON())}
+    with Open(args.output, 'w') as f:
+        json.dump(json_prep, f, indent=4)
     return 0 
 
 
