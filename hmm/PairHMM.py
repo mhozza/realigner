@@ -46,7 +46,7 @@ class GeneralizedPairState(GeneralizedState):
         self._sampleEmission = rand_generator(em)
         
     def augmentSequences(self, A, B):
-        return A[0][A[1]:A[1] + A[2]], B[0][B[1], B[1] + B[2]] 
+        return A[0][A[1]:A[1] + A[2]], B[0][B[1]:B[1] + B[2]] 
     
     def trainEmissions(self, emissions):
         total = self.mathType(sum(emissions.values()))
@@ -87,6 +87,7 @@ class BaumWelchProcessor:
         self.transitionCount = defaultdict(model.mathType)
         self.emissionCount = [defaultdict(model.mathType) 
                               for _ in range(len(model.states))]
+        self.model = model
     
     def processRow(self, X, x, dx, Y, y, dy, i, row, bt, positionGenerator):
         F = defaultdict(self.model.mathType)
@@ -115,8 +116,10 @@ class BaumWelchProcessor:
         for (_y, V) in row.iteritems():
             for state in range(len(V)):
                 for ((_sdx, _sdy), prob) in V[state].iteritems():
+                    if _sdx == 0 and _sdy == 0:
+                        continue #TODO: find out why this happens
                     self.emissionCount[state][# spadne na unhashable
-                        self.states[state].augmentSequences(
+                        self.model.states[state].augmentSequences(
                             (X, x + i - _sdx, _sdx),
                             (Y, y + _y - _sdy, _sdy),
                         )
