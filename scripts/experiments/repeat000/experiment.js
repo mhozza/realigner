@@ -197,7 +197,7 @@
 		"params": ["-v", "PYTHONPATH=./", "-b y"],
 		"stdout": "output",
 		"stderr": "output",
-		"depends": ["Expect_3"],
+		"depends": ["Expect_4"],
 		"cmd": [
 		    "pypy-env/bin/pypy",
 		    "bin/Maximization.py",
