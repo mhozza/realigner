@@ -240,6 +240,11 @@ class HMM(ConfigObject):
         self.states[stateFrom].addTransition(stateTo, probability)
         self.states[stateTo].addReverseTransition(stateFrom, probability)
         
+    def clearTransitions(self):
+        self.transitions = defaultdict(dict)
+        for state in self.states:
+            state.clearTransitions()
+        
         
     def reorderStatesTopologically(self):
         reorder = Graphs.orderToDict(
