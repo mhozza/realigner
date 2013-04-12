@@ -4,8 +4,8 @@ from collections import defaultdict
 from tools.my_rand import rand_generator, normalize_dict, default_dist, \
                             dist_to_json
 from tools.Exceptions import ParseException
-from adapters.TRFDriver import Repeat
 import math
+#from multiprocessing import Pool
 
 class RepeatProfileFactory:
             
@@ -36,6 +36,9 @@ class RepeatProfileFactory:
             return self.cache[consensus]
         if '_E' not in self.transitionMatrix: # TODO: neskor chceme iny system detekcie
             one = self.mathType(1.0)
+            for k, v in self.transitionMatrix.iteritems():
+                self.transitionMatrix[k] = self.mathType(v)
+
             self.transitionMatrix['_M'] = (self.transitionMatrix['_M'] * 
                                            (one - self.repProb))
             self.transitionMatrix['_I'] = (self.transitionMatrix['_I'] * 
@@ -49,18 +52,20 @@ class RepeatProfileFactory:
                                             (one - self.repProb))
             self.transitionMatrix['DRI'] = (self.transitionMatrix['_I'] * 
                                             (one - self.repProb))
-            self.transitionMatrix['DE'] = (self.transitionMatrix['_I'] * 
-                                           self.repProb)
+            self.transitionMatrix['DRE'] = (self.transitionMatrix['_I'] * 
+                                            self.repProb)
             self.transitionMatrix['DRD'] = (self.transitionMatrix['_D'] * 
                                             (one - self.repProb))
-            self.transitionMatrix['M_'] = ((one - self.transitionMatrix['MI']) 
-                                           * (one - self.repProb))
-            self.transitionMatrix['ME'] = ((one - self.transitionMatrix['MI']) 
-                                           * self.repProb)
-            self.transitionMatrix['I_'] = ((one - self.transitionMatrix['II']) 
-                                           * (one - self.repProb))
-            self.transitionMatrix['IE'] = ((one - self.transitionMatrix['II'])
-                                           * self.repProb)
+            self.transitionMatrix['MR_'] = ((one - self.transitionMatrix['MI']) 
+                                            * (one - self.repProb))
+            self.transitionMatrix['MRE'] = ((one - self.transitionMatrix['MI']) 
+                                            * self.repProb)
+            self.transitionMatrix['IR_'] = ((one - self.transitionMatrix['II']) 
+                                            * (one - self.repProb))
+            self.transitionMatrix['IRE'] = ((one - self.transitionMatrix['II'])
+                                            * self.repProb)
+            self.transitionMatrix['MRI'] = self.transitionMatrix['MI']
+            self.transitionMatrix['IRI'] = self.transitionMatrix['II']
             self.transitionMatrix['_E'] = self.repProb
         self.cache[consensus] = self.factory(self.mathType, 
             consensus, self.time, self.backgroudProbability,
@@ -164,7 +169,7 @@ class PairRepeatState(State):
         if self.version != None:
             ret['version'] = self.version
         if self.repProb != None:
-            ret['repprob'] = self.repProb 
+            ret['repprob'] = float(self.repProb) 
         #TODO: save consensus distribution
         return ret
 
@@ -335,6 +340,7 @@ class PairRepeatState(State):
             if keyY in self.memoizeY:
                 prob *= self.memoizeY[keyY]
             ret[consensus] += prob 
+        #print X[x:x + dx], Y[y:y + dy], tuple(ret.iteritems())
         return X[x:x + dx], Y[y:y + dy], tuple(ret.iteritems())
     
     def clearCache(self):
@@ -344,7 +350,7 @@ class PairRepeatState(State):
         self.rdgmemoize = dict()
         self.factory.clearCache()
     
-    def combineExpectations(self, emissions):
+    def combineExpectations(self, expectations):
         def name_to_type(name):
             d = {'Init': '_', 'End': 'E'}
             d1 = {'m': 'M', 'i': 'I'}
@@ -358,27 +364,43 @@ class PairRepeatState(State):
             raise 'Unknown state name'
         
         def emission_to_realemission(state, emission, char):
-            if state == 'M':
-                return 1 if char == emission else 0
-            return emission
+            return 1 if char == emission else 0
         # TODO: zmen na dicty
-        transitions = defaultdict(self.mathType(0.0))
-        emissions = defaultdict(lambda *_:defaultdict(self.mathType(0.0)))
+        transitions = defaultdict(self.mathType)
+        emissions = defaultdict(lambda *_:defaultdict(self.mathType))
         like = self.mathType(0.0)
-        for (x, y, consensus), prob in emissions.iteritems():
+        #pool = Pool(processes=2)
+        #def __transform(arg):
+        #    (x, y, consensus), prob = arg
+        #    hmm = self.factory.getHMM(consensus)
+        #    out = []
+        #    for seq in [x, y]:
+        #        if len(seq) == 0:
+        #            continue
+        #        out.append(hmm.getBaumWelchCount(seq, 0, len(seq)))
+        #    return consensus, prob, hmm, out
+        # Parallel implementation. In reality is slower:-/  
+        #for consensus, prob, hmm, out in pool.map(__transform ,list(expectations.iteritems())):
+        #    clen = len(consensus)
+        #    for trans, emiss, likelihood in out:
+        for (x, y, consensus), prob in list(expectations.iteritems()):
+            clen = len(consensus)
             hmm = self.factory.getHMM(consensus)
             for sequence in [x, y]:
+                if len(sequence) == 0:
+                    continue
                 trans, emiss, likelihood = hmm.getBaumWelchCount(sequence, 0, len(sequence))
                 # TODO: Netreba tie veci nahodou uz normalizovat tu? alebo vydelit expectations likelihoodom? 
                 like += likelihood * prob
-                for fi in range(len(self.states)):
-                    fname = self.states[fi].stateName
+                for fi in range(len(hmm.states)):
+                    fname = hmm.states[fi].stateName
                     fn, findex = name_to_type(fname)
                     #Transitions for state fi
                     for ti, p in trans[fi].iteritems():
-                        tname = self.states[ti].stateName
-                        tn, tindex = name_to_type(tname)
-                        if tindex == 0 and findex > 0:
+                        tname = hmm.states[ti].stateName
+                        tn, _ = name_to_type(tname)
+                        if ((fn == 'I' and findex == clen) or 
+                            (fn in ['M', 'D'] and findex == clen - 1)):
                             transitions[fn + 'R' + tn] += prob * p
                         else:
                             transitions[fn + tn] += prob * p
@@ -386,41 +408,54 @@ class PairRepeatState(State):
                     for em, p in emiss[fi].iteritems():
                         if len(em) == 0: 
                             continue
-                        em = emission_to_realemission(fn, em, consensus[findex])
+                        if fn == 'M':
+                            em = emission_to_realemission(fn, em, 
+                                                          consensus[findex])
                         emissions[fn][em] += prob * p
         return transitions, emissions, like
     
     def improveModel(self, transitions, emissions):  
         self.clearCache()
-        back = normalize_dict(emissions['I'])
+        back = list(normalize_dict(emissions['I'], self.mathType).iteritems())
         self.backgroundProbability = back
         self.factory.backgroudProbability = back
         eqprob = emissions['M'][1] / sum(emissions['M'].values())
-        time = -3.0/4.0 * (math.log((4.0 * eqprob - 1.0)/3.0))
+        time = -3.0/4.0 * (math.log((self.mathType(4.0) * eqprob - 1.0)/3.0))
         self.time = time
         self.factory.time = time
+        totals = defaultdict(self.mathType)
+        for k, v in transitions.iteritems():
+            totals[k[:-1]] += v
         for state in transitions:
-            transitions[state] = normalize_dict(transitions[state])
+            transitions[state] /= totals[state[:-1]]
         self.transitionMatrix = transitions
         self.factory.transitionMatrix = transitions
          
     
-    def trainEmissions(self, emissions):
-        
+    def trainEmissions(self, expect):
         lastLike = self.mathType(0.0)
         
-        transitions, emissions, like = self.expectationMaximization(emissions)
+        transitions, emissions, like = self.combineExpectations(expect)
+        print 'Likelihood', like, like.value
+        iterations = 0
         def diff(like, lastLike):
-            if like > lastLike:
-                return like - lastLike
-            print 'Warning: last likelihood was smaller then previous', like, lastLike
-            return lastLike - like
+            if type(like) == float:
+                if like >= lastLike:
+                    return like - lastLike
+                print 'Warning: last likelihood was smaller then previous', like.value, lastLike.value
+                return lastLike - like
+            else:
+                if like >= lastLike:
+                    return like.value - lastLike.value
+                print 'Warning: last likelihood was smaller then previous', like.value, lastLike.value
+                return lastLike.value - like.value
         while diff(like, lastLike) > 1e-6:
-            lastLike = like
+            print 'New Iteration'
+            lastLike = self.mathType(like)
             self.improveModel(transitions, emissions)
-            transitions, emissions, like = self.expectationMaimization(emissions)
+            transitions, emissions, like = self.combineExpectations(expect)
+            print 'Likelihood', like, like.value
+            iterations += 1
+            if iterations > 5:
+                break
         self.improveModel(transitions, emissions)
-        # musim zlepsit modely
-        #for (x, y, consensus), prob in emissions.iteritems():
-        #    print 'train repeat state', x, y, consensus, prob
-            

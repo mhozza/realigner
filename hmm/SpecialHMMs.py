@@ -254,26 +254,23 @@ def createProfileHMMv2(mathType, consensus, time, backgroundProb, trans):
             {"from": "i" + str(i), "to": "m" + str(i), "prob": trans['IM']},
             {"from": "i" + str(i), "to": "1d" + str(i), "prob": trans['ID']},
         ])
-    for k, v in trans.iteritems():
-        trans[k] = mathType(v)
     transitions.extend([
         {"from": "Init", "to": "m0", "prob": trans['_M']},
         {"from": "Init", "to": "i0", "prob": trans['_I']},
         {"from": "Init", "to": "1d0", "prob": trans['_D']},
         {"from": "Init", "to": "End", "prob": trans['_E']},
         {"from": "1d" + str(length - 1), "to": "m0", "prob": trans['DRM']},
-        {"from": "1d" + str(length - 1), "to": "End", "prob": trans['DE']},
+        {"from": "1d" + str(length - 1), "to": "End", "prob": trans['DRE']},
         {"from": "1d" + str(length - 1), "to": "i0", "prob": trans['DRI']},
-        {"from": "1d" + str(length - 1), "to": "End", "prob": trans['DE']},
         {"from": "1d" + str(length - 1), "to": "2d0", "prob": trans['DRD']},
-        {"from": "m" + str(length - 1), "to": "Init", "prob": trans['M_']},
-        {"from": "m" + str(length - 1), "to": "End", "prob": trans['ME']},
+        {"from": "m" + str(length - 1), "to": "Init", "prob": trans['MR_']},
+        {"from": "m" + str(length - 1), "to": "End", "prob": trans['MRE']},
         {"from": "m" + str(length - 1), "to": "i" + str(length), 
-         "prob": trans['MI']},
+         "prob": trans['MRI']},
         {"from": "i" + str(length), "to": "i" + str(length),
-         "prob": trans['II']},
-        {"from": "i" + str(length), "to": "Init", "prob": trans['I_']},
-        {"from": "i" + str(length), "to": "End", "prob": trans['IE']},
+         "prob": trans['IRI']},
+        {"from": "i" + str(length), "to": "Init", "prob": trans['IR_']},
+        {"from": "i" + str(length), "to": "End", "prob": trans['IRE']},
     ])
     insertState = State(mathType)
     insertState.load({
@@ -320,11 +317,11 @@ def createProfileHMMv2(mathType, consensus, time, backgroundProb, trans):
     nm = consensus
     if len(nm) > 20:
         nm = hashlib.md5(consensus).hexdigest()
-    with Open('submodels/{0}.js'.format(nm), 'w') as f:
-        def LogNumToJson(obj):
-            if isinstance(obj, LogNum):
-                return '{0} {1}'.format(str(float(obj)),str(obj.value))
-            raise TypeError
-        json.dump(hmm.toJSON(), f, indent=4, sort_keys=True, 
-                  default=LogNumToJson)
+    #with Open('submodels/{0}.js'.format(nm), 'w') as f:
+    #    def LogNumToJson(obj):
+    #        if isinstance(obj, LogNum):
+    #            return '{0} {1}'.format(str(float(obj)),str(obj.value))
+    #        raise TypeError
+    #    json.dump(hmm.toJSON(), f, indent=4, sort_keys=True, 
+    #              default=LogNumToJson)
     return hmm
