@@ -159,9 +159,9 @@ class GeneralizedHMM(HMM):
         bt = [[] for _ in range(len(backwardTable))]
         for i, t in backwardTable:
             bt[i] = t
-        probability = self.getProbability(X, x, dx, table=forwardTable)
+        probability = self.getProbability(X, x, dx, table=[forwardTable[dx]])
 
-        for i in range(len(dx + 1)):
+        for i in range(dx + 1):
             for stateID in range(len(self.states)):
                 state = self.states[stateID]
                 for followingID, transprob in state.followingIDs():
@@ -178,7 +178,7 @@ class GeneralizedHMM(HMM):
             table = self.getForwardTable(
                 X, x, dx, memoryPattern=MemoryPatterns.last(dx + 1))
     
-        return sum([sum([prob for (_, prob) in dct.iteritems()]) * 
-                    self.states[stateID].getEndProbability() 
+        return sum([self.mathType(sum([prob for (_, prob) in dct.iteritems()])) 
+                    * self.states[stateID].getEndProbability() 
                     for (stateID, dct) in ((l, table[0][1][l]) 
-                                           for l in range(len(table[0][1])))])
+                    for l in range(len(table[0][1])))])
