@@ -20,6 +20,8 @@ class LogNum:
                 self.value = math.log(float(value))
             except ValueError:
                 self.value = float("-inf")
+            except TypeError:
+                self.value = float("-inf")
         else:
             self.value = float(value)
 
@@ -100,7 +102,7 @@ class LogNum:
             return float(math.exp(self.value))
         else:
             return float(self.value)
-    
+
         
     def __str__(self, exp = True):
         if exp:
@@ -109,8 +111,13 @@ class LogNum:
             return str(self.value)
         
     
-        
-        
+    def __repr__(self):
+        return 'LogNum:' + str(self.value)
+    
+    def __hash__(self):
+        return hash(self.value)
+
+
 if __name__ == "__main__":
     def main():
         a = LogNum(2, True)
