@@ -224,6 +224,7 @@ def worker(transformation):
     model = get_model(args)
 
     # ====== Realign all sequences =============================================
+    ret = 0
     for task_id in task_ids:
         if task_id == None:
             output_filename = output_filename_template
@@ -233,7 +234,9 @@ def worker(transformation):
             alignment_filename = \
                 alignment_filename_template.format(id=task_id - 1)
          
-        return transformation(args, model, output_filename, alignment_filename)
+        ret = max(ret,transformation(args, model, output_filename,
+                                     alignment_filename))
+    return ret
 
 
     
