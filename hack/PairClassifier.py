@@ -7,14 +7,18 @@ from alignment import Fasta
 from alignment.Alignment import Alignment
 from copy import deepcopy
 from numpy import array
+from numpy import histogram
 from numpy.ma.core import mean
 from os import path, listdir
 from random import randint
 from sklearn.ensemble import RandomForestClassifier
+import matplotlib.pyplot as plt 
 import itertools
 import os
 import pickle
 import sys
+from numpy.ma.testutils import approx
+from numpy.core.function_base import linspace
 
 class AnnotatedBase:
     def __init__(self):
@@ -230,17 +234,34 @@ class DataLoader:
                 sequences.append(self.loadSequence(fname))
         return sequences
 
-
 if __name__ == "__main__":
-    c = PairClassifier(memoization=False)    
-#    d = DataLoader()
-#    x,y = d.prepareTrainingData(d.loadSequence("data/sequences/simulated_alignment.fa"))
-#    x,y = d.prepareTrainingData(d.loadSequence("data/sequences/short.fa"))
+    c = PairClassifier(autotrain=False, memoization=False, trainingDataDir="../data/train_sequences",filename="../data/randomforest.dat")    
+    d = DataLoader()
+    x,y = d.prepareTrainingData(d.loadSequence("../data/train_sequences/s1.fa"))
+#    x,y = d.prepareTrainingData(d.loadSequence("../data/sequences/simulated_alignment.fa"))
+#    x,y = d.prepareTrainingData(d.loadSequence("../data/sequences/short.fa"))
+    px, py = d.prepareTrainingData(d.loadSequence("../data/train_sequences/s3.fa"))
         
-#    c.fit(x,y)
-    p = [array((i,j,k,l)) for i in range(4) for j in range(4) for k in range(2) for l in range(2)]
-    yy = c.predict(p)
-    for i in zip(p,yy):
-        print(i)
+    c.fit(x,y)
+#    p = [array((i,j,k,l)) for i in range(4) for j in range(4) for k in range(2) for l in range(2)]
+    # yy = c.predict(p)
+#    for i in zip(p,yy):
+#        print(i)
+#        
+    dd = c.predict([px[i] for i in range(len(px)) if py[i]])
+    dd2 = c.predict([px[i] for i in range(len(px)) if not py[i]])    
+    plt.plot(histogram(dd, 100, density=True)[0])
+#    plt.hold(True)    
+    from scipy.stats.kde import gaussian_kde
+    k = gaussian_kde(dd)
+    k2 = gaussian_kde(dd2)
+    xvals = linspace(0, 1, 100)
+    plt.plot(k(xvals))
+    plt.plot(k2(xvals))
+    plt.plot(histogram(dd2, 100, density=True)[0])
+    plt.show()
+    
+    
+    
 
 
