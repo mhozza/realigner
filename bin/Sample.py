@@ -82,8 +82,8 @@ def main():
     dirname = os.path.dirname(output_filename)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
-    tandemRepeats = {'sequence1': [], 'sequence2': []}
     for i in range(n_samples):
+        tandemRepeats = {'sequence1': [], 'sequence2': []}
         seq = PHMM.generateSequence((X_len, Y_len))
         X = ""
         Y = ""
