@@ -47,10 +47,6 @@ case 'nosample' in
 		working_dir_tmp/stat \
 		tmp/output_file_from_aggregate.txt
 
-		;&
-*)	
-
-
 
 # Create model
 	time $PYTHON scripts/experiments/repeat000/CreateModel.py \
@@ -67,6 +63,9 @@ case 'nosample' in
 		--output_files tmp/output_from_sample.txt \
 		--model tmp/output_file_from_create.txt
 
+
+		;&
+*)	
 
 	export SGE_TASK_FIRST=1
 	export SGE_TASK_ID=1

@@ -1,4 +1,7 @@
 import math
+from tools.ConfigFactory import ConfigObject
+from tools.Exceptions import ParseException
+
 
 def autoconvDecorator(f):
     def newFunction(self, other):
@@ -9,7 +12,7 @@ def autoconvDecorator(f):
 
 NegativeInfinity = float("-inf")
 
-class LogNum:
+class LogNum(ConfigObject):
     value = float("-inf")
     
     def __init__(self, value = float(0), log = True):
@@ -25,10 +28,19 @@ class LogNum:
         else:
             self.value = float(value)
 
+    def toJSON(self):
+        ret = ConfigObject.toJSON(self)
+        ret['val'] = self.value
+        return ret
+    
+    def load(self, dictionary): 
+        ConfigObject.load(self, dictionary)
+        if 'val' not in dictionary:
+            raise ParseException("Value ('val') not found in state")
+        self.value = float(dictionary['val']) 
     
     def factory(self, other):
         return LogNum(other)
-   
 
     @autoconvDecorator   
     def __add__(self, other):

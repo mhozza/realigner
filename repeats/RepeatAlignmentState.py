@@ -5,7 +5,8 @@ from tools.my_rand import rand_generator, normalize_dict, default_dist, \
                             dist_to_json
 from tools.Exceptions import ParseException
 import math
-#from multiprocessing import Pool
+from multiprocessing import Pool
+from random import shuffle
 
 class RepeatProfileFactory:
             
@@ -362,28 +363,15 @@ class PairRepeatState(State):
             if name[:2] in d2:
                 return d2[name[:2]], int(name[2:])
             raise 'Unknown state name'
-        
         def emission_to_realemission(state, emission, char):
             return 1 if char == emission else 0
         # TODO: zmen na dicty
         transitions = defaultdict(self.mathType)
         emissions = defaultdict(lambda *_:defaultdict(self.mathType))
         like = self.mathType(0.0)
-        #pool = Pool(processes=2)
-        #def __transform(arg):
-        #    (x, y, consensus), prob = arg
-        #    hmm = self.factory.getHMM(consensus)
-        #    out = []
-        #    for seq in [x, y]:
-        #        if len(seq) == 0:
-        #            continue
-        #        out.append(hmm.getBaumWelchCount(seq, 0, len(seq)))
-        #    return consensus, prob, hmm, out
-        # Parallel implementation. In reality is slower:-/  
-        #for consensus, prob, hmm, out in pool.map(__transform ,list(expectations.iteritems())):
-        #    clen = len(consensus)
-        #    for trans, emiss, likelihood in out:
-        for (x, y, consensus), prob in list(expectations.iteritems()):
+        it = list(expectations.iteritems())
+        shuffle(it)
+        for (x, y, consensus), prob in it[:10000]:
             clen = len(consensus)
             hmm = self.factory.getHMM(consensus)
             for sequence in [x, y]:
@@ -436,6 +424,8 @@ class PairRepeatState(State):
         lastLike = self.mathType(0.0)
         
         transitions, emissions, like = self.combineExpectations(expect)
+        print 'Trained values'
+        print transitions, emissions, like
         print 'Likelihood', like, like.value
         iterations = 0
         def diff(like, lastLike):

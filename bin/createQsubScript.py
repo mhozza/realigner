@@ -4,6 +4,8 @@ from algorithm.Graphs import toposort
 from tools.file_wrapper import Open
 from tools import perf
 
+# TODO: Pridaj moznost preskocit niektore casti -- ak su uz hotove
+
 def cmd_to_string(cmd):
     if type(cmd) == list:
         return ' '.join(cmd)

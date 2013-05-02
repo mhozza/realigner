@@ -89,7 +89,8 @@ def dist(s1, s2):
                 d[j - 1] + (1 if s1[i] == s2[j - 1] else 0)
             ])
         d = nd
-    return float(d[-1]) / max(len(s1), len(s2))
+    
+    return float(d[-1]) * (s1.count('\n') + s2.count('\n')) / (len(s1) + len(s2))
 
 
 class PerfAggregator:
@@ -127,16 +128,12 @@ class ErrorAggregator:
         if len(self.centers) == 0:
             self.centers[e] += 1
             return
-        least = None
-        least_ind = None
         for k, _ in self.centers.iteritems():
-            d = dist(e, k)
-            if least == None or least > d:
-                least = d
-                least_ind = k
-        if least < 0.2:
-            self.centers[least_ind] += 1
-            return
+            d = dist('\n'.join(e.split('\n')[-3:]), '\n'.join(k.split('\n')[-3:]))
+            #print 'dist', d, len(self.centers)
+            if d < 0.15:
+                self.centers[k] += 1
+                return
         self.centers[e] += 1     
         
     def output(self):
