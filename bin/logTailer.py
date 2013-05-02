@@ -4,6 +4,10 @@ import os
 import math
 from collections import defaultdict
 
+# TODO: Rychlejsie porovnavanie error, ziskavanie patternov z chyb
+# TODO: Vypis subory v ktorych je chyba
+# TODO: Vyber si ktore joby (cez id alebo nazov) chces zobrazovat)
+
 def colored(string, color):
     CSI = "\x1B["
     #reset = CSI+"m"
@@ -125,7 +129,6 @@ class ErrorAggregator:
             return
         least = None
         least_ind = None
-        
         for k, _ in self.centers.iteritems():
             d = dist(e, k)
             if least == None or least > d:
