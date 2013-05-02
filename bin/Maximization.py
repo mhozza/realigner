@@ -78,7 +78,7 @@ def main():
                                 continue
                             total = sum([p for _, p in cons])
                             for c, p in cons:
-                                expectations['emissions'][stateID][x, y, c] = (
+                                expectations['emissions'][stateID][x, y, c] += (
                                     prob * v * p / total)
                 
     # Compute maximization step for transitions (no smoothing)
