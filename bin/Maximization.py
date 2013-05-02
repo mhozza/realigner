@@ -18,6 +18,12 @@ def destroy_lognum(structure):
         return float(structure) 
     return structure 
 
+class LogNumEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, LogNum):
+            return obj.toJSON()
+        return json.JSONEncoder.default(self, obj)
+
 @perf.runningTimeDecorator
 def main():
     parser = argparse.ArgumentParser('Compute maximization step.')
@@ -78,7 +84,7 @@ def main():
                                 continue
                             total = sum([p for _, p in cons])
                             for c, p in cons:
-                                expectations['emissions'][stateID][x, y, c] = (
+                                expectations['emissions'][stateID][x, y, c] += (
                                     prob * v * p / total)
                 
     # Compute maximization step for transitions (no smoothing)
