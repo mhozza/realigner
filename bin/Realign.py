@@ -105,7 +105,7 @@ def parse_arguments():
     parser.add_argument('--trf', type=toList, default=trf_paths
                         , help="Location of tandem repeat finder binary")
     parser.add_argument('--algorithm', type=str, 
-                        default='repeat', choices=['repeat', 'viterbi', 'repeat_no_blocks'],
+                        default='repeat_no_blocks', choices=['repeat', 'viterbi', 'repeat_no_blocks'],
                         help="Which realignment algorithm to use")
     parser.add_argument('--bind_file', nargs='*', help='Replace filenames in '
                         + 'the input_file model.', default=[]) 
