@@ -1,0 +1,51 @@
+'''
+Created on Jan 17, 2013
+
+@author: mic
+'''
+from repeats.RepeatRealigner import RepeatRealigner
+from collections import defaultdict
+from algorithm.LogNum import LogNum
+from tools import perf
+
+class RepeatRealignerNoBlocks(RepeatRealigner):
+    '''
+    classdocs
+    '''
+    
+    def __init__(self):
+        """
+        Constructor
+        """
+        RepeatRealigner.__init__(self)
+    
+    @perf.runningTimeDecorator
+    def prepareData(self, *data):
+        data = RepeatRealigner.prepareData(self, *data)
+        arguments = 0
+       
+        # Smooth out the data
+        table = [defaultdict(lambda *_:defaultdict(model.mathType))
+                 for _ in range(len(self.posteriorTable))]
+        for x in range(len(self.posteriorTable)):
+            for y, dct in self.posteriorTable[x]:
+                for (state, _sdx, _sdy), prob in dct[x][y]:
+                    if max(_sdx, _sdy) <= 0:
+                        table[x][y][(state, _sdx, _sdy)] += prob
+                        continue
+                    len_x, len_y = _sdx, _sdy
+                    iter_x = list(range(_sdx))
+                    if len_x >= 1:
+                        len_x = 1
+                    else:
+                        iter_x = [0]
+                    iter_y = list(range(_sdy))
+                    if len_y >= 1:
+                        len_y = 1
+                    else 
+                        iter_y = [0]
+                    for xx in iter_x:
+                        for yy in iter_y:
+                            table[x + xx][y + yy][(state, len_x, len_y)] += prob
+        self.posteriorTable = table 
+        return data[arguments:]

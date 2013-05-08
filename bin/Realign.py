@@ -13,6 +13,7 @@ from tools.file_wrapper import Open
 from alignment.AlignmentCanvas import AlignmentCanvas
 import json
 from alignment.ViterbiRealigner import ViterbiRealigner
+from repeats.RepeatRealignerNoBlocks import RepeatRealignerNoBlocks
 
 
 def brainwash(className):
@@ -86,6 +87,8 @@ def getRealigner(s):
         return RepeatRealigner
     elif s == 'viterbi':
         return ViterbiRealigner
+    elif s == 'repeat_no_blocks':
+        return RepeatRealignerNoBlocks
     else:
         raise('Unknown type')
 
@@ -102,7 +105,7 @@ def parse_arguments():
     parser.add_argument('--trf', type=toList, default=trf_paths
                         , help="Location of tandem repeat finder binary")
     parser.add_argument('--algorithm', type=str, 
-                        default='repeat', choices=['repeat', 'viterbi'],
+                        default='repeat', choices=['repeat', 'viterbi', 'repeat_no_blocks'],
                         help="Which realignment algorithm to use")
     parser.add_argument('--bind_file', nargs='*', help='Replace filenames in '
                         + 'the input_file model.', default=[]) 
