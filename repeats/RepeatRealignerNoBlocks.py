@@ -42,7 +42,7 @@ class RepeatRealignerNoBlocks(RepeatRealigner):
                     iter_y = list(range(_sdy))
                     if len_y >= 1:
                         len_y = 1
-                    else 
+                    else:
                         iter_y = [0]
                     for xx in iter_x:
                         for yy in iter_y:
