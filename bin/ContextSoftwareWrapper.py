@@ -36,7 +36,7 @@ def main(args):
         fl = get_temp_filename()
         # Not very clean way how to do it. There should be later some major refactoring
         class Stub:
-            alignment=args.input_template.format(task_id)
+            alignment=args.input_template.format(id=task_id)
             output=fl
             min_split_size=0
             max_split_size=1000000
@@ -46,7 +46,7 @@ def main(args):
         os.system('{bin} infile={inp} outfile={out} fpfile={model} win={win}'.format(
             bin=args.binary,
             inp=fl,
-            out=args.output_template.format(task_id),
+            out=args.output_template.format(id=task_id),
             model=args.model,
             win=args.window,
         ))

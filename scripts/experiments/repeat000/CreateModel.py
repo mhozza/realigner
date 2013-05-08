@@ -113,6 +113,6 @@ if __name__ == "__main__":
          files['trf_length'],
          files['trf_cover'],
          parsed_arg.output,
-         simple_model,
+         parsed_arg.simple_model,
     )
     perf.printAll()

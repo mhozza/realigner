@@ -28,8 +28,8 @@ class RepeatRealignerNoBlocks(RepeatRealigner):
         table = [defaultdict(lambda *_:defaultdict(model.mathType))
                  for _ in range(len(self.posteriorTable))]
         for x in range(len(self.posteriorTable)):
-            for y, dct in self.posteriorTable[x]:
-                for (state, _sdx, _sdy), prob in dct[x][y]:
+            for y, dct in self.posteriorTable[x].iteritems():
+                for (state, _sdx, _sdy), prob in dct.iteritems():
                     if max(_sdx, _sdy) <= 0:
                         table[x][y][(state, _sdx, _sdy)] += prob
                         continue

@@ -211,7 +211,7 @@
 		"cmd": ["pypy-env/bin/pypy",
                         "bin/SplitAlignmentForContext.py",
                         "--alignment data/experiments/repeat0001/sampled_test_aln/aln_*.fa",
-                        "--output data/experiments/repeat0001/sampled_est_aln/context_data.txt",
+                        "--output data/experiments/repeat0001/sampled_test_aln/context_data.txt",
                         "--min_split_size 50",
                         "--max_split_size 75"
                        ]
@@ -221,7 +221,7 @@
                         "stdout": "output",
                         "stderr": "output",
                         "depends": ["PrepareTrainingDataForContextSoftware"],
-                        "cmd": ["pypy-env/bin/pypy",
+                        "cmd": [
                                 "../Context/bin/train",
                                 "infile=data/experiments/repeat0001/sampled_train_aln/context_data.txt",
                                 "fpout=data/experiments/repeat0001/context_trained_model.txt",
@@ -232,7 +232,7 @@
                 "params": ["-v", "PYTHONPATH=./", "-b y"],
                 "stdout": "output",
                 "stderr": "output",
-                "depends": "TrainContextSoftware",
+                "depends": ["TrainContextSoftware"],
                 "array": [1, 100],
                 "cmd": ["pypy-env/bin/pypy",
                         "bin/ContextSoftwareWrapper.py",
