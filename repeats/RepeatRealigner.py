@@ -78,23 +78,24 @@ class RepeatRealigner(Realigner):
         arguments = 0
         
         # Add repeats
-        RX = RepeatGenerator(None, self.repeat_width)
-        RY = RepeatGenerator(None, self.repeat_width)
-        for (rt, ch) in [('trf', 'R'), ('original_repeats', 'r')]:
-            if rt in self.annotations:
-                RX.addRepeats(self.annotations[rt][self.X_name])
-                RY.addRepeats(self.annotations[rt][self.Y_name])
-                self.drawer.add_repeat_finder_annotation(
-                    'X', ch, self.annotations[rt][self.X_name], 
-                    (255, 0, 0, 255))
-                self.drawer.add_repeat_finder_annotation(
-                    'Y', ch, self.annotations[rt][self.Y_name],
-                    (255, 0, 0, 255))
-        RX.buildRepeatDatabase()
-        RY.buildRepeatDatabase()
-        self.model.states[
-            self.model.statenameToID['Repeat']
-        ].addRepeatGenerator(RX, RY)
+        if 'Repeat' in self.model.statenameToID:
+            RX = RepeatGenerator(None, self.repeat_width)
+            RY = RepeatGenerator(None, self.repeat_width)
+            for (rt, ch) in [('trf', 'R'), ('original_repeats', 'r')]:
+                if rt in self.annotations:
+                    RX.addRepeats(self.annotations[rt][self.X_name])
+                    RY.addRepeats(self.annotations[rt][self.Y_name])
+                    self.drawer.add_repeat_finder_annotation(
+                        'X', ch, self.annotations[rt][self.X_name], 
+                        (255, 0, 0, 255))
+                    self.drawer.add_repeat_finder_annotation(
+                        'Y', ch, self.annotations[rt][self.Y_name],
+                        (255, 0, 0, 255))
+            RX.buildRepeatDatabase()
+            RY.buildRepeatDatabase()
+            self.model.states[
+                self.model.statenameToID['Repeat']
+            ].addRepeatGenerator(RX, RY)
         #posterior table
         #position generator
         
