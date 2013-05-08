@@ -11,24 +11,25 @@ from tools import perf
 @perf.runningTimeDecorator
 def main(model_file, additional_parameters,
          emmisions_file, transitions_file, repeat_consensus_file,
-         repeat_length_file, trf_cover_file, output_file):
+         repeat_length_file, trf_cover_file, output_file, simple_model):
     loader = HMMLoader()
 
     with Open(trf_cover_file, 'r') as f:
         trf_cover = json.load(f)
-    repeat_probability = (float(trf_cover['R_segment_count']) / 
-                          (trf_cover['R_segment_count'] +
-                           trf_cover['M_count']))
-    repeat_count = sum([trf_cover[x] for x in ['RR', 'RM', 'MR']])
-    repeat_repeat_probability = float(trf_cover['RR']) / repeat_count
-    nothing_repeat_probability = float(trf_cover['MR']) / repeat_count
-    repeat_nothing_probability = float(trf_cover['RM']) / repeat_count
+    if not simple_model:
+        repeat_probability = (float(trf_cover['R_segment_count']) / 
+                              (trf_cover['R_segment_count'] +
+                               trf_cover['M_count']))
+        repeat_count = sum([trf_cover[x] for x in ['RR', 'RM', 'MR']])
+        repeat_repeat_probability = float(trf_cover['RR']) / repeat_count
+        nothing_repeat_probability = float(trf_cover['MR']) / repeat_count
+        repeat_nothing_probability = float(trf_cover['RM']) / repeat_count
 
-    loader.addDictionary('trackemi', {"value": {
-        'RR': repeat_repeat_probability,
-        'RM': repeat_nothing_probability,
-        'MR': nothing_repeat_probability,
-    }})
+        loader.addDictionary('trackemi', {"value": {
+            'RR': repeat_repeat_probability,
+            'RM': repeat_nothing_probability,
+            'MR': nothing_repeat_probability,
+        }})
 
     for k, v in additional_parameters.iteritems():
         loader.addDictionary(k, v)
@@ -56,23 +57,25 @@ def main(model_file, additional_parameters,
     for k, v in __trans.iteritems():
         trans[''.join(ast.literal_eval(k))] = v
     trans = normalize_tuple_dict(trans)
-    for k in trans:
-        trans[k] *= (1 - repeat_probability)
-    trans['MR'] = repeat_probability
-    trans['XR'] = repeat_probability
-    trans['YR'] = repeat_probability
-    trans['RR'] = repeat_probability
-    trans['RX'] = (1 - repeat_probability) / 3
-    trans['RY'] = (1 - repeat_probability) / 3
-    trans['RM'] = (1 - repeat_probability) / 3
+    if not simple_model:
+        for k in trans:
+            trans[k] *= (1 - repeat_probability)
+        trans['MR'] = repeat_probability
+        trans['XR'] = repeat_probability
+        trans['YR'] = repeat_probability
+        trans['RR'] = repeat_probability
+        trans['RX'] = (1 - repeat_probability) / 3
+        trans['RY'] = (1 - repeat_probability) / 3
+        trans['RM'] = (1 - repeat_probability) / 3
        
     loader.addDictionary('trans', trans) 
         
     # Parse emissions from trf
-    loader.addFile('consensus.js', 
-                   os.path.relpath(os.path.abspath(repeat_consensus_file), 
-                                   os.path.dirname(model_file)))
-    loader.addFile('repeatlength.js', os.path.abspath(repeat_length_file))
+    if not simple_model:
+        loader.addFile('consensus.js', 
+                       os.path.relpath(os.path.abspath(repeat_consensus_file), 
+                                       os.path.dirname(model_file)))
+        loader.addFile('repeatlength.js', os.path.abspath(repeat_length_file))
 
     model = loader.load(model_file)
     
@@ -95,6 +98,8 @@ if __name__ == "__main__":
                         help='Output file for resulting model')
     parser.add_argument('--parameters', type=str, default='{}',
                         help='Additional parameters (in json as dictionary).')
+    parser.add_argument('--simple_model', type=bool, default=False,
+                        help='Whether it is simple model or repeat model')
     parsed_arg = parser.parse_args()
     
     with Open(parsed_arg.filenames, 'r') as f:
@@ -107,6 +112,7 @@ if __name__ == "__main__":
          files['trf_consensus'],
          files['trf_length'],
          files['trf_cover'],
-         parsed_arg.output
+         parsed_arg.output,
+         simple_model,
     )
     perf.printAll()

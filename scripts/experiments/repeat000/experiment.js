@@ -47,6 +47,19 @@
 			"data/experiments/repeat0001/aggregated_stats.js",
 			"data/experiments/repeat0001/original_model.js"]
 	},
+	"CreateSimpleModel": {
+		"params": ["-v", "PYTHONPATH=./", "-b y"],
+		"stdout": "output",
+		"stderr": "output",
+		"depends": ["AggregateStatistics"],
+		"cmd": ["pypy-env/bin/pypy",
+			"scripts/experiments/repeat000/CreateModel.py",
+			"data/models/noRepeatHMM.js",
+			"data/experiments/repeat0001/aggregated_stats.js",
+			"data/experiments/repeat0001/original_simple_model.js",
+                        "--simple_model True"]
+	},
+
 	"SampleTrainData": {
 		"params": ["-v", "PYTHONPATH=./", "-b y"],
 		"stdout": "output",
@@ -276,6 +289,58 @@
 			"--sequence_regexp 'sequence1' 'sequence2'",
 			"--tracks original_repeats",
 			"--algorithm viterbi"]
-	}
-
+	},
+        "PrepareTrainingDataForContextSoftware": {
+                "params": ["-v", "PYTHONPATH=./", "-b y"],
+		"stdout": "output",
+		"stderr": "output",
+		"depends": ["SampleTrainData"],
+		"cmd": ["pypy-env/bin/pypy",
+                        "bin/SplitAlignmentForContext.py",
+                        "--alignment data/experiments/repeat0001/sampled_train_aln/aln_*.fa",
+                        "--output data/experiments/repeat0001/sampled_train_aln/context_data.txt",
+                        "--min_split_size 50",
+                        "--max_split_size 75"
+                       ]
+        },
+        "PrepareTestingDataForContextSoftware": {
+                "params": ["-v", "PYTHONPATH=./", "-b y"],
+		"stdout": "output",
+		"stderr": "output",
+		"depends": ["SampleTrainData"],
+		"cmd": ["pypy-env/bin/pypy",
+                        "bin/SplitAlignmentForContext.py",
+                        "--alignment data/experiments/repeat0001/sampled_test_aln/aln_*.fa",
+                        "--output data/experiments/repeat0001/sampled_est_aln/context_data.txt",
+                        "--min_split_size 50",
+                        "--max_split_size 75"
+                       ]
+        },
+        "TrainContextSoftware": {
+                "params": ["-v", "PYTHONPATH=./", "-b y"],
+                        "stdout": "output",
+                        "stderr": "output",
+                        "depends": ["PrepareTrainingDataForContextSoftware"],
+                        "cmd": ["pypy-env/bin/pypy",
+                                "../Context/bin/train",
+                                "infile=data/experiments/repeat0001/sampled_train_aln/context_data.txt",
+                                "fpout=data/experiments/repeat0001/context_trained_model.txt",
+                                "win=10"
+                               ]
+        },
+        "RunContext": {
+                "params": ["-v", "PYTHONPATH=./", "-b y"],
+                "stdout": "output",
+                "stderr": "output",
+                "depends": "TrainContextSoftware",
+                "array": [1, 100],
+                "cmd": ["pypy-env/bin/pypy",
+                        "bin/ContextSoftwareWrapper.py",
+                        "--binary ../Context/align",
+                        "--input_template data/experiments/repeat0001/sampled_test_aln/aln_{id}.fa",
+                        "--output_template data/experiments/repeat0001/sampled_test_aln/aln_{id}.context.fa",
+                        "--model data/experiments/repeat0001/context_trained_model.txt",
+                        "--window 10"
+                       ]
+        }
 }
