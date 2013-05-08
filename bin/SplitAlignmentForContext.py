@@ -4,6 +4,7 @@ from alignment import Fasta
 
 
 def main(arg):
+    print arg.output
     with open(arg.output, 'w') as f:
         for alignment_file in arg.alignment:
             alns = Fasta.load(alignment_file, arg.alignment_regexp, Alignment,
@@ -29,8 +30,11 @@ def main(arg):
                     splits.pop()
                 splits.append(l)
                 for fr, to in zip(splits, splits[1:]):
-                    f.write('{}.{}-{} {}\n'.format(aln.names[0], fr, to, aln.sequences[0][fr:to]))
-                    f.write('{}.{}-{} {}\n'.format(aln.names[1], fr, to, aln.sequences[1][fr:to]))
+                    s1 = aln.sequences[0][fr:to]
+                    s2 = aln.sequences[1][fr:to]
+                    if min(map(len,[s1.strip('-'), s2.strip('-')])) > 0:
+                        f.write('{}.{}-{} {}\n'.format(aln.names[0], fr, to, s1))
+                        f.write('{}.{}-{} {}\n'.format(aln.names[1], fr, to, s2))
  
 
 if __name__ == '__main__':
