@@ -242,5 +242,21 @@
                         "--model data/experiments/repeat0001/context_trained_model.txt",
                         "--window 10"
                        ]
+        },
+        "EvaluateExperiment": {
+                "params": ["-v", "PYTHONPATH=./", "-b y"],
+                "stdout": "output",
+                "stderr": "output",
+                "depends": ["RunRepeatRealigner", "RunSimpleModel", "RunRepeatRealignerOriginalRepeats", "RunViterbi", "RunViterbiSimpleModel", "RunViterbiOriginalRepeats", "RunContext"],
+                "cmd": ["pypy-env/bin/pypy",
+                        "bin/GetResultsFromExperiment.py",
+                        "--correct data/experiments/repeat0001/sampled_test_aln/aln_{id}.fa",
+                        "--aln data/experiments/repeat0001/sampled_test_aln/aln_{id}.{type}.fa",
+                        "--part_output data/experiments/repeat0001/sampled_test_aln/aln_{id}.{type}.evaluated.js",
+                        "--interval 1 100",
+                        "--output data/experiments/repeat0001/{type}.evaluated.js",
+                        "--types context repeatRealigner repeatRealignerOriginal simpleModel",
+                                "simpleModelViterbi viterbiRealigner viterbiRealignerOriginal"
+                       ]
         }
 }
