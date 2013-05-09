@@ -150,6 +150,14 @@ for job_name, job_id, array, filename in get_error_logs(sys.argv[1]):
 jobs = list(jobs.iteritems())
 jobs.sort(key=lambda x:x[0][0])
 
+names = defaultdict(list)
+for (job_id, job_name), _ in jobs:
+    names[job_name].append(job_id)
+for k in names:
+    names[k] = max(names[k])
+
+jobs = [x for x in jobs if names[x[0][1]] == x[0][0]]
+
 aggregated_data = list()
 for (job_id, job_name), data in jobs:
     perf = PerfAggregator() 
