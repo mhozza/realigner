@@ -84,3 +84,4 @@ if __name__ == '__main__':
     parser.add_argument('--window', type=int, default=10, help='Window size')
     args = parser.parse_args()
     main(args)
+    perf.printAll()
