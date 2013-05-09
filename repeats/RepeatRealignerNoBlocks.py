@@ -22,8 +22,12 @@ class RepeatRealignerNoBlocks(RepeatRealigner):
     @perf.runningTimeDecorator
     def prepareData(self, *data):
         data = RepeatRealigner.prepareData(self, *data)
-        arguments = 0
+        ignore_states = data[0]
+        arguments = 1
        
+        statefun = lambda x: x
+        if ignore_states:
+            statefun = lambda x: 0
         # Smooth out the data
         table = [defaultdict(lambda *_:defaultdict(self.mathType))
                  for _ in range(len(self.posteriorTable))]
@@ -31,7 +35,7 @@ class RepeatRealignerNoBlocks(RepeatRealigner):
             for y, dct in self.posteriorTable[x].iteritems():
                 for (state, _sdx, _sdy), prob in dct.iteritems():
                     if max(_sdx, _sdy) <= 0:
-                        table[x][y][(state, _sdx, _sdy)] += prob
+                        table[x][y][(statefun(state), _sdx, _sdy)] += prob
                         continue
                     len_x, len_y = _sdx, _sdy
                     iter_x = list(range(_sdx))
@@ -48,6 +52,6 @@ class RepeatRealignerNoBlocks(RepeatRealigner):
                         if x + xx >= len(table):
                             continue
                         for yy in iter_y:
-                            table[x + xx][y + yy][(state, len_x, len_y)] += prob
+                            table[x + xx][y + yy][(statefun(state), len_x, len_y)] += prob
         self.posteriorTable = table 
         return data[arguments:]

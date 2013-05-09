@@ -136,6 +136,8 @@ def parse_arguments():
                         'list of key value pairs: "key:value". This files ' + 
                         'used to skip store precomputed data in algorithms.',
                         type=io_to_dict, default={},)
+    parser.add_argument('--ignore_states', default=False, type=bool, 
+                        help='Ignore states in posterior-type decoders.')
     parser.add_argument('--draw', default='', type=str, 
                         help='output file for image')
     parsed_arg = parser.parse_args()
@@ -182,7 +184,7 @@ def realign_file(args, model, output_filename, alignment_filename):
                                   annotations, 
                                   {'input':args.intermediate_input_files,
                                    'output':args.intermediate_output_files},
-                                  args.repeat_width)
+                                  args.repeat_width, args.ignore_states)
             aln = realigner.realign(0, len(seq1), 0, len(seq2))
             perf.msg("Sequence was realigned in {time} seconds.")
             perf.replace()
