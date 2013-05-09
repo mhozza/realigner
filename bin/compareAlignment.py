@@ -35,16 +35,17 @@ identity = lambda x, *_: x
 def main(correct_file, aln_file, output_file, interval=None):
     task_ids = [None]
     if os.environ.has_key('SGE_TASK_ID'):
-        sge_task_id = int(os.environ['SGE_TASK_ID'])
-        if 'SGE_STEP_SIZE' not in os.environ:
-            sge_step_size = 1
-        else:
-            sge_step_size = int(os.environ['SGE_STEP_SIZE'])
-        sge_task_last = int(os.environ['SGE_TASK_LAST'])
-        task_ids = range(
-            sge_task_id,
-            min(sge_task_id + sge_step_size, sge_task_last + 1)
-        )
+        if os.environ['SGE_TASK_ID'] != 'undefined':
+            sge_task_id = int(os.environ['SGE_TASK_ID'])
+            if 'SGE_STEP_SIZE' not in os.environ:
+                sge_step_size = 1
+            else:
+                sge_step_size = int(os.environ['SGE_STEP_SIZE'])
+            sge_task_last = int(os.environ['SGE_TASK_LAST'])
+            task_ids = range(
+                sge_task_id,
+                min(sge_task_id + sge_step_size, sge_task_last + 1)
+            )
     if interval != None:
         task_ids = range(interval[0], interval[1] + 1)
     for task_id in task_ids:
@@ -56,6 +57,7 @@ def main(correct_file, aln_file, output_file, interval=None):
                 Fasta.load(aln_file.format(id=task_id - 1), separator, Alignment)
             ):
                 correct_len = len(correct.getCoordPairs(False))
+                total_len = correct_len * 2 - correct.sequences[0].count('-') - correct.sequences[2].count('-')
                 ccc = fun(correct.getCoordPairs(False), correct)
                 acc = alignment.getCoordPairs(False)
                 cc = map(lambda x: (x[0], x[2]), ccc)
@@ -67,6 +69,13 @@ def main(correct_file, aln_file, output_file, interval=None):
                 not_in_c = c.difference(a)
                 not_in_a = a.difference(c)
                 symm_diff = c.symmetric_difference(a)
+
+                score = 0
+                for v1, v2 in intersect:
+                    if v1 >= 0: 
+                        score += 1
+                    if v2 >= 0: 
+                        score += 1
                 
                 # Find long segments that are correctly aligned
                 cseg = [1 if x in c else 0 for x in ac]
@@ -88,6 +97,7 @@ def main(correct_file, aln_file, output_file, interval=None):
                     'a-length': len(ac),
                     'intersect': len(intersect),
                     '%correct': float(len(intersect) * 100) / correct_len,
+                    '%score': float(score) * 100 / total_len,
                     'c-a': len(not_in_c),
                     'a-c': len(not_in_a),
                     'symmetric_difference': len(symm_diff),
