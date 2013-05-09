@@ -2,6 +2,7 @@ import json
 import argparse
 from tools.file_wrapper import Open
 from tools import perf
+import math
 
 def add_dictionaries(dest, src):
     for k, v in src.iteritems():
@@ -25,7 +26,7 @@ def stats(v):
     total = float(sum(v))
     mean = total / len(v)
     variance = sum([(mean - x)**2 for x in v]) / len(v)
-    return (mean, variance, len(v))
+    return (mean, math.sqrt(variance), len(v))
 
 
 def compute_stats(d):
