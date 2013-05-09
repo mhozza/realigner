@@ -236,7 +236,7 @@
                 "array": [1, 100],
                 "cmd": ["pypy-env/bin/pypy",
                         "bin/ContextSoftwareWrapper.py",
-                        "--binary ../Context/align",
+                        "--binary ../Context/bin/align",
                         "--input_template data/experiments/repeat0001/sampled_test_aln/aln_{id}.fa",
                         "--output_template data/experiments/repeat0001/sampled_test_aln/aln_{id}.context.fa",
                         "--model data/experiments/repeat0001/context_trained_model.txt",

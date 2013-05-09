@@ -1,10 +1,12 @@
 import argparse
 from alignment.Alignment import Alignment
 from alignment import Fasta
+import sys
+from tools import perf
 
 
+@perf.runningTimeDecorator
 def main(arg):
-    print arg.output
     with open(arg.output, 'w') as f:
         for alignment_file in arg.alignment:
             alns = Fasta.load(alignment_file, arg.alignment_regexp, Alignment,

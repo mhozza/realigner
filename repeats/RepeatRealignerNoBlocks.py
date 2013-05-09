@@ -25,7 +25,7 @@ class RepeatRealignerNoBlocks(RepeatRealigner):
         arguments = 0
        
         # Smooth out the data
-        table = [defaultdict(lambda *_:defaultdict(model.mathType))
+        table = [defaultdict(lambda *_:defaultdict(self.mathType))
                  for _ in range(len(self.posteriorTable))]
         for x in range(len(self.posteriorTable)):
             for y, dct in self.posteriorTable[x].iteritems():
@@ -45,6 +45,8 @@ class RepeatRealignerNoBlocks(RepeatRealigner):
                     else:
                         iter_y = [0]
                     for xx in iter_x:
+                        if x + xx >= len(table):
+                            continue
                         for yy in iter_y:
                             table[x + xx][y + yy][(state, len_x, len_y)] += prob
         self.posteriorTable = table 
