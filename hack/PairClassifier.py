@@ -1,60 +1,19 @@
+#/usr/bin/python
 '''
 Created on Mar 28, 2013
 
 @author: Michal Hozza
 '''
-from alignment import Fasta
-from alignment.Alignment import Alignment
-from copy import deepcopy
-from numpy import array
-from numpy import histogram
+import hack.DataLoader
+from numpy.core.function_base import linspace
 from numpy.ma.core import mean
-from os import path, listdir
-from random import randint
+from numpy.ma.testutils import approx
+from os import path
+from scipy.stats.kde import gaussian_kde
 from sklearn.ensemble import RandomForestClassifier
-import matplotlib.pyplot as plt 
-import itertools
+import matplotlib.pyplot as plt
 import os
 import pickle
-import sys
-from numpy.ma.testutils import approx
-from numpy.core.function_base import linspace
-
-class AnnotatedBase:
-    def __init__(self):
-        self.base = '-'
-        self.annotations = {}
-
-    def copy(self, ab):
-        self.base = ab.base
-        self.annotations = deepcopy(ab.annotations)
-
-    def toTrainData(self):
-        gap_val = -1  # hodnota kotrou sa ma nahradit '-'
-        m = {'A':0, 'C':1, 'G':2, 'T':3, '-':gap_val}
-        res = [m[self.base]]
-        for i in self.annotations.values():
-            if i=='-':
-                res.append(gap_val)
-            else:
-                res.append(float(i))
-        return res
-
-
-class AnnotatedBaseCouple:
-    def __init__(self, annotations = []):
-        self.annotations = annotations
-        self.X = AnnotatedBase()
-        self.Y = AnnotatedBase()
-
-    def toTrainData(self):
-        return array(list(itertools.chain(*zip(self.X.toTrainData(), self.Y.toTrainData()))))
-
-    def isAligned(self):
-        if(self.X.base != '-' != self.Y.base):
-            return 1
-        else:
-            return 0
 
 
 class PairClassifier:
@@ -76,7 +35,7 @@ class PairClassifier:
         else:
             self.classifier = self._getClassifier()
             if autotrain:
-                dl = DataLoader()
+                dl = hack.DataLoader.DataLoader()
                 data, target = (list(), list())
                 for seq in dl.loadDirectory(self.trainingDataDir):
                     d, t = dl.prepareTrainingData(seq)
@@ -121,147 +80,100 @@ class PairClassifier:
         return res
 
 
-class DataLoader:
-    def getAnnotationsAt(self, annotations, i):
-        baseAnnotation = dict()
-        if annotations != None:
-            for key in annotations:
-                baseAnnotation[key] = annotations[key][i]
-        return baseAnnotation
-
-    def alnToAnnotation(self, annotations):
-        newannotations = dict()
-        for key in annotations:
-            newannotations[key] =  annotations[key].replace("-","")
-        return newannotations
-
-    def _SequenceToAnnotatedBaseCoupleList(self, annotations, seqX, annotationsX,
-                                           seqY, annotationsY):
-        if len(seqX) != len(seqY):
-            print(seqX)
-            print(seqY)
-            sys.stderr.write("ERROR: sequences does not have same length\n")
-            exit(1)
-
-        data = list()
-
-        for i in range(len(seqX)):
-            b = AnnotatedBaseCouple(annotations)
-            b.X.base = seqX[i]
-            b.X.annotations = self.getAnnotationsAt(annotationsX, i)
-            b.Y.base = seqY[i]
-            b.Y.annotations = self.getAnnotationsAt(annotationsY, i)
-            data.append(b)
-        return data
-
-
-    def getAnnotations(self, fname):
-        annotationsCount = 0
-        annotationNames = list()
-        annotationsX, annotationsY = dict(), dict()
-        if path.isfile(fname):
-            f = open(fname,'r')
-            for i, line in enumerate(f):
-                if i==0:
-                    annotationsCount = int(line)
-                elif i<=annotationsCount:
-                    annotationNames.append(line.strip())
-                elif i<=2*annotationsCount:
-                    annotationsX[annotationNames[i-1-annotationsCount]] = line.strip()
-                else:
-                    annotationsY[annotationNames[i-1-2*annotationsCount]] = line.strip()
-            f.close()
-        return (annotationsX, annotationsY)
-
-    def getSequences(self, fname):
-        alignment_regexp = ""
-        sequence_regexp = ["sequence1", "sequence2"]
-
-        #pre zaciatok berieme len prve zarovnanie
-        aln = Fasta.load(fname, alignment_regexp, Alignment, sequence_regexp ).next()
-        if aln==None or len(aln.sequences) < 2:
-            sys.stderr.write("ERROR: not enough sequences in file\n")
-            exit(1)
-        seq1 = aln.sequences[0]
-        seq2 = aln.sequences[1]
-        return (seq1, seq2)
-
-
-    def loadSequence(self, fname):
-        #constants
-        annotationsSubdirName = "annotations"
-        annotations = ["Gene"]
-
-        base = path.basename(fname)
-        directory = path.dirname(fname)
-        annotationsFname = path.join(directory,annotationsSubdirName,base)
-
-        seqX, seqY = self.getSequences(fname)
-        annotationsX, annotationsY = self.getAnnotations(annotationsFname)
-        return self._SequenceToAnnotatedBaseCoupleList(annotations,
-                                                       seqX, annotationsX,
-                                                       seqY, annotationsY)
-
-    def prepareTrainingData(self, abcList):
-        train_data = (list(), list())        
-        for i in abcList:
-            if i.isAligned():
-                train_data[0].append(i.toTrainData())
-                train_data[1].append(1)
-
-        seq_size = len(train_data[0])
-        for i in range(seq_size):                        
-            x = None
-            while x == None or abcList[x].X.base == '-':
-                x = (randint(0,seq_size-1))
-            y = None
-            while y == None or y==x or abcList[y].Y.base == '-' :
-                y = (randint(0,seq_size-1))
-            
-            b = AnnotatedBaseCouple(abcList[0].annotations)
-            b.X = abcList[x].X
-            b.Y = abcList[y].Y
-            train_data[0].append(b.toTrainData())
-            train_data[1].append(0)
-
-        return train_data
-
-    def loadDirectory(self, dirname):
-        sequences = list()
-        for fn in listdir(dirname):
-            fname = path.join(dirname, fn)
-            if path.isfile(fname):
-                sequences.append(self.loadSequence(fname))
-        return sequences
 
 if __name__ == "__main__":
-    c = PairClassifier(autotrain=False, memoization=False, trainingDataDir="../data/train_sequences",filename="../data/randomforest.dat")    
-    d = DataLoader()
-    x,y = d.prepareTrainingData(d.loadSequence("../data/train_sequences/s1.fa"))
-#    x,y = d.prepareTrainingData(d.loadSequence("../data/sequences/simulated_alignment.fa"))
-#    x,y = d.prepareTrainingData(d.loadSequence("../data/sequences/short.fa"))
-    px, py = d.prepareTrainingData(d.loadSequence("../data/train_sequences/s3.fa"))
+    pathToData = "data/"
+    c = PairClassifier(autotrain=False, memoization=False, trainingDataDir=pathToData+"train_sequences",filename=pathToData+"randomforest.dat")    
+    c2 = PairClassifier(autotrain=False, memoization=False, trainingDataDir=pathToData+"train_sequences",filename=pathToData+"randomforest.dat")
+    d = hack.DataLoader.DataLoader()
+    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s1.fa"))
+    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s1_na.fa"))
+    # x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa"))
+    # x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment_na.fa"))
+    # x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa"))
+    # x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short_na.fa"))
+#    px, py = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s3.fa"))
+    px,py = x,y
+    px2,py2 = x2,y2
         
     c.fit(x,y)
-#    p = [array((i,j,k,l)) for i in range(4) for j in range(4) for k in range(2) for l in range(2)]
+    c2.fit(x2,y2)
+    # p = [array((i,j,k,l)) for k in range(2) for l in range(2) for i in range(4) for j in range(4) ]
     # yy = c.predict(p)
-#    for i in zip(p,yy):
-#        print(i)
-#        
-    dd = c.predict([px[i] for i in range(len(px)) if py[i]])
-    dd2 = c.predict([px[i] for i in range(len(px)) if not py[i]])    
-    plt.plot(histogram(dd, 100, density=True)[0])
-#    plt.hold(True)    
-    from scipy.stats.kde import gaussian_kde
-    k = gaussian_kde(dd)
-    k2 = gaussian_kde(dd2)
-    xvals = linspace(0, 1, 100)
-    plt.plot(k(xvals))
-    plt.plot(k2(xvals))
-    plt.plot(histogram(dd2, 100, density=True)[0])
+    
+    
+    # for i,j in enumerate(yy):
+    #     if i % 16 ==0:
+    #         s = 0
+    #     s+=j
+    #     if i % 16 ==15:
+    #         for k in range(i-15, i+1):
+    #             yy[k]*=4
+    #             yy[k]/=s
+            
+    # for i in zip(p,yy):
+    #     print(i)
+        
+    dd1 = c.predict([px[i] for i in range(len(px)) if py[i]])
+    dd0 = c.predict([px[i] for i in range(len(px)) if not py[i]]) 
+    dd21 = c2.predict([px2[i] for i in range(len(px2)) if py2[i]])
+    dd20 = c2.predict([px2[i] for i in range(len(px2)) if not py2[i]])
+    k1 = gaussian_kde(dd1)
+    k0 = gaussian_kde(dd0)
+    k21 = gaussian_kde(dd21)
+    k20 = gaussian_kde(dd20)
+    xvals = linspace(0, 1, 500)
+    plt.hold(True)    
+    plt.hist([dd1, dd0, dd21, dd20], 10, normed=False, histtype='bar', stacked=False, label=["anotated 1","anotated 0","not anotated 1","not anotated 0"])
+    plt.legend()    
+    plt.figure()    
+    plt.plot(k1(xvals), label="anotated 1")
+    plt.plot(k0(xvals), label="anotated 0")
+    plt.plot(k21(xvals), label="not anotated 1")
+    plt.plot(k20(xvals), label="not anotated 0")
+    plt.legend()
     plt.show()
+
+    
+    # plt.plot(histogram(yy, 100, density=False)[0])
+    # k = gaussian_kde(yy)
+    # xvals = linspace(0, 1, 100)
+    # plt.hold(True)     
+    # plt.plot(k(xvals)) 
+      
+#    plt.show()
     
     
+#     zt = [0.65, 0.7, 0.8]
     
+#     b = list()
+    
+#     for g1 in [0,1]:
+#         for g2 in [0,1]:
+#             z = zt[g1+g2]
+#             a = [[0.0 for i in range(4)] for j in range(4)]
+#             for i in range(4):
+#                 a[i][i] +=z**2
+#                 for j in range(4):
+#                     if i!=j:
+#                         a[i][j] += 2*z*(1-z)/3
+#                         for k in range(4):
+#                             if k!=i:
+#                                 a[j][k] += ((1-z)**2)/9
+    
+#             for r in enumerate(a):                 
+#                 for c in enumerate(r[1]):
+#                     print(r[0],c[0],g1,g2,c[1])
+#                     b.append(c[1])
+#                     # print(r[0],c[0],g1,g2,c[1]*pt[g1+g2]*.25)
+    
+    
+#     # plt.plot(histogram(b, 100, density=True)[0])
+#     # plt.hold(True)    
+#     plt.plot(histogram(b, 100, density=False)[0])
+#     k = gaussian_kde(b)
+#     xvals = linspace(0, 1, 100)
+#     plt.plot(k(xvals))
+#     plt.show()
 
 
