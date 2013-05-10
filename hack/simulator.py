@@ -72,10 +72,10 @@ sYname = "sequence2"
 annotationName = 'gene'
 
 datadir = 'data/train_sequences/'
-fname = "simulated_alignment"
-alignmentSuffix = ".fa"
-annotationsSuffix = ".bed";
-configSuffix = ".js"
+fname = "simulated_alignment2"
+alignmentExtension = ".fa"
+annotationsExtension = ".bed";
+configExtension = ".js"
 
 n = 1000;
 
@@ -133,8 +133,8 @@ for i in range(n):
     mouseDNA.append(c2)
 
 # output
-sXfname = datadir+fname+'_'+sXname+'_'+annotationName+annotationsSuffix
-sYfname = datadir+fname+'_'+sYname+'_'+annotationName+annotationsSuffix
+sXfname = datadir+fname+'_'+sXname+'_'+annotationName+annotationsExtension
+sYfname = datadir+fname+'_'+sYname+'_'+annotationName+annotationsExtension
 intervalsX = sequenceToIntervals(maskSequence(humanGene, humanDNA), annotationName)
 intervalsY = sequenceToIntervals(maskSequence(mouseGene, mouseDNA), annotationName)
 
@@ -144,12 +144,12 @@ annotations.addSequences([sXname, sYname])
 annotations.addAnnotationFile(sXname, annotationName,  sXfname)
 annotations.addAnnotationFile(sYname, annotationName,  sYfname)
 
-Fasta.save([(sXname, ''.join(humanDNA)), (sYname, ''.join(mouseDNA) )], datadir+fname+alignmentSuffix);
+Fasta.save([(sXname, ''.join(humanDNA)), (sYname, ''.join(mouseDNA) )], datadir+fname+alignmentExtension);
 with track.new(sXfname, 'bed') as t:
     t.fields = ['start', 'end', 'name']
     t.write("chr1", intervalsX)
 with track.new(sYfname, 'bed') as t:
     t.fields = ['start', 'end', 'name']
     t.write("chr1", intervalsY)
-with Open(datadir+fname+configSuffix,"w") as f:
+with Open(datadir+fname+configExtension,"w") as f:
     json.dump(annotations.toJSON(),f)

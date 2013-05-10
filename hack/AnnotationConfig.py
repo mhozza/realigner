@@ -12,6 +12,7 @@ class Annotations(ConfigObject):
         self.sequences = dict()
 
     def load(self, dictionary,  mathType):
+        ConfigObject.load(self, dictionary)
         if "sequences" not in dictionary:
             raise ParseException("Sequences not in AnnotationConfig")
 
