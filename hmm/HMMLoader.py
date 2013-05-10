@@ -10,6 +10,7 @@ from repeats.HighOrderRepeatState import HighOrderRepeatState
 from hmm.HighOrderState import HighOrderState
 import json
 from hack.ClassifierState import ClassifierState, SimpleState
+from hack.AnnotationConfig import AnnotationConfig, Annotations
 from algorithm.LogNum import LogNum
 
 def getInitializerObject(tp, mathType):
@@ -44,6 +45,7 @@ class HMMLoader(ConfigFactory):
             HighOrderRepeatState,
             RepeatLengthDistribution,
             SimpleState,
+			Annotations,
 			LogNum,
         ]:
 
