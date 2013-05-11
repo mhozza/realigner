@@ -87,12 +87,12 @@ if __name__ == "__main__":
     c = PairClassifier(autotrain=False, memoization=False, trainingDataDir=pathToData+"train_sequences",filename=pathToData+"randomforest.dat")
     c2 = PairClassifier(autotrain=False, memoization=False, trainingDataDir=pathToData+"train_sequences",filename=pathToData+"randomforest.dat")
     d = hack.DataLoader.DataLoader()
-    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s1.fa"))
-    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s1.fa", pathToData+"train_sequences/s1_na.js"))
-#    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa"))
-#    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa", pathToData+"sequences/simulated_alignment_na.js"))
-#    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa"))
-#    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa", pathToData+"sequences/short_na.js"))
+    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s1.fa"),5)
+    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s1.fa", pathToData+"train_sequences/s1_na.js"),5)
+#    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa"),5)
+#    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa", pathToData+"sequences/simulated_alignment_na.js"),5)
+#    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa"),5)
+#    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa", pathToData+"sequences/short_na.js"),5)
 #    px, py = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s3.fa"))
 
 #    print zip(x,y)
@@ -116,8 +116,6 @@ if __name__ == "__main__":
 
     # for i in zip(p,yy):
     #     print(i)
-
-    plt.subplot(1,2,1)
     dd1 = c.predict([px[i] for i in range(len(px)) if py[i]])
     dd0 = c.predict([px[i] for i in range(len(px)) if not py[i]])
     dd21 = c2.predict([px2[i] for i in range(len(px2)) if py2[i]])
@@ -127,6 +125,8 @@ if __name__ == "__main__":
     k21 = gaussian_kde(dd21)
     k20 = gaussian_kde(dd20)
     xvals = linspace(0.0, 1.0, 500)
+
+    plt.subplot(1,2,1)
     plt.hist([dd1, dd0, dd21, dd20],
              10, normed=False, histtype='bar',
              stacked=False,

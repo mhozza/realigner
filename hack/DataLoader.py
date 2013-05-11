@@ -171,26 +171,63 @@ class DataLoader:
                                                        seqX, annotationsX,
                                                        seqY, annotationsY)
 
-    def prepareTrainingData(self, abcList):
+
+
+    def _checkWindowX(self, abcList, index, size = 1):
+        for i in range(index-size//2,index+(1+size)//2):
+            if i>=len(abcList) or i<0:
+                return False
+            if abcList[i].X.base == '-':
+                return False
+        return True
+
+    def _checkWindowY(self, abcList, index, size = 1):
+        for i in range(index-size//2,index+(1+size)//2):
+            if i>=len(abcList) or i<0:
+                return False
+            if abcList[i].Y.base == '-':
+                return False
+        return True
+
+    def _createXYWindow(self, abcList, indexX, indexY, size = 1):
+        l = list()
+        for i in range(size):
+            b = AnnotatedBaseCouple(abcList[0].annotations)
+            b.X = abcList[i+indexX-size//2].X
+            b.Y = abcList[i+indexY-size//2].Y
+            l+=list(b.toTrainData())
+        return array(l)
+
+    def _createDataWindow(self, abcList, index, size = 1):
+        l = list()
+        for i in range(index-size//2,index+(1+size)//2):
+            if i>=len(abcList) or i<0:
+                return None
+            item = abcList[i]
+            if not item.isAligned():
+                return None
+            l+=list(item.toTrainData())
+        return array(l)
+
+    def prepareTrainingData(self, abcList, windowSize = 1):
         train_data = (list(), list())
-        for i in abcList:
-            if i.isAligned():
-                train_data[0].append(i.toTrainData())
+        for i in range(len(abcList)):
+            w = self._createDataWindow(abcList, i, windowSize)
+            if w!=None:
+                train_data[0].append(w)
                 train_data[1].append(1)
 
         seq_size = len(train_data[0])
         for i in range(seq_size):
             x = None
-            while x == None or abcList[x].X.base == '-':
-                x = (randint(0,seq_size-1))
+            while x == None or not self._checkWindowX(abcList, x, windowSize):
+                x = randint(0,seq_size-1)
             y = None
-            while y == None or y==x or abcList[y].Y.base == '-' :
-                y = (randint(0,seq_size-1))
+            while y == None or not self._checkWindowY(abcList, y, windowSize):
+                y = randint(0,seq_size-1)
 
-            b = AnnotatedBaseCouple(abcList[0].annotations)
-            b.X = abcList[x].X
-            b.Y = abcList[y].Y
-            train_data[0].append(b.toTrainData())
+            w = self._createXYWindow(abcList, x, y, windowSize)
+            train_data[0].append(w)
             train_data[1].append(0)
 
         return train_data
