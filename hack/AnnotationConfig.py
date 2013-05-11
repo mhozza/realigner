@@ -7,11 +7,11 @@ from tools.ConfigFactory import ConfigObject
 from tools.Exceptions import ParseException
 
 class Annotations(ConfigObject):
-    def __init__(self):
+    def __init__(self, *p):
         self.annotations = list()
         self.sequences = dict()
 
-    def load(self, dictionary,  mathType):
+    def load(self, dictionary):
         ConfigObject.load(self, dictionary)
         if "sequences" not in dictionary:
             raise ParseException("Sequences not in AnnotationConfig")
@@ -21,8 +21,9 @@ class Annotations(ConfigObject):
 
         for i in dictionary["sequences"]:
             self.sequences[i['name']] = dict()
-            for a in i:
-                self.sequences[i['name']][a['id']] = a['file']
+            for a in i['annotations']:
+                if a['id'] in self.annotations:
+                    self.sequences[i['name']][a['id']] = a['file']
 
     def toJSON(self):
         ret = ConfigObject.toJSON(self)
@@ -31,7 +32,7 @@ class Annotations(ConfigObject):
         for key, value in self.sequences.iteritems():
             ann = list()
             for akey, avalue in value.iteritems():
-                ann.append({'id': akey, 'value':avalue})
+                ann.append({'id': akey, 'file':avalue})
             ret["sequences"].append({"name":key, "annotations":ann})
         return ret
 

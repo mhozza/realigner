@@ -1,10 +1,12 @@
+#!/usr/bin/python
 from alignment import Fasta
 from hack.AnnotationConfig import Annotations
 from tools.file_wrapper import Open
+import json
+import os
 import random
 import sys
 import track
-import json
 
 
 class BiasedCoin:
@@ -13,7 +15,7 @@ class BiasedCoin:
 
     def flip(self):
         r = random.random()
-        return (r <= self.p)
+        return (r < self.p)
 
 
 class MarkovChain:
@@ -29,7 +31,7 @@ class MarkovChain:
             self.state%=len(self.c)
         return self.state
 
-def maskSequence(sequence, mask):
+def getSequence(sequence, mask):
     return [sequence[i] for i in range(len(sequence)) if mask[i]!='-']
 
 def sequenceToIntervals(seq, name):
@@ -72,7 +74,7 @@ sYname = "sequence2"
 annotationName = 'gene'
 
 datadir = 'data/train_sequences/'
-fname = "simulated_alignment2"
+fname = "simulated_alignment"
 alignmentExtension = ".fa"
 annotationsExtension = ".bed";
 configExtension = ".js"
@@ -110,8 +112,7 @@ for i in range(n):
     DNAMutationCoin = createDNAMutationCoin(g2+g3)
 
     # create DNA item
-    c  = DNA_CHARS[random.randint(0,3)]
-    c2 = DNA_CHARS[random.randint(0,3)]
+    c = c2 = DNA_CHARS[random.randint(0,3)]
     if not DNAMutationCoin.flip():
         char_index = random.randint(0,2)
         if(DNA_CHARS[char_index]==c2):
@@ -135,8 +136,8 @@ for i in range(n):
 # output
 sXfname = datadir+fname+'_'+sXname+'_'+annotationName+annotationsExtension
 sYfname = datadir+fname+'_'+sYname+'_'+annotationName+annotationsExtension
-intervalsX = sequenceToIntervals(maskSequence(humanGene, humanDNA), annotationName)
-intervalsY = sequenceToIntervals(maskSequence(mouseGene, mouseDNA), annotationName)
+intervalsX = sequenceToIntervals(getSequence(humanGene, humanDNA), annotationName)
+intervalsY = sequenceToIntervals(getSequence(mouseGene, mouseDNA), annotationName)
 
 annotations = Annotations()
 annotations.setAnnotations([annotationName])
@@ -144,7 +145,12 @@ annotations.addSequences([sXname, sYname])
 annotations.addAnnotationFile(sXname, annotationName,  sXfname)
 annotations.addAnnotationFile(sYname, annotationName,  sYfname)
 
-Fasta.save([(sXname, ''.join(humanDNA)), (sYname, ''.join(mouseDNA) )], datadir+fname+alignmentExtension);
+if os.path.isfile(sXfname):
+    os.remove(sXfname)
+if os.path.isfile(sYfname):
+    os.remove(sYfname)
+
+Fasta.save([(sXname, ''.join(humanDNA)), (sYname, ''.join(mouseDNA) )], datadir+fname+alignmentExtension)
 with track.new(sXfname, 'bed') as t:
     t.fields = ['start', 'end', 'name']
     t.write("chr1", intervalsX)
