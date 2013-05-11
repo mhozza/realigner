@@ -117,6 +117,7 @@ if __name__ == "__main__":
     # for i in zip(p,yy):
     #     print(i)
 
+    plt.subplot(1,2,1)
     dd1 = c.predict([px[i] for i in range(len(px)) if py[i]])
     dd0 = c.predict([px[i] for i in range(len(px)) if not py[i]])
     dd21 = c2.predict([px2[i] for i in range(len(px2)) if py2[i]])
@@ -125,19 +126,19 @@ if __name__ == "__main__":
     k0 = gaussian_kde(dd0)
     k21 = gaussian_kde(dd21)
     k20 = gaussian_kde(dd20)
-    xvals = linspace(0, 1, 500)
-    plt.hold(True)
+    xvals = linspace(0.0, 1.0, 500)
     plt.hist([dd1, dd0, dd21, dd20],
              10, normed=False, histtype='bar',
              stacked=False,
              label=["anotated 1","anotated 0","not anotated 1","not anotated 0"])
-    plt.legend()
-    plt.figure()
-    plt.plot(k1(xvals), label="anotated 1")
-    plt.plot(k0(xvals), label="anotated 0")
-    plt.plot(k21(xvals), label="not anotated 1")
-    plt.plot(k20(xvals), label="not anotated 0")
-    plt.legend()
+    plt.legend(loc=0)
+    plt.subplot(1,2,2)
+    plt.hold(True)
+    plt.plot(xvals, k1(xvals), label="anotated 1")
+    plt.plot(xvals, k0(xvals), label="anotated 0")
+    plt.plot(xvals, k21(xvals), label="not anotated 1")
+    plt.plot(xvals, k20(xvals), label="not anotated 0")
+    plt.legend(loc=0)
     plt.show()
 
 
