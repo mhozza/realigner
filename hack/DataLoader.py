@@ -29,7 +29,7 @@ class AnnotatedBase:
 
     def toTrainData(self):
         gap_val = -1  # hodnota kotrou sa ma nahradit '-'
-        
+
         m = {'A':0, 'C':1, 'G':2, 'T':3, '-':gap_val}
         res = [m[self.base]]
         for i in self.annotations.values():
@@ -54,7 +54,7 @@ class AnnotatedBaseCouple:
             return 1
         else:
             return 0
-        
+
 
 class DataLoader:
     def getAnnotationsAt(self, annotations, i):
@@ -67,11 +67,11 @@ class DataLoader:
                 baseAnnotation[key] = annotations[key][i]
         return baseAnnotation
 
-    def alnToAnnotation(self, annotations):
-        newannotations = dict()
-        for key in annotations:
-            newannotations[key] =  annotations[key].replace("-","")
-        return newannotations
+#    def alnToAnnotation(self, annotations):
+#        newannotations = dict()
+#        for key in annotations:
+#            newannotations[key] =  annotations[key].replace("-","")
+#        return newannotations
 
     def _SequenceToAnnotatedBaseCoupleList(self, annotations, seqX, annotationsX,
                                            seqY, annotationsY):
@@ -86,12 +86,12 @@ class DataLoader:
         posY = 0
         for i in range(len(seqX)):
             b = AnnotatedBaseCouple(annotations)
-            b.X.base = seqX[i]            
+            b.X.base = seqX[i]
             b.X.position = posX;
             b.X.annotations = self.getAnnotationsAt(annotationsX, posX)
             b.Y.base = seqY[i]
             b.X.position = posY;
-            b.Y.annotations = self.getAnnotationsAt(annotationsY, posX)
+            b.Y.annotations = self.getAnnotationsAt(annotationsY, posY)
 
             if(b.X.base!='-'):
                 posX+=1
@@ -100,56 +100,40 @@ class DataLoader:
             data.append(b)
         return data
 
-
-    def _getAnnotations_old(self, fname):
-        annotationsCount = 0
-        annotationNames = list()
-        annotationsX, annotationsY = dict(), dict()
-        if path.isfile(fname):
-            f = open(fname,'r')
-            for i, line in enumerate(f):
-                if i==0:
-                    annotationsCount = int(line)
-                elif i<=annotationsCount:
-                    annotationNames.append(line.strip())
-                elif i<=2*annotationsCount:
-                    annotationsX[annotationNames[i-1-annotationsCount]] = line.strip()
-                else:
-                    annotationsY[annotationNames[i-1-2*annotationsCount]] = line.strip()
-            f.close()
-        return (annotationsX, annotationsY)
-    
     def _intervalsToIntervalMap(self, intervals):
         '''
         Converts intervals from track to intervalmap, for searching
-                
+
         currently supports binary annotations only
         '''
-        m = intervalmap()        
+        m = intervalmap()
         m[:] = 0
         for i in intervals:
-            m[i['start']:i['end']] = 1
+            m[i[1]:i[2]] = 1
         return m
-    
-    
+
     def _getAnnotationFromBED(self, fname):
         '''
         Reads intervals from BED file
-        '''  
-        with track.load(fname) as ann:
-            ann = ann.read()
-        return self._intervalsToIntervalMap(ann)
-    
+        '''
+        try:
+            with track.load(fname) as ann:
+                ann = ann.read(fields=['start', 'end'])
+                intervals = self._intervalsToIntervalMap(ann)
+        except Exception:
+            intervals = self._intervalsToIntervalMap([])
+        return intervals
+
     def _getSequenceAnnotations(self, annotations, sequenceAnnotationsConfig):
         '''
-        Returns annotations for one sequence 
+        Returns annotations for one sequence
         '''
         res = dict()
         for annotation in annotations:
             res[annotation] = self._getAnnotationFromBED(sequenceAnnotationsConfig[annotation])
         return res
-            
-    
+
+
     def getAnnotations(self, fname):
         loader = hmm.HMMLoader.HMMLoader()
         annotationConfig = loader.load(fname)
@@ -157,7 +141,7 @@ class DataLoader:
         annotationsX =  self._getSequenceAnnotations(annotations, annotationConfig.sequences["sequence1"])
         annotationsY =  self._getSequenceAnnotations(annotations, annotationConfig.sequences["sequence2"])
         return annotations, annotationsX, annotationsY
-        
+
 
     def getSequences(self, fname):
         alignment_regexp = ""
@@ -175,12 +159,12 @@ class DataLoader:
 
     def loadSequence(self, fname, configFname=None):
         '''
-        Loads sequence with from file 'fname'        
+        Loads sequence with from file 'fname'
         '''
         if configFname==None:
-            configFname, ext = path.splitext(fname)
+            configFname = path.splitext(fname)[0]
             configFname+='.js'
-        
+
         seqX, seqY = self.getSequences(fname)
         annotations, annotationsX, annotationsY = self.getAnnotations(configFname)
         return self._SequenceToAnnotatedBaseCoupleList(annotations,
@@ -188,21 +172,21 @@ class DataLoader:
                                                        seqY, annotationsY)
 
     def prepareTrainingData(self, abcList):
-        train_data = (list(), list())        
+        train_data = (list(), list())
         for i in abcList:
             if i.isAligned():
                 train_data[0].append(i.toTrainData())
                 train_data[1].append(1)
 
         seq_size = len(train_data[0])
-        for i in range(seq_size):                        
+        for i in range(seq_size):
             x = None
             while x == None or abcList[x].X.base == '-':
                 x = (randint(0,seq_size-1))
             y = None
             while y == None or y==x or abcList[y].Y.base == '-' :
                 y = (randint(0,seq_size-1))
-            
+
             b = AnnotatedBaseCouple(abcList[0].annotations)
             b.X = abcList[x].X
             b.Y = abcList[y].Y
@@ -220,4 +204,3 @@ class DataLoader:
         return sequences
 
 
-    

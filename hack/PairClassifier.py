@@ -22,7 +22,8 @@ class PairClassifier:
 
     def __init__(self, filename="data/randomforest.clf",
                  trainingDataDir="data/train_sequences",
-                 params={"n_estimators":500, "n_jobs":4}, autotrain=True, memoization=True):
+                 params={"n_estimators":500, "n_jobs":4}, autotrain=True,
+                 memoization=True):
         self.defaultFilename = filename
         self.trainingDataDir = trainingDataDir
         self.params = params
@@ -83,25 +84,27 @@ class PairClassifier:
 
 if __name__ == "__main__":
     pathToData = "data/"
-    c = PairClassifier(autotrain=False, memoization=False, trainingDataDir=pathToData+"train_sequences",filename=pathToData+"randomforest.dat")    
+    c = PairClassifier(autotrain=False, memoization=False, trainingDataDir=pathToData+"train_sequences",filename=pathToData+"randomforest.dat")
     c2 = PairClassifier(autotrain=False, memoization=False, trainingDataDir=pathToData+"train_sequences",filename=pathToData+"randomforest.dat")
     d = hack.DataLoader.DataLoader()
     x,y = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s1.fa"))
-    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s1_na.fa"))
-    # x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa"))
-    # x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment_na.fa"))
-    # x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa"))
-    # x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short_na.fa"))
+    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s1.fa", pathToData+"train_sequences/s1_na.js"))
+#    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa"))
+#    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa", pathToData+"sequences/simulated_alignment_na.js"))
+#    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa"))
+#    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa", pathToData+"sequences/short_na.js"))
 #    px, py = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s3.fa"))
+
+#    print zip(x,y)
     px,py = x,y
     px2,py2 = x2,y2
-        
+
     c.fit(x,y)
     c2.fit(x2,y2)
     # p = [array((i,j,k,l)) for k in range(2) for l in range(2) for i in range(4) for j in range(4) ]
     # yy = c.predict(p)
-    
-    
+
+
     # for i,j in enumerate(yy):
     #     if i % 16 ==0:
     #         s = 0
@@ -110,12 +113,12 @@ if __name__ == "__main__":
     #         for k in range(i-15, i+1):
     #             yy[k]*=4
     #             yy[k]/=s
-            
+
     # for i in zip(p,yy):
     #     print(i)
-        
+
     dd1 = c.predict([px[i] for i in range(len(px)) if py[i]])
-    dd0 = c.predict([px[i] for i in range(len(px)) if not py[i]]) 
+    dd0 = c.predict([px[i] for i in range(len(px)) if not py[i]])
     dd21 = c2.predict([px2[i] for i in range(len(px2)) if py2[i]])
     dd20 = c2.predict([px2[i] for i in range(len(px2)) if not py2[i]])
     k1 = gaussian_kde(dd1)
@@ -123,10 +126,13 @@ if __name__ == "__main__":
     k21 = gaussian_kde(dd21)
     k20 = gaussian_kde(dd20)
     xvals = linspace(0, 1, 500)
-    plt.hold(True)    
-    plt.hist([dd1, dd0, dd21, dd20], 10, normed=False, histtype='bar', stacked=False, label=["anotated 1","anotated 0","not anotated 1","not anotated 0"])
-    plt.legend()    
-    plt.figure()    
+    plt.hold(True)
+    plt.hist([dd1, dd0, dd21, dd20],
+             10, normed=False, histtype='bar',
+             stacked=False,
+             label=["anotated 1","anotated 0","not anotated 1","not anotated 0"])
+    plt.legend()
+    plt.figure()
     plt.plot(k1(xvals), label="anotated 1")
     plt.plot(k0(xvals), label="anotated 0")
     plt.plot(k21(xvals), label="not anotated 1")
@@ -134,20 +140,20 @@ if __name__ == "__main__":
     plt.legend()
     plt.show()
 
-    
+
     # plt.plot(histogram(yy, 100, density=False)[0])
     # k = gaussian_kde(yy)
     # xvals = linspace(0, 1, 100)
-    # plt.hold(True)     
-    # plt.plot(k(xvals)) 
-      
+    # plt.hold(True)
+    # plt.plot(k(xvals))
+
 #    plt.show()
-    
-    
+
+
 #     zt = [0.65, 0.7, 0.8]
-    
+
 #     b = list()
-    
+
 #     for g1 in [0,1]:
 #         for g2 in [0,1]:
 #             z = zt[g1+g2]
@@ -160,16 +166,16 @@ if __name__ == "__main__":
 #                         for k in range(4):
 #                             if k!=i:
 #                                 a[j][k] += ((1-z)**2)/9
-    
-#             for r in enumerate(a):                 
+
+#             for r in enumerate(a):
 #                 for c in enumerate(r[1]):
 #                     print(r[0],c[0],g1,g2,c[1])
 #                     b.append(c[1])
 #                     # print(r[0],c[0],g1,g2,c[1]*pt[g1+g2]*.25)
-    
-    
+
+
 #     # plt.plot(histogram(b, 100, density=True)[0])
-#     # plt.hold(True)    
+#     # plt.hold(True)
 #     plt.plot(histogram(b, 100, density=False)[0])
 #     k = gaussian_kde(b)
 #     xvals = linspace(0, 1, 100)
