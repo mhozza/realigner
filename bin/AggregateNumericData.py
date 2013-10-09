@@ -31,10 +31,12 @@ def stats(v):
 
 def compute_stats(d):
     for k, v in d.iteritems():
-        if isinstance(v, list):
+        if k[0] == '+':
+            d[k] = sum(v)
+        elif isinstance(v, list):
             d[k] = stats(v)
         else:
-            if k == 'correct_len_histogram':
+            if k == 'correct_len_histogram' or k[:2] == '@+':
                 for kk, vv in v.iteritems():
                     d[k][kk] = sum(vv)
             else:
@@ -42,9 +44,15 @@ def compute_stats(d):
 
 
 @perf.runningTimeDecorator
-def main(args_input, args_output, interval):
+def main(args_input, args_output, interval, ignore):
     aggr = dict()
     for task_id in range(interval[0] - 1, interval[1]):
+        if task_id == 68 and filename.count('0002')>0:
+            print 'removing task_id 68'
+            continue
+        if task_id in ignore:
+            print 'removing task {}'.format(task_id)
+            continue
         for filename in args_input:
             with Open(filename.format(id=task_id), 'r') as f:
                 data = json.load(f)
@@ -59,6 +67,8 @@ if __name__ == '__main__':
     parser.add_argument('--input', type=str, nargs='+', help='Input files', required=True)
     parser.add_argument('--interval', type=int, nargs=2, 
                         help='Interval of ids for input files', default=None)
+    parser.add_argument('--ignore', type=str, default='')
     args = parser.parse_args()
-    main(args.input, args.output, args.interval)
+    args.ignore = set(map(int,args.ignore.split(',')))
+    main(args.input, args.output, args.interval, args.ignore)
     perf.printAll()

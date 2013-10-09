@@ -3,7 +3,12 @@ import sys
 
 stack = list()
 messages = list()
- 
+
+def indent():
+    if len(stack) < 2:
+        return ''
+    return ('| ' * (len(stack) - 2)) + '+'
+
 def push(cnt=1):
     for _ in range(cnt):
         stack.append(time.time())
@@ -24,14 +29,17 @@ def getTime(back = 0):
         back = slen - 1
     return stack[slen - back - 1]
 
-def msg(message, back = 0):
-    timediff= time.time() - getTime(back)
-    messages.append(message.format(time=timediff))
-    
 def printAll():
+    global messages
     for message in messages:
         sys.stderr.write(message + "\n")
+    messages = []
 
+def msg(message, back = 0):
+    timediff= time.time() - getTime(back)
+    messages.append(indent() + message.format(time=timediff))
+    printAll()
+    
 def runningTimeDecorator(fn):
     def wrapped(*p, **k):
         push(2)

@@ -91,6 +91,8 @@ class GeneralizedHMM(HMM):
                     for (_sdx, dprob) in following.durationGenerator():
                         if _x + _sdx > dx: 
                             continue
+                        if x + _x + _sdx > len(X):
+                            continue
                         rows[_x + _sdx][followingID][_sdx] += \
                             following.emission(X, x + _x, _sdx) \
                             * acc_trans_prob * dprob
@@ -182,3 +184,16 @@ class GeneralizedHMM(HMM):
                     * self.states[stateID].getEndProbability() 
                     for (stateID, dct) in ((l, table[0][1][l]) 
                     for l in range(len(table[0][1])))])
+
+    def getProbabilities(self, X, x, dx, positionGenerator=None, table=None):
+        if table == None:
+            table = self.getForwardTable(
+                X, x, dx, memoryPattern=MemoryPatterns.every(dx + 1))
+        
+        return [
+            sum([self.mathType(sum([prob for (_, prob) in dct.iteritems()])) 
+                    * self.states[stateID].getEndProbability() 
+                    for (stateID, dct) in ((l, row[1][l]) 
+                    for l in range(len(row[1])))])
+            for row in table
+        ]

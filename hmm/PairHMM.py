@@ -352,7 +352,7 @@ class GeneralizedPairHMM(HMM):
                     previous = self.states[previousID]
                     for ((_sdx, _sdy), dprob) in \
                             previous.reverseDurationGenerator(_x, _y):
-                        if _x - _sdx < 0 or _y - _sdy < 0:
+                        if _x - _sdx < 0 or _y - _sdy < 0 or _x - _sdx > dx or _y - _sdy > dy:
                             continue
                         rows[_x - _sdx][_y - _sdy][previousID] += (
                             acc_prob * transprob * dprob * 
@@ -441,7 +441,7 @@ class GeneralizedPairHMM(HMM):
                     following = self.states[followingID]
                     for ((_sdx, _sdy), dprob) in \
                             following.durationGenerator(_x, _y):
-                        if _x + _sdx > dx or _y + _sdy > dy:
+                        if _x + _sdx > dx or _y + _sdy > dy or _x + _sdx < 0 or _y + _sdy < 0:
                             continue
                         #dprob = self.mathType(1.0)
                         rows[_x + _sdx][_y + _sdy][followingID][(_sdx, _sdy)] \
@@ -598,6 +598,27 @@ class GeneralizedPairHMM(HMM):
         if positionGenerator != None:
             positionGenerator = list(positionGenerator)
         perf.push()
+        if 'Repeat' in self.statenameToID:
+            state = self.states[self.statenameToID['Repeat']]
+            # Cache all stuff 
+            cons_list = state.cons_list
+            if state.merge_consensus or state.correctly_merge_consensus:
+                for _x in range(dx + 1):
+                    max_range = max([0] + list(state.repeatGeneratorX.getHints(x + _x)))
+                    state.emissionX(X, x + _x, max_range, cons_list)
+                for _y in range(dy + 1):
+                    max_range = max([0] + list(state.repeatGeneratorY.getHints(y + _y)))
+                    state.emissionY(Y, y + _y, max_range, cons_list)
+            else:
+                for cons in cons_list:
+                    for _x in range(dx + 1):
+                        max_range = max([0] + list(state.repeatGeneratorX.getHints(x + _x)))
+                        state.emissionX(X, x + _x, max_range, cons)
+                    for _y in range(dy + 1):
+                        max_range = max([0] + list(state.repeatGeneratorY.getHints(y + _y)))
+                        state.emissionY(Y, y + _y, max_range, cons)
+        perf.msg('Emission cache was filled in {time} seconds.')
+        perf.replace()
         if forwardTable == None:
             forwardTable = self.getForwardTableGenerator(X, x, dx, Y, y, dy,
                 positionGenerator=positionGenerator)

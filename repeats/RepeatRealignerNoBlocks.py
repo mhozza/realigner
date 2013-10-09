@@ -23,7 +23,8 @@ class RepeatRealignerNoBlocks(RepeatRealigner):
     def prepareData(self, *data):
         data = RepeatRealigner.prepareData(self, *data)
         ignore_states = data[0]
-        arguments = 1
+        resolve_indels = data[1]
+        arguments = 2
        
         statefun = lambda x: x
         if ignore_states:
@@ -34,7 +35,7 @@ class RepeatRealignerNoBlocks(RepeatRealigner):
         for x in range(len(self.posteriorTable)):
             for y, dct in self.posteriorTable[x].iteritems():
                 for (state, _sdx, _sdy), prob in dct.iteritems():
-                    if max(_sdx, _sdy) <= 0:
+                    if max(_sdx, _sdy) <= 1:
                         table[x][y][(statefun(state), _sdx, _sdy)] += prob
                         continue
                     len_x, len_y = _sdx, _sdy
@@ -52,6 +53,12 @@ class RepeatRealignerNoBlocks(RepeatRealigner):
                         if x + xx >= len(table):
                             continue
                         for yy in iter_y:
-                            table[x + xx][y + yy][(statefun(state), len_x, len_y)] += prob
+                            table[x - xx][y - yy][(statefun(state), len_x, len_y)] += prob
+                            if resolve_indels: 
+                                if len_y > 0:
+                                    table[x - xx][y - yy][(statefun(state), len_x, 0)] += prob
+                                if len_x > 0:
+                                    table[x - xx][y - yy][(statefun(state), 0, len_y)] += prob
         self.posteriorTable = table 
+        self.drawer.add_posterior_table(self.posteriorTable)
         return data[arguments:]

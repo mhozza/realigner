@@ -2,7 +2,7 @@ import re
 import sys
 import os
 import math
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 # TODO: Rychlejsie porovnavanie error, ziskavanie patternov z chyb
 # TODO: Vypis subory v ktorych je chyba
@@ -56,7 +56,7 @@ def get_error_logs(path):
 
 
 def parse_error_log(filename):
-    perf = defaultdict(float)
+    perf = OrderedDict()
     perf_re = re.compile('(.*) ([0-9.e-]+) seconds\.$')
     error = None
     with open(filename, 'r') as f:
@@ -93,14 +93,30 @@ def dist(s1, s2):
     return float(d[-1]) * (s1.count('\n') + s2.count('\n')) / (len(s1) + len(s2))
 
 
+def split_data(k):
+    if len(k) == 0:
+        return None, k
+    if k[0] not in ['|', '+']:
+        return None, k
+    a, b = tuple(k.split('+', 1))
+    return a + '+', b
+
+
+
 class PerfAggregator:
     
     def __init__(self):
-        self.data = defaultdict(list)
+        self.data = OrderedDict()
+        self.prefix = defaultdict(str)
     
     def addDataPoint(self, d):
         for k, v in d.iteritems():
-            self.data[k].append(v)
+            prefix, sufix = split_data(k)
+            if sufix not in self.data:
+                self.data[sufix] = list()
+            self.data[sufix].append(v)
+            if prefix != None:
+                self.prefix[sufix] = prefix
             
     def output(self):
         for k, v in self.data.iteritems():
@@ -110,8 +126,8 @@ class PerfAggregator:
                 total = sum(v)
                 mean = total / len(v)
                 variance = sum([(mean - x)**2 for x in v]) / len(v)
-                print('{} {} seconds [Deviation: {}, {} data points].'.format(
-                    k, mean, math.sqrt(variance), len(v)
+                print('{}{} {} seconds [Deviation: {}, {} data points].'.format(
+                    self.prefix[k], k, mean, math.sqrt(variance), len(v)
                 )) 
       
         

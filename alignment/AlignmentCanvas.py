@@ -95,24 +95,27 @@ class AlignmentCanvas():
             
     def add_posterior_table(self, table):
         colors = [(255, 255, 0, 255), (0, 255, 0, 255), (0, 0, 255, 255),
-                  (255, 0, 0, 255)]
+                  (255, 255, 255, 255)]
         inf = float("-inf");
         for x in range(len(table)):
             for y, val in table[x].iteritems():
                 for (state, dx, dy), prob in val.iteritems():
-                    dd = dx + dy
-                    if dd == 0:
-                        weight = -99999999999
-                    else:
-                        weight = prob * dd
-                    if weight > inf: 
-                        self.add_line((weight, colors[state], 1,
+                    if state != 3:
+                        continue
+                    #dd = dx + dy
+                    #if dd == 0:
+                    #    weight = -99999999999
+                    #else:
+                    #   weight = prob * dd
+                    cl = [255 - int(float(prob*1000000) * col) for col in colors[state]]
+                    cl[-1] = 255
+                    cl = tuple(cl)
+                    self.add_line((47, cl, 1,
                                        [(x, y), (x - dx, y - dy)]))
     
     
     def draw(self, output_filename, width, height,
              annotation_width=30, annotation_border=5):
-        
         I = Image.new("RGBA", (width, height), (255, 255, 255, 255))
         D =  ImageDraw.Draw(I)
         x_len = len(self.sequences['X']['sequence'])
@@ -174,7 +177,10 @@ class AlignmentCanvas():
                 
         self.lines.sort(key=lambda x: x[0])
         for _, color, _width, segments in self.lines:
-            D.line(map(canvasTranslator, segments), fill=color, width=_width)
+            if _ == 47:
+                D.rectangle(map(canvasTranslator, segments), fill=color)#, width=_width)
+            else:
+                D.line(map(canvasTranslator, segments), fill=color, width=_width)
         
         for seq, v in self.sequences.iteritems():
             for name, annotations in v.iteritems():
@@ -200,6 +206,5 @@ class AlignmentCanvas():
                                     (width, rect[1][1])], fill=fl)
                     D.rectangle(rect, outline=(0, 0, 0, 255), 
                                     fill=color) 
-        print w, h, x_len, y_len
         del D  
         I.save(output_filename)

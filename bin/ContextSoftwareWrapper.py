@@ -24,7 +24,7 @@ def main(args):
     task_ids = [None]
     if os.environ.has_key('SGE_TASK_ID'):
         sge_task_id = int(os.environ['SGE_TASK_ID'])
-        if 'SGE_STEP_SIZE' not in os.environ:
+        if not os.environ.has_key('SGE_STEP_SIZE'):
             sge_step_size = 1
         else:
             sge_step_size = int(os.environ['SGE_STEP_SIZE'])
