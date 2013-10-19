@@ -9,9 +9,7 @@ class ClassifierState(GeneralizedPairState):
         GeneralizedPairState.__init__(self, *p)
         self.clf = PairClassifier()
         self.dl = hack.DataLoader.DataLoader()
-        self.annotations, self.aX, self.aY = self.dl.getAnnotations("data/sequences/annotations/simulated_alignment.fa")
-        self.aX = self.dl.alnToAnnotation(self.aX)
-        self.aY = self.dl.alnToAnnotation(self.aY)
+        self.annotations, self.aX, self.aY = self.dl.getAnnotations("data/sequences/simulated_alignment.js")
 
     def emission(self, X, x, dx, Y, y, dy):
         #if(dx!=1 && dy!=1) throw Some Exception
