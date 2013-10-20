@@ -11,11 +11,11 @@ export SGE_STEP_SIZE=1
 time $PYTHON bin/Realign.py \
 	--mathType LogNum \
 	--beam_width 30 \
-	--sequence_regexp sequence1 sequence2 \
+	--sequence_regexp $3 $4 \
 	--algorithm viterbi\
 	--model data/models/ClassificationHMM.js\
-	data/sequences/simulated_alignment.fa\
-	data/sequences/simulated_alignment.realigned.fa
+	$1\
+	$2
 				
 	# working_dir_tmp/sampled_alignments/{id}.fa \
 	# working_dir_tmp/sampled_alignments/{id}.realigned.fa \

@@ -8,48 +8,6 @@ import random
 import sys
 import track
 
-
-class BiasedCoin:
-    def __init__(self, p):
-        self.p = p
-
-    def flip(self):
-        r = random.random()
-        return (r < self.p)
-
-
-class MarkovChain:
-    def __init__(self, p, q):
-        self.state = 0
-        self.c = list()
-        self.c.append(BiasedCoin(p))
-        self.c.append(BiasedCoin(q))
-
-    def getState(self):
-        if(self.c[self.state].flip()):
-            self.state+=1
-            self.state%=len(self.c)
-        return self.state
-
-def getSequence(sequence, mask):
-    return [sequence[i] for i in range(len(sequence)) if mask[i]!='-']
-
-def sequenceToIntervals(seq, name):
-    last = None;
-    vi = list()
-    for i in range(len(seq)):
-        if seq[i]:
-            if last==None:
-                last = [i, i, name]
-            last[1]+=1
-        else:
-            if last!=None:
-                vi.append(last)
-                last = None
-    if last != None:
-        vi.append(tuple(last))
-    return vi
-
 P_START_GENE = 0.001
 P_STOP_GENE = 0.01
 P_START_DELETE = 0.01
@@ -61,101 +19,175 @@ P_MUTATE_DNA_00 = 0.65
 
 DNA_CHARS = ['A', 'C', 'G', 'T']
 
-def createDNAMutationCoin(s):
-    '''
+
+class BiasedCoin:
+    def __init__(self, p):
+        self.p = p
+
+    def flip(self):
+        r = random.random()
+        return r < self.p
+
+
+class MarkovChain:
+    def __init__(self, p, q):
+        self.state = 0
+        self.c = list()
+        self.c.append(BiasedCoin(p))
+        self.c.append(BiasedCoin(q))
+
+    def get_state(self):
+        if self.c[self.state].flip():
+            self.state += 1
+            self.state %= len(self.c)
+        return self.state
+
+
+def get_sequence(sequence, mask):
+    return [sequence[i] for i in range(len(sequence)) if mask[i] != '-']
+
+
+def sequence_to_intervals(seq, name):
+    last = None
+    vi = list()
+    for i in range(len(seq)):
+        if seq[i]:
+            if last is None:
+                last = [i, i, name]
+            last[1] += 1
+        else:
+            if last is not None:
+                vi.append(last)
+                last = None
+    if last is not None:
+        vi.append(tuple(last))
+    return vi
+
+
+def create_dna_mutation_coin(s):
+    """
     set up DNA mutation coin
-    '''
+    """
     p = [P_MUTATE_DNA_00, P_MUTATE_DNA_1, P_MUTATE_DNA_11]
     return BiasedCoin(p[s])
 
 
-sXname = "sequence1"
-sYname = "sequence2"
-annotationName = 'gene'
+def main(n):
+    s1name = "sequence1"
+    s2name = "sequence2"
+    s3name = "sequence3"
+    annotation_name = 'gene'
 
-datadir = 'data/train_sequences/'
-fname = "simulated_alignment"
-alignmentExtension = ".fa"
-annotationsExtension = ".bed";
-configExtension = ".js"
+    datadir = '../data/train_sequences/'
+    fname = "simulated_alignment"
+    alignment_extension = ".fa"
+    annotations_extension = ".bed"
+    config_extension = ".js"
 
-n = 1000;
+    if len(sys.argv) > 1:
+        n = int(sys.argv[1])
+    if len(sys.argv) > 2:
+        fname = sys.argv[2]
 
-if len(sys.argv)>1:
-    n = int(sys.argv[1])
-if len(sys.argv)>2:
-    fname = sys.argv[2]
+    # srand(time(NULL));
 
-# srand(time(NULL));
+    master_gene_sequence = MarkovChain(P_START_GENE, P_STOP_GENE)
+    human_delete_sequence = MarkovChain(P_START_DELETE, P_STOP_DELETE)
+    mouse_delete_sequence = MarkovChain(P_START_DELETE, P_STOP_DELETE)
+    horse_delete_sequence = MarkovChain(P_START_DELETE, P_STOP_DELETE)
+    mutator_coin = BiasedCoin(P_NOT_MUTATE_GENE)
 
-masterGeneSequence = MarkovChain(P_START_GENE,P_STOP_GENE)
-humanDeleteSequence = MarkovChain(P_START_DELETE,P_STOP_DELETE)
-mouseDeleteSequence = MarkovChain(P_START_DELETE,P_STOP_DELETE)
-mutatorCoin = BiasedCoin(P_NOT_MUTATE_GENE)
+    master_gene = list()
+    human_gene = list()
+    mouse_gene = list()
+    horse_gene = list()
 
-masterGene = list()
-humanGene = list()
-mouseGene = list()
+    human_dna = list()
+    mouse_dna = list()
+    horse_dna = list()
 
-humanDNA = list()
-mouseDNA = list()
+    for i in range(n):
+        # create master_gene item
+        g = g2 = g3 = g4 = master_gene_sequence.get_state()
 
-for i in range(n):
-    # create masterGene item
-    g = g2 = g3 = masterGeneSequence.getState()
+        # mutate master_gene item
+        if g:
+            g2 = mutator_coin.flip()
+            g3 = mutator_coin.flip()
+            g4 = mutator_coin.flip()
 
-    # mutate masterGene item
-    if(g):
-        g2 = mutatorCoin.flip()
-        g3 = mutatorCoin.flip()
+        dna_mutation_coin = create_dna_mutation_coin(g2 + g3)
+        dna_mutation_coin2 = create_dna_mutation_coin(g2 + g4)
 
-    DNAMutationCoin = createDNAMutationCoin(g2+g3)
+        # create DNA item
+        c = c2 = c3 = DNA_CHARS[random.randint(0, 3)]
+        if not dna_mutation_coin.flip():
+            char_index = random.randint(0, 2)
+            if DNA_CHARS[char_index] == c2:
+                char_index = 3
+            c2 = DNA_CHARS[char_index]
 
-    # create DNA item
-    c = c2 = DNA_CHARS[random.randint(0,3)]
-    if not DNAMutationCoin.flip():
-        char_index = random.randint(0,2)
-        if(DNA_CHARS[char_index]==c2):
-            char_index = 3
-        c2 = DNA_CHARS[char_index]
+        if not dna_mutation_coin2.flip():
+            char_index = random.randint(0, 2)
+            if DNA_CHARS[char_index] == c3:
+                char_index = 3
+            c3 = DNA_CHARS[char_index]
 
-    # delete DNA item
-    if(humanDeleteSequence.getState()):
-        c = '-';
-    if(mouseDeleteSequence.getState()):
-        c2 = '-';
+        # delete DNA item
+        if human_delete_sequence.get_state():
+            c = '-'
+        if mouse_delete_sequence.get_state():
+            c2 = '-'
+        if horse_delete_sequence.get_state():
+            c3 = '-'
 
-    # add items to sequence
-    masterGene.append(g)
-    humanGene.append(g2)
-    mouseGene.append(g3)
+        # add items to sequence
+        master_gene.append(g)
+        human_gene.append(g2)
+        mouse_gene.append(g3)
+        horse_gene.append(g4)
 
-    humanDNA.append(c)
-    mouseDNA.append(c2)
+        human_dna.append(c)
+        mouse_dna.append(c2)
+        horse_dna.append(c3)
 
-# output
-sXfname = datadir+fname+'_'+sXname+'_'+annotationName+annotationsExtension
-sYfname = datadir+fname+'_'+sYname+'_'+annotationName+annotationsExtension
-intervalsX = sequenceToIntervals(getSequence(humanGene, humanDNA), annotationName)
-intervalsY = sequenceToIntervals(getSequence(mouseGene, mouseDNA), annotationName)
+    # output
+    s1fname = datadir+fname+'_'+s1name+'_'+annotation_name+annotations_extension
+    s2fname = datadir+fname+'_'+s2name+'_'+annotation_name+annotations_extension
+    s3fname = datadir+fname+'_'+s3name+'_'+annotation_name+annotations_extension
+    intervals1 = sequence_to_intervals(get_sequence(human_gene, human_dna), annotation_name)
+    intervals2 = sequence_to_intervals(get_sequence(mouse_gene, mouse_dna), annotation_name)
+    intervals3 = sequence_to_intervals(get_sequence(horse_gene, horse_dna), annotation_name)
 
-annotations = Annotations()
-annotations.setAnnotations([annotationName])
-annotations.addSequences([sXname, sYname])
-annotations.addAnnotationFile(sXname, annotationName,  sXfname)
-annotations.addAnnotationFile(sYname, annotationName,  sYfname)
+    annotations = Annotations()
+    annotations.setAnnotations([annotation_name])
+    annotations.addSequences([s1name, s2name, s3name])
+    annotations.addAnnotationFile(s1name, annotation_name,  s1fname)
+    annotations.addAnnotationFile(s2name, annotation_name,  s2fname)
+    annotations.addAnnotationFile(s3name, annotation_name,  s3fname)
 
-if os.path.isfile(sXfname):
-    os.remove(sXfname)
-if os.path.isfile(sYfname):
-    os.remove(sYfname)
+    if os.path.isfile(s1fname):
+        os.remove(s1fname)
+    if os.path.isfile(s2fname):
+        os.remove(s2fname)
 
-Fasta.save([(sXname, ''.join(humanDNA)), (sYname, ''.join(mouseDNA) )], datadir+fname+alignmentExtension)
-with track.new(sXfname, 'bed') as t:
-    t.fields = ['start', 'end', 'name']
-    t.write("chr1", intervalsX)
-with track.new(sYfname, 'bed') as t:
-    t.fields = ['start', 'end', 'name']
-    t.write("chr1", intervalsY)
-with Open(datadir+fname+configExtension,"w") as f:
-    json.dump(annotations.toJSON(),f)
+    Fasta.save(
+        [(s1name, ''.join(human_dna)), (s2name, ''.join(mouse_dna)), (s3name, ''.join(horse_dna))],
+        datadir+fname+alignment_extension
+    )
+
+    with track.new(s1fname, 'bed') as t:
+        t.fields = ['start', 'end', 'name']
+        t.write("chr1", intervals1)
+    with track.new(s2fname, 'bed') as t:
+        t.fields = ['start', 'end', 'name']
+        t.write("chr1", intervals2)
+    with track.new(s3fname, 'bed') as t:
+        t.fields = ['start', 'end', 'name']
+        t.write("chr1", intervals3)
+
+    with Open(datadir+fname+config_extension, "w") as f:
+        json.dump(annotations.toJSON(), f)
+
+if __name__ == "__main__":
+    main(1000)

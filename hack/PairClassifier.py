@@ -1,19 +1,19 @@
 #/usr/bin/python
-'''
+"""
 Created on Mar 28, 2013
 
 @author: Michal Hozza
-'''
-import hack.DataLoader
+"""
 from numpy.core.function_base import linspace
-from numpy.ma.core import mean
-from numpy.ma.testutils import approx
 from os import path
 from scipy.stats.kde import gaussian_kde
-from sklearn.ensemble import RandomForestClassifier
-import matplotlib.pyplot as plt
 import os
 import pickle
+
+from sklearn.ensemble import RandomForestClassifier
+import matplotlib.pyplot as plt
+
+import hack.DataLoader
 
 
 class PairClassifier:
@@ -21,42 +21,42 @@ class PairClassifier:
         return RandomForestClassifier(**self.params)
 
     def __init__(self, filename="data/randomforest.clf",
-                 trainingDataDir="data/train_sequences",
-                 params={"n_estimators":500, "n_jobs":4}, autotrain=True,
+                 training_data_dir="data/train_sequences",
+                 params={"n_estimators": 100, "n_jobs": 4, "max_depth": 50}, autotrain=True,
                  memoization=True):
-        self.defaultFilename = filename
-        self.trainingDataDir = trainingDataDir
+        self.default_filename = filename
+        self.training_data_dir = training_data_dir
         self.params = params
         self.mem = dict()
         self.memoization = memoization
 
-        if autotrain and path.exists(self.defaultFilename):
-            if path.isfile(self.defaultFilename):
-                self.load(self.defaultFilename)
+        if autotrain and path.exists(self.default_filename):
+            if path.isfile(self.default_filename):
+                self.load(self.default_filename)
         else:
             self.classifier = self._getClassifier()
             if autotrain:
                 dl = hack.DataLoader.DataLoader()
                 data, target = (list(), list())
-                for seq in dl.loadDirectory(self.trainingDataDir):
+                for seq in dl.loadDirectory(self.training_data_dir):
                     d, t = dl.prepareTrainingData(seq)
                     data += d
                     target += t
                 self.fit(data, target)
-                self.save(self.defaultFilename)
+                self.save(self.default_filename)
 
     def load(self, fname):
-        f = open(fname,'r')
+        f = open(fname, 'r')
         self.classifier = pickle.load(f)
         f.close()
 
     def save(self, fname):
-        f = open(fname,'w')
+        f = open(fname, 'w')
         pickle.dump(self.classifier, f)
         f.close()
 
     def removeDefaultFile(self):
-        os.remove(self.defaultFilename)
+        os.remove(self.default_filename)
 
     def reset(self):
         if self.classifier:
@@ -72,35 +72,47 @@ class PairClassifier:
             if d in self.mem:
                 return self.mem[d]
 
-#    	return self.classifier.predict(data)
-#        hits = array([tree.predict(data) for tree in self.classifier.estimators_])
-#        res = [mean(hits[:,i]) for i in range(len(data))]
-        res =  self.classifier.predict_proba(data)[:,1]
+            #    	return self.classifier.predict(data)
+            #        hits = array([tree.predict(data) for tree in self.classifier.estimators_])
+            #        res = [mean(hits[:,i]) for i in range(len(data))]
+        res = self.classifier.predict_proba(data)[:, 1]
         if self.memoization:
             self.mem[d] = res
         return res
 
 
-
 if __name__ == "__main__":
     pathToData = "data/"
-    c = PairClassifier(autotrain=False, memoization=False, trainingDataDir=pathToData+"train_sequences",filename=pathToData+"randomforest.dat")
-    c2 = PairClassifier(autotrain=False, memoization=False, trainingDataDir=pathToData+"train_sequences",filename=pathToData+"randomforest.dat")
+    c = PairClassifier(
+        filename=pathToData + "randomforest.dat",
+        training_data_dir=pathToData + "train_sequences",
+        autotrain=False,
+        memoization=False,
+    )
+    c2 = PairClassifier(
+        filename=pathToData + "randomforest.dat",
+        training_data_dir=pathToData + "train_sequences",
+        autotrain=False,
+        memoization=False,
+    )
     d = hack.DataLoader.DataLoader()
-    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s1.fa"),5)
-    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s1.fa", pathToData+"train_sequences/s1_na.js"),5)
-#    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa"),5)
-#    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa", pathToData+"sequences/simulated_alignment_na.js"),5)
-#    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa"),5)
-#    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa", pathToData+"sequences/short_na.js"),5)
-#    px, py = d.prepareTrainingData(d.loadSequence(pathToData+"train_sequences/s3.fa"))
+    x, y = d.prepareTrainingData(d.loadSequence(pathToData + "train_sequences/s1.fa"), 1)
+    x2, y2 = d.prepareTrainingData(
+        d.loadSequence(pathToData + "train_sequences/s1.fa", pathToData + "train_sequences/s1_na.js"), 1)
+    #    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa"),5)
+    #    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa", pathToData+"sequences/simulated_alignment_na.js"),1)
+    #    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa"),5)
+    #    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa", pathToData+"sequences/short_na.js"),5)
+    px, py = d.prepareTrainingData(d.loadSequence(pathToData + "train_sequences/s2.fa"), 1)
+    px2, py2 = d.prepareTrainingData(
+        d.loadSequence(pathToData + "train_sequences/s2.fa", pathToData + "train_sequences/s2_na.js"), 1)
 
-#    print zip(x,y)
-    px,py = x,y
-    px2,py2 = x2,y2
+    #    print zip(x,y)
+    #    px,py = x,y
+    #    px2,py2 = x2,y2
 
-    c.fit(x,y)
-    c2.fit(x2,y2)
+    c.fit(x, y)
+    c2.fit(x2, y2)
     # p = [array((i,j,k,l)) for k in range(2) for l in range(2) for i in range(4) for j in range(4) ]
     # yy = c.predict(p)
 
@@ -126,13 +138,13 @@ if __name__ == "__main__":
     k20 = gaussian_kde(dd20)
     xvals = linspace(0.0, 1.0, 500)
 
-    plt.subplot(1,2,1)
+    plt.subplot(1, 2, 1)
     plt.hist([dd1, dd0, dd21, dd20],
              10, normed=False, histtype='bar',
              stacked=False,
-             label=["anotated 1","anotated 0","not anotated 1","not anotated 0"])
+             label=["anotated 1", "anotated 0", "not anotated 1", "not anotated 0"])
     plt.legend(loc=0)
-    plt.subplot(1,2,2)
+    plt.subplot(1, 2, 2)
     plt.hold(True)
     plt.plot(xvals, k1(xvals), label="anotated 1")
     plt.plot(xvals, k0(xvals), label="anotated 0")
