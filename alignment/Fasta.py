@@ -47,6 +47,10 @@ def load(filename, alignment_separator, output_formatter=lambda x:x,
                     output[i] = (name, sequence)
                     break
         lastCategory = category
+    # TODO: remove this!!!
+    ln = max([0] + [len(x[1]) for x in output if x != None]) 
+    output = [x if x != None else ('', '?'*ln) for x in output]
+    #TODO: end of remove
     if len(output) > 0 and sum([1 for x in output if x != None]) > 0:
         yield output_formatter(output)
 

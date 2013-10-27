@@ -4,6 +4,7 @@ from tools.ConfigFactory import ConfigObject
 from tools.Exceptions import ParseException
 from tools.my_rand import rand_generator
 from tools.tuplemetrics import tadd, tlesssome
+import sys
 
 class State(ConfigObject):
         
@@ -81,6 +82,9 @@ class State(ConfigObject):
 
 
     def emission(self, X, x, _=1):
+        if x >= len(X):
+            sys.stderr.write('Error: {}, {}, {}'.format(len(X), x, X))
+            raise "Bad index"
         return self.emissions[X[x]]
 
     

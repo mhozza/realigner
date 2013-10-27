@@ -188,6 +188,8 @@ def createProfileHMMv1(mathType, consensus, time, backgroundProb, trans):
 
 
 def createProfileHMMv2(mathType, consensus, time, backgroundProb, trans):
+    if consensus == None or len(consensus) == 0: 
+        raise "Wrong consensus: {}".format(consensus)
     length = len(consensus)
     states = []
     transitions = []

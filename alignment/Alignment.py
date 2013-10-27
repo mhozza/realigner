@@ -42,7 +42,7 @@ class Alignment:
     
     def getCoordPairs(self, gapsPlace=True):
         ret = []
-        for i in range(len(self.sequences[0][1])):
+        for i in range(len(self.sequences[0])):
             ret.append(tuple([
                 self.aln_to_seq[x][i] 
                     if self.sequences[x][i] != '-' or gapsPlace == True else

@@ -86,10 +86,14 @@ class PairRepeatState(State):
         self.repeatGeneratorX = None
         self.repeatGeneratorY = None
         self.consensus = ""
-        self.memoizeX = dict()
-        self.memoizeY = dict()
-        self.dgmemoize = dict()
-        self.rdgmemoize = dict()
+        self.memoizeX = defaultdict(dict)
+        self.memoizeY = defaultdict(dict)
+        self.memoizeXsimple = dict()
+        self.memoizeYsimple = dict()
+        self.merge_consensus = False
+        self.correctly_merge_consensus = False
+        #self.dgmemoize = dict()
+        #self.rdgmemoize = dict()
         self.consensusSampler = None
         self.durationSampler = None
         self.backgroundProbability = None
@@ -100,11 +104,17 @@ class PairRepeatState(State):
         self.repProb = None
         self.modelversion = None
         self.trackEmissions = None
+        self.x_count = 0
+        self.y_count = 0
+        self.cons_set = set()
+        self.cons_list = list()
         
     
     def addRepeatGenerator(self, repeatGeneratorX, repeatGeneratorY):
         self.repeatGeneratorX = repeatGeneratorX
         self.repeatGeneratorY = repeatGeneratorY
+        self.cons_set = self.repeatGeneratorX.cons | self.repeatGeneratorY.cons
+        self.cons_list = list(self.cons_set)
 
         
     def load(self, dictionary):
@@ -176,90 +186,148 @@ class PairRepeatState(State):
 
 
     def durationGenerator(self, _x, _y):
-        key = (_x, _y)
-        if key in self.dgmemoize:
-            return self.dgmemoize[key]
-        X = list(self.repeatGeneratorX.getHints(_x))
-        Y = list(self.repeatGeneratorY.getHints(_y))
+        #key = (_x, _y)
+        #if key in self.dgmemoize:
+        #    return self.dgmemoize[key]
+        X = list(set(self.repeatGeneratorX.getHints(_x)))
+        Y = list(set(self.repeatGeneratorY.getHints(_y)))
         val = list(self.__durationGenerator(X, Y))
-        self.dgmemoize[key] = val
+        #self.dgmemoize[key] = val
         return val
 
 
     def reverseDurationGenerator(self, _x, _y):
-        key = (_x, _y)
-        if key in self.rdgmemoize:
-            return self.rdgmemoize[key]
-        X = list(self.repeatGeneratorX.getReverseHints(_x))
-        Y = list(self.repeatGeneratorY.getReverseHints(_y))
+        #key = (_x, _y)
+        #if key in self.rdgmemoize:
+        #    return self.rdgmemoize[key]
+        X = list(set(self.repeatGeneratorX.getReverseHints(_x)))
+        Y = list(set(self.repeatGeneratorY.getReverseHints(_y)))
         val = list(self.__durationGenerator(X, Y))
-        self.rdgmemoize[key] = val
+        #self.rdgmemoize[key] = val
         return val
 
 
     def __durationGenerator(self, X, Y):
         # TODO: fix distribution
-        for xlen, xcon in X:
-            xrc = float(xlen) / len(xcon)
-            xp = (self.repeatLengthDistribution[xrc] * 
-                  self.consensusDistribution[xcon] *
-                  self.trackEmissions['RM'])
-            self.consensus = xcon
-            yield (xlen, 0), xp
-        for ylen, ycon in Y:
-            yrc = float(ylen) / len(ycon)
-            yp = (self.repeatLengthDistribution[yrc] * 
-                  self.consensusDistribution[ycon] *
-                  self.trackEmissions['MR'])
-            self.consensus = ycon
-            yield (0, ylen), yp
-        for (xlen, xcon) in X:
-            xrc = float(xlen) / len(xcon)
-            xp = (self.repeatLengthDistribution[xrc] * 
-                  self.consensusDistribution[xcon] *
-                  self.trackEmissions['RR'])
-            yp = (self.repeatLengthDistribution[xrc] *
-                  self.trackEmissions['RR'])
-            for (ylen, ycon) in Y:
-                yrc = float(ylen) / len(ycon)
-                xp *= self.repeatLengthDistribution[yrc]
-                yp *= self.repeatLengthDistribution[yrc] * \
-                    self.consensusDistribution[ycon]
-                self.consensus = xcon
-                yield((xlen, ylen), xp)
-                self.consensus = ycon
-                yield((xlen, ylen), yp)
+        for con in self.cons_list:
+            for xlen in X:
+                xrc = float(xlen) / len(con)
+                xp = (self.repeatLengthDistribution[xrc] * 
+                      self.consensusDistribution[con] *
+                      self.trackEmissions['RM'])
+                self.consensus = con
+                yield (xlen, 0), xp
+            for ylen in Y:
+                yrc = float(ylen) / len(con)
+                yp = (self.repeatLengthDistribution[yrc] * 
+                      self.consensusDistribution[con] *
+                      self.trackEmissions['MR'])
+                self.consensus = con
+                yield (0, ylen), yp
+            for xlen in X:
+                xrc = float(xlen) / len(con)
+                xp = (self.repeatLengthDistribution[xrc] * 
+                      self.consensusDistribution[con] *
+                      self.trackEmissions['RR'])
+                for ylen in Y:
+                    yrc = float(ylen) / len(con)
+                    xp *= self.repeatLengthDistribution[yrc]
+                    self.consensus = con
+                    yield((xlen, ylen), xp)
+            if self.merge_consensus or self.correctly_merge_consensus:
+                break
 
     def getHMM(self, consensus):
         return self.factory.getHMM(consensus)
 
+    def emissionX(self, X, x, dx, cons=None):
+        if self.merge_consensus or self.correctly_merge_consensus:
+            keyX = (x, dx)
+            if keyX in self.memoizeXsimple:
+                return self.memoizeXsimple[keyX]
+            cons_list = self.cons_list
+            if cons != None:
+                cons_list = cons
+            first = True
+            fun = lambda x:x
+            if self.correctly_merge_consensus:
+                fun = lambda x:[x]
+            for consensus in cons_list:
+                hmm = self.factory.getHMM(consensus)
+                valX = hmm.getProbabilities(X, x, dx)
+                for ddx in range(dx + 1):
+                    if first:
+                        self.memoizeXsimple[(x, ddx)] = fun(valX[ddx])
+                    else:
+                        self.memoizeXsimple[(x, ddx)] += fun(valX[ddx])
+                first = False
+            if first:
+                return self.mathType(0.0)
+            return self.memoizeXsimple[(x, dx)]
+        else:
+            if cons != None:
+                self.consensus = cons
+            keyX = (x, dx)
+            if keyX in self.memoizeX[self.consensus]:
+                valX = self.memoizeX[self.consensus][keyX]
+                return valX
+            else:
+                hmm = self.factory.getHMM(self.consensus)
+                valX = hmm.getProbabilities(X, x, dx)
+                for ddx in range(dx + 1):
+                    self.memoizeX[self.consensus][(x, ddx)] = valX[ddx]
+            return valX[dx]
+
+    def emissionY(self, Y, y, dy, cons=None):
+        if self.merge_consensus or self.correctly_merge_consensus:
+            keyY = (y, dy)
+            if keyY in self.memoizeYsimple:
+                return self.memoizeYsimple[keyY]
+            cons_list = self.cons_list
+            if cons != None:
+                cons_list = cons
+            first = True
+            fun = lambda x:x
+            if self.correctly_merge_consensus:
+                fun = lambda x:[x]
+            for consensus in cons_list:
+                hmm = self.factory.getHMM(consensus)
+                valY = hmm.getProbabilities(Y, y, dy)
+                for ddy in range(dy + 1):
+                    if first:
+                        self.memoizeYsimple[(y, ddy)] = fun(valY[ddy])
+                    else:
+                        self.memoizeYsimple[(y, ddy)] += fun(valY[ddy])
+                first = False
+            if first:
+                return self.mathType(0.0)
+            return self.memoizeYsimple[(y, dy)]
+        else:
+            if cons != None:
+                self.consensus = cons
+            keyY = (y, dy)
+            if keyY in self.memoizeY[self.consensus]:
+                valY = self.memoizeY[self.consensus][keyY]
+                self.y_count += 1
+                return valY
+            else:
+                hmm = self.factory.getHMM(self.consensus)
+                valY = hmm.getProbabilities(Y, y, dy)
+                for ddy in range(dy + 1):
+                    self.memoizeY[self.consensus][(y, ddy)] = valY[ddy]
+            return valY[dy]
+
     def emission(self, X, x, dx, Y, y, dy):
+        #print "Emission", (x, dx), (y, dy), "Len", (len(X), len(Y))
         # we expect that we have consensus from last generated duration 
         # TODO: fix distribution
-        keyX = (self.consensus, x, dx)
-        keyY = (self.consensus, y, dy)
-        hmm = None
-        if keyX in self.memoizeX:
-            valX = self.memoizeX[keyX]
-        else:
-            hmm = self.getModel(self.consensus)
-            if dx > 0:
-                valX = hmm.getProbability(X, x, dx)
-            else:
-                valX = self.mathType(1.0)
-            self.memoizeX[keyX] = valX
-        if keyY in self.memoizeY:
-            valY = self.memoizeY[keyY]
-        else:
-            if hmm == None:
-                hmm = self.getModel(self.consensus)
-            if dy > 0:
-                valY = hmm.getProbability(Y, y, dy)
-            else:
-                valY = self.mathType(1.0)
-            self.memoizeY[keyY] = valY
-        return valX * valY
-
+        if self.correctly_merge_consensus:
+            return sum([
+                a * b 
+                for a, b 
+                in zip(self.emissionX(X, x, dx), self.emissionY(Y, y, dy))
+            ])
+        return self.emissionX(X, x, dx) * self.emissionY(Y, y, dy)
 
     def buildSampleEmission(self):
         dur = defaultdict(int)
@@ -288,30 +356,31 @@ class PairRepeatState(State):
     def sampleEmission(self):
         # generate durations
         consensus = self.consensusSampler()
-        
-        if self.version == 'v2':
-            cl = dx = dy = tuple([None])
-            model_length = True
-        else:
-            cl = len(consensus)
-            dx = int(self.durationSampler() * cl)
-            dy = int(self.durationSampler() * cl)
-            model_length = False
-        hmm = self.getModel(consensus)
-        hmm.buildSampleTransitions()
-        # generate sequences
-        X = hmm.generateSequence(dx, model_length) 
-        Y = hmm.generateSequence(dy, model_length)
-        tracks = self.trackEmissionsSampler()
-        if tracks == 'MR':
-            X = []
-        if tracks == 'RM':
-            Y = []
-        X = "".join([x for (x, _) in X])
-        Y = "".join([x for (x, _) in Y])
-        if model_length:
-            dx = len(X)
-            dy = len(Y)
+        dx , dy = 0, 0
+        while len(consensus) * 3 > min(dx, dy):
+            if self.version == 'v2':
+                cl = dx = dy = tuple([None])
+                model_length = True
+            else:
+                cl = len(consensus)
+                dx = int(self.durationSampler() * cl)
+                dy = int(self.durationSampler() * cl)
+                model_length = False
+            hmm = self.factory.getHMM(consensus)
+            hmm.buildSampleTransitions()
+            # generate sequences
+            X = hmm.generateSequence(dx, model_length) 
+            Y = hmm.generateSequence(dy, model_length)
+            tracks = self.trackEmissionsSampler()
+            if tracks == 'MR':
+                X = []
+            if tracks == 'RM':
+                Y = []
+            X = "".join([x for (x, _) in X])
+            Y = "".join([x for (x, _) in Y])
+            if model_length:
+                dx = len(X)
+                dy = len(Y)
         # Generate Alignment
         return X, Y, (consensus, dx, dy)
     
@@ -334,23 +403,24 @@ class PairRepeatState(State):
         X, x, dx = A
         Y, y, dy = B
         ret = defaultdict(self.mathType)
+        #TODO: this is broken
         for consensus in self.getCons(x, dx, y, dy):
-            keyX = (consensus, x, dx)
-            keyY = (consensus, y, dy)
+            keyX = (x, dx)
+            keyY = (y, dy)
             prob = self.mathType(1.0)
-            if keyX in self.memoizeX:
-                prob *= self.memoizeX[keyX]
-            if keyY in self.memoizeY:
-                prob *= self.memoizeY[keyY]
+            if keyX in self.memoizeX[consensus]:
+                prob *= self.memoizeX[consensus][keyX]
+            if keyY in self.memoizeY[consensus]:
+                prob *= self.memoizeY[consensus][keyY]
             ret[consensus] += prob 
         #print X[x:x + dx], Y[y:y + dy], tuple(ret.iteritems())
         return X[x:x + dx], Y[y:y + dy], tuple(ret.iteritems())
     
     def clearCache(self):
-        self.memoizeX = dict()
-        self.memoizeY = dict()
-        self.dgmemoize = dict()
-        self.rdgmemoize = dict()
+        self.memoizeX = defaultdict(dict)
+        self.memoizeY = defaultdict(dict)
+        #self.dgmemoize = dict()
+        #self.rdgmemoize = dict()
         self.factory.clearCache()
     
     def combineExpectations(self, expectations):

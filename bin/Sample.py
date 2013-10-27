@@ -83,38 +83,47 @@ def main():
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     for i in range(n_samples):
-        tandemRepeats = {'sequence1': [], 'sequence2': []}
-        seq = PHMM.generateSequence((X_len, Y_len))
-        X = ""
-        Y = ""
-        A = ""
-        for (seq, state) in seq:
-            ann_data = None
-            if len(seq) == 2:
-                x, y = seq
-            else: 
-                x, y, ann_data = seq
-            dx, dy = len(x), len(y)
-            if ann_data != None:
-                xlen = len(X.replace('-', ''))
-                ylen = len(Y.replace('-', ''))
-                if dx > 0:
-                    tandemRepeats['sequence1'].append((
-                        xlen, xlen + dx, dx / ann_data[1], ann_data[0], x
-                    ))
-                if dy > 0:
-                    tandemRepeats['sequence2'].append((
-                        ylen, ylen + dy, dy / ann_data[2], ann_data[0], y
-                    ))
-            A += PHMM.states[state].getChar() * max(dx, dy)
-            X += x + ('-' * (dy - dx))
-            Y += y + ('-' * (dx - dy))
+        done = False
+        while not done:
+            tandemRepeats = {'sequence1': [], 'sequence2': []}
+            seq = PHMM.generateSequence((X_len, Y_len))
+            X = ""
+            Y = ""
+            A = ""
+            for (seq, state) in seq:
+                ann_data = None
+                if len(seq) == 2:
+                    x, y = seq
+                else: 
+                    x, y, ann_data = seq
+                dx, dy = len(x), len(y)
+                if ann_data != None:
+                    xlen = len(X.replace('-', ''))
+                    ylen = len(Y.replace('-', ''))
+                    if dx > 0:
+                        tandemRepeats['sequence1'].append((
+                            xlen, xlen + dx, dx / ann_data[1], ann_data[0], x
+                        ))
+                        done = True
+                    if dy > 0:
+                        tandemRepeats['sequence2'].append((
+                            ylen, ylen + dy, dy / ann_data[2], ann_data[0], y
+                        ))
+                        done = True
+                A += PHMM.states[state].getChar() * max(dx, dy)
+                X += x + ('-' * (dy - dx))
+                Y += y + ('-' * (dx - dy))
+            #if len(X) - X.count('-') > 2 * X_len:
+            #    done = False
+            #if len(Y) - Y.count('-') > 2 * Y_len:
+            #    done = False
         aln = [("sequence1", X), ("alignment", A), ("sequence2", Y)]
         json.dump(tandemRepeats, Open(output_filename.format(id=i) + '.repeats',
                                       'w'), indent=4)
         Fasta.save(aln, output_filename.format(id=i))
         output_files.append(output_filename.format(id=i))
-    json.dump(output_files, Open(output_files_filename, 'w'), indent=4)  
+    with Open(output_files_filename, 'w') as output_file_object:
+        json.dump(output_files, output_file_object, indent=4)  
     return 0
 
 

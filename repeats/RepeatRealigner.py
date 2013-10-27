@@ -12,6 +12,7 @@ import json
 from algorithm.LogNum import LogNum
 from tools import perf
 from tools.file_wrapper import Open
+from adapters.TRFDriver import Repeat
 
 def jsonize(inp):
     t = type(inp)
@@ -78,23 +79,39 @@ class RepeatRealigner(Realigner):
         arguments = 0
         
         # Add repeats
-        RX = RepeatGenerator(None, self.repeat_width)
-        RY = RepeatGenerator(None, self.repeat_width)
-        for (rt, ch) in [('trf', 'R'), ('original_repeats', 'r')]:
-            if rt in self.annotations:
-                RX.addRepeats(self.annotations[rt][self.X_name])
-                RY.addRepeats(self.annotations[rt][self.Y_name])
-                self.drawer.add_repeat_finder_annotation(
-                    'X', ch, self.annotations[rt][self.X_name], 
-                    (255, 0, 0, 255))
-                self.drawer.add_repeat_finder_annotation(
-                    'Y', ch, self.annotations[rt][self.Y_name],
-                    (255, 0, 0, 255))
-        RX.buildRepeatDatabase()
-        RY.buildRepeatDatabase()
-        self.model.states[
-            self.model.statenameToID['Repeat']
-        ].addRepeatGenerator(RX, RY)
+        if 'Repeat' in self.model.statenameToID:
+            RX = RepeatGenerator(None, self.repeat_width, self.cons_count)
+            RY = RepeatGenerator(None, self.repeat_width, self.cons_count)
+            for (rt, ch) in [('trf', 'R'), ('original_repeats', 'r')]:
+                if rt in self.annotations:
+                    RX.addRepeats(self.annotations[rt][self.X_name])
+                    RY.addRepeats(self.annotations[rt][self.Y_name])
+                    self.drawer.add_repeat_finder_annotation(
+                        'X', ch, self.annotations[rt][self.X_name], 
+                        (255, 0, 0, 255))
+                    self.drawer.add_repeat_finder_annotation(
+                        'Y', ch, self.annotations[rt][self.Y_name],
+                        (255, 0, 0, 255))
+            if 'trf_cons' in self.annotations:
+                x_len = len(self.X)
+                y_len = len(self.Y)
+                cons = list((self.annotations['trf_cons'][self.X_name] |
+                             self.annotations['trf_cons'][self.Y_name]))
+                if len(cons) > 0:
+                    RX.addRepeats([Repeat(i, j, 0, cons[i%len(cons)], "") 
+                                   for i in range(x_len) 
+                                   for j in range(i + 1, x_len)])
+                    RY.addRepeats([Repeat(i, j, 0, cons[i%len(cons)], "") 
+                                   for i in range(y_len) 
+                                   for j in range(i + 1, y_len)])
+            RX.buildRepeatDatabase()
+            RY.buildRepeatDatabase()
+            self.model.states[
+                self.model.statenameToID['Repeat']
+            ].addRepeatGenerator(RX, RY)
+
+        perf.msg("Repeat hints computed in {time} seconds.")
+        perf.replace()
         #posterior table
         #position generator
         
@@ -106,7 +123,6 @@ class RepeatRealigner(Realigner):
             )
             
             self.posteriorTable = divide(self.posteriorTable, probability)
-            self.drawer.add_posterior_table(self.posteriorTable)
             
             x = jsonize(self.posteriorTable)
             if 'posterior' in self.io_files['output']:

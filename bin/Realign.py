@@ -13,6 +13,7 @@ from tools.file_wrapper import Open
 from alignment.AlignmentCanvas import AlignmentCanvas
 import json
 from alignment.ViterbiRealigner import ViterbiRealigner
+from repeats.RepeatRealignerNoBlocks import RepeatRealignerNoBlocks
 
 
 def brainwash(className):
@@ -62,6 +63,26 @@ def compute_annotations(args, alignment_filename):
                           for _v in v]
         
         annotations['original_repeats'] = repeats
+
+    if 'trf_cons' in args.tracks:
+        trf = None
+        for trf_executable in args.trf:
+            if os.path.exists(trf_executable):
+                trf = TRFDriver(trf_executable, mathType=args.mathType)
+                #break
+        if trf:
+            repeats = trf.run(alignment_filename)
+        #    repeats = json.load(Open(alignment_filename + '.repeats',
+        #                         'r'))
+        #    for k, v in repeats.iteritems():
+        #        repeats[k] = [Repeat(_v[0], _v[1], _v[2], _v[3], _v[4]) 
+        #                      for _v in v]
+            annotations['trf_cons'] = {}
+            for seq_name in repeats:
+                cons = set([repeat.consensus for repeat in repeats[seq_name]])
+                annotations['trf_cons'][seq_name] = cons
+            print annotations
+                
             
     perf.msg("Hints computed in {time} seconds.")
     perf.replace()
@@ -86,6 +107,8 @@ def getRealigner(s):
         return RepeatRealigner
     elif s == 'viterbi':
         return ViterbiRealigner
+    elif s == 'repeat_no_blocks':
+        return RepeatRealignerNoBlocks
     else:
         raise('Unknown type')
 
@@ -102,7 +125,7 @@ def parse_arguments():
     parser.add_argument('--trf', type=toList, default=trf_paths
                         , help="Location of tandem repeat finder binary")
     parser.add_argument('--algorithm', type=str, 
-                        default='repeat', choices=['repeat', 'viterbi'],
+                        default='repeat_no_blocks', choices=['repeat', 'viterbi', 'repeat_no_blocks'],
                         help="Which realignment algorithm to use")
     parser.add_argument('--bind_file', nargs='*', help='Replace filenames in '
                         + 'the input_file model.', default=[]) 
@@ -120,8 +143,10 @@ def parse_arguments():
                         help='Beam width.')
     parser.add_argument('--repeat_width', default=0, help='Maximum possible' + 
                         ' error of repeat annotation.', type=int)
+    parser.add_argument('--cons_count', default=1, help='Shift count for repeats.',
+                        type=int)
     parser.add_argument('--tracks', help='Comma separated list of ' + \
-                        'annotation tracks (trf, original_repeats)', 
+                        'annotation tracks (trf, original_repeats, trf_cons)', 
                         type=lambda x: set(x.split(',')),
                         default='trf')
     io_to_dict = lambda x: dict([tuple(y.split(':')) for y in x.split(',')])
@@ -133,11 +158,20 @@ def parse_arguments():
                         'list of key value pairs: "key:value". This files ' + 
                         'used to skip store precomputed data in algorithms.',
                         type=io_to_dict, default={},)
+    parser.add_argument('--ignore_states', default=False, type=bool, 
+                        help='Ignore states in posterior-type decoders.')
+    parser.add_argument('--resolve_indels', default=False, type=bool, 
+                        help='Fix indels in repeat issue in posterior-type decoders.')
+    parser.add_argument('--merge_consensus', default=False, type=bool, 
+                        help='Fix indels in repeat issue in posterior-type decoders.')
+    parser.add_argument('--correctly_merge_consensus', default=False, type=bool, 
+                        help='Fix indels in repeat issue in posterior-type decoders.')
     parser.add_argument('--draw', default='', type=str, 
                         help='output file for image')
     parsed_arg = parser.parse_args()
     parsed_arg.mathType = getMathType(parsed_arg.mathType)
-    
+    if 'trf_cons' in parsed_arg.tracks:
+        parsed_arg.cons_count = 0
     # ====== Validate input parameters =========================================
     if len(parsed_arg.bind_file) % 2 != 0:
         sys.stderr.write('ERROR: If binding files, the number of arguments has'
@@ -179,7 +213,9 @@ def realign_file(args, model, output_filename, alignment_filename):
                                   annotations, 
                                   {'input':args.intermediate_input_files,
                                    'output':args.intermediate_output_files},
-                                  args.repeat_width)
+                                  args.repeat_width, args.cons_count, 
+                                  args.merge_consensus, args.correctly_merge_consensus, args.ignore_states,
+                                  args.resolve_indels)
             aln = realigner.realign(0, len(seq1), 0, len(seq2))
             perf.msg("Sequence was realigned in {time} seconds.")
             perf.replace()
@@ -209,17 +245,18 @@ def worker(transformation):
     # ====== Check SGE parameters ==============================================
     task_ids = [None]
     if os.environ.has_key('SGE_TASK_ID'):
-        sge_task_id = int(os.environ['SGE_TASK_ID'])
-        if 'SGE_STEP_SIZE' not in os.environ:
-            sge_step_size = 1
-        else:
-            sge_step_size = int(os.environ['SGE_STEP_SIZE'])
-        sge_task_last = int(os.environ['SGE_TASK_LAST'])
-        task_ids = range(
-            sge_task_id,
-            min(sge_task_id + sge_step_size, sge_task_last + 1)
-        )
-    
+        if os.environ['SGE_TASK_ID'] != 'undefined':
+            sge_task_id = int(os.environ['SGE_TASK_ID'])
+            if not os.environ.has_key('SGE_STEP_SIZE'):
+                sge_step_size = 1
+            else:
+                sge_step_size = int(os.environ['SGE_STEP_SIZE'])
+            sge_task_last = int(os.environ['SGE_TASK_LAST'])
+            task_ids = range(
+                sge_task_id,
+                min(sge_task_id + sge_step_size, sge_task_last + 1)
+            )
+        
     # ====== Load model ========================================================
     model = get_model(args)
 
