@@ -118,6 +118,7 @@ def find_repeats_in_sequence(consensus, sequence, modelParam):
 def find_repeats_in_alignment(alignment, consensus_list, modelParam):
     ret = dict()
     print len(alignment.sequences), len(consensus_list), len(list(set(consensus_list)))
+    consensus_list = list(set(consensus_list))
     count = 0;
     for i in range(len(alignment.sequences)):
         sequence = (''.join([x for x in alignment.sequences[i] if x != '-'])).upper()
@@ -125,10 +126,10 @@ def find_repeats_in_alignment(alignment, consensus_list, modelParam):
         for cons in consensus_list:
             pairs  = find_repeats_in_sequence(cons, sequence, modelParam)
             for start, end in pairs:
-                print "wtf", start, end, cons, len(cons), (end-start)/len(cons)
+                #print "wtf", start, end, cons, len(cons), (end-start)/len(cons)
                 out.append(Repeat(start, end, (end-start)/len(cons), cons, sequence[start:end]))
             count += 1
-            print count ,  (len(alignment.sequences) * len(consensus_list))
+            #print count ,  (len(alignment.sequences) * len(consensus_list))
         ret[alignment.names[i]] = out
     return ret
             
