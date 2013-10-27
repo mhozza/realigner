@@ -70,7 +70,7 @@ def build_model(consensus, modelParam):
     model.reorderStatesTopologically()
     #for state in model.states:
     #    print state.stateName
-    model_cache[consensus] = model
+    #model_cache[consensus] = model
     nm = consensus
     if len(nm) > 20:
         nm = hashlib.md5(consensus).hexdigest()
@@ -89,7 +89,7 @@ def find_repeats_in_sequence(consensus, sequence, modelParam):
     table = [None for _ in range(len(sequence) + 1)]
     for k, v in table_tmp:
         table[k] = v    
-    print sequence, consensus
+    #print sequence, consensus
     #with open('tabulka.js', 'w') as f:
     #    json.dump(jsonize(table_tmp), f, indent=4)
     path = model.getViterbiPath(table)
@@ -109,10 +109,10 @@ def find_repeats_in_sequence(consensus, sequence, modelParam):
         if background_state_id != stateID:
             wat = 1
         bin_path.append(wat)
-    print bin_path
+    #print bin_path
     bin_path = zip([0] + bin_path, bin_path + [0], range(len(bin_path) + 1))
     changes = [position for a, b, position in bin_path if a != b]
-    print changes
+    #print changes
     return zip(changes, changes[1:])[::2]
  
 def find_repeats_in_alignment(alignment, consensus_list, modelParam):
