@@ -20,7 +20,7 @@ def jsonize(inp):
         for k, v in inp.iteritems():
             output[str(k)] = jsonize(v)
         return output
-    elif t == list:
+    elif t == list or t == tuple:
         output = []
         for x in inp:
             output.append(jsonize(x))

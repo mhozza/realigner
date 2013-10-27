@@ -230,6 +230,8 @@ class PairRepeatState(State):
                 self.consensus = ycon
                 yield((xlen, ylen), yp)
 
+    def getHMM(self, consensus):
+        return self.factory.getHMM(consensus)
 
     def emission(self, X, x, dx, Y, y, dy):
         # we expect that we have consensus from last generated duration 
@@ -240,7 +242,7 @@ class PairRepeatState(State):
         if keyX in self.memoizeX:
             valX = self.memoizeX[keyX]
         else:
-            hmm = self.factory.getHMM(self.consensus)
+            hmm = self.getModel(self.consensus)
             if dx > 0:
                 valX = hmm.getProbability(X, x, dx)
             else:
@@ -250,7 +252,7 @@ class PairRepeatState(State):
             valY = self.memoizeY[keyY]
         else:
             if hmm == None:
-                hmm = self.factory.getHMM(self.consensus)
+                hmm = self.getModel(self.consensus)
             if dy > 0:
                 valY = hmm.getProbability(Y, y, dy)
             else:
@@ -295,7 +297,7 @@ class PairRepeatState(State):
             dx = int(self.durationSampler() * cl)
             dy = int(self.durationSampler() * cl)
             model_length = False
-        hmm = self.factory.getHMM(consensus)
+        hmm = self.getModel(consensus)
         hmm.buildSampleTransitions()
         # generate sequences
         X = hmm.generateSequence(dx, model_length) 
@@ -373,7 +375,7 @@ class PairRepeatState(State):
         shuffle(it)
         for (x, y, consensus), prob in it[:10000]:
             clen = len(consensus)
-            hmm = self.factory.getHMM(consensus)
+            hmm = self.getModel(consensus)
             for sequence in [x, y]:
                 if len(sequence) == 0:
                     continue

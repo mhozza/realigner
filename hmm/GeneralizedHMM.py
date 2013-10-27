@@ -4,6 +4,8 @@ from hmm.HMM import State, HMM
 from tools.Exceptions import ParseException
 import operator
 from tools.my_rand import rand_generator
+from tools.structtools import recursiveArgMax, structToStr
+
     
 class GeneralizedState(State):
        
@@ -101,6 +103,86 @@ class GeneralizedHMM(HMM):
             rows[_x] = list()
                 
         return retTable
+    
+    def getViterbiTable(self, X, x, dx, memoryPattern=None, initialRow=None):
+        if memoryPattern == None:
+            memoryPattern = MemoryPatterns.every(dx + 1)
+        #TODO: pridaj jednu vrstvu dictov, aby to fungovalo (lebo inac
+        #pri initi stave/silent stavoch pises do dictu cez ktory sa iteruje
+        #a zaroven to chces aj pouzit
+        #pri odovzdavani by sa to mozno ale patrilo spojit
+        # v skutocnomsti to nebude treba. Idealny stav je, ze vyrobime specialny 
+        # init stav, ktory pojde do ostatnych stavov
+            rows = [[defaultdict(lambda *x: (self.mathType(0.0), -1)) 
+                     for _ in range(len(self.states))] 
+                     for _ in range(dx + 1)]
+        
+        #zacinam v 0 riadku
+        ignoreFirstRow = False
+        if initialRow != None:
+            rows[0] = initialRow
+            ignoreFirstRow = True
+        else:
+            for state in self.states:
+                prob = state.getStartProbability()
+                if prob > self.mathType(0.0):
+                    rows[0][state.getStateID()][0] = (prob, -1)
+
+        # Main algorithm
+        retTable = list()
+        for _x in range(dx + 1):
+            if ignoreFirstRow and _x == 0:
+                continue
+            for stateID in range(len(self.states)):
+                acc_prob = reduce(max, 
+                                  [value[0] for (_,value) in
+                                      rows[_x][stateID].iteritems()], 
+                                  self.mathType(0.0))
+                state = self.states[stateID]
+                for (followingID, transprob) in state.followingIDs():
+                    following = self.states[followingID]
+                    acc_trans_prob = acc_prob * transprob
+                    for (_sdx, dprob) in following.durationGenerator():
+                        if _x + _sdx > dx: 
+                            continue
+                        rows[_x + _sdx][followingID][_sdx] = max (
+                            rows[_x + _sdx][followingID][_sdx],
+                            (                                      
+                                following.emission(X, x + _x, _sdx) \
+                                    * acc_trans_prob * dprob,
+                                stateID,
+                            ),
+                            key = lambda x: x[0],
+                        )
+                                        
+            if _x < 0:
+                continue
+            if memoryPattern.next():
+                retTable.append((_x, rows[_x]))
+            rows[_x] = list()
+                
+        return retTable
+    
+    def getViterbiPath(self, table):
+        #table[x][y][state][(sdx,sdy)] = (prob, previousStateId)
+        _x = len(table) - 1
+        ((stateID, _sdx)), (prob, previousStateId) = \
+            recursiveArgMax(
+                table[_x],
+                selector=lambda x, y: max(x, y, key=lambda z: z[0]  )
+            )
+        path = [(stateID, _x, _sdx, prob)]
+        stateID = previousStateId
+        while stateID >= 0:
+            _x -= _sdx
+            _sdx, (prob, previousStateId) = max(
+                table[_x][previousStateId].iteritems(),
+                key=lambda (_, (prob, __)): prob
+            )
+            path.append((stateID, _x, _sdx, prob))
+            stateID = previousStateId 
+        path.reverse()
+        return path
    
     
     def getBackwardTable(self, X, x, dx, memoryPattern=None, initialRow=None):

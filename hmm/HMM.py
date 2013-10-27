@@ -245,11 +245,25 @@ class HMM(ConfigObject):
         for state in self.states:
             state.clearTransitions()
         
-        
     def reorderStatesTopologically(self):
+        def silentFirst(self, order):
+            silent = []
+            other = []
+            for i in order:
+                durations = list(self.states[i].durationGenerator())
+                if len(durations) > 1:
+                    other.append(i)
+                elif len(durations) == 0:
+                    silent.append(i)
+                elif durations[0][0] == 0:
+                    silent.append(i)
+                else:
+                    other.append(i)
+            other.extend(silent)
+            return other
         reorder = Graphs.orderToDict(
-            reversed(
-                Graphs.toposort(self.transitions)))
+            silentFirst(self, reversed(
+                Graphs.toposort(self.transitions))))
         transitions = defaultdict(dict)
         for (key, value) in self.transitions.iteritems():
             newval = dict()
