@@ -37,10 +37,12 @@ class TRFDriver:
     """
     def __init__(
             self,
-            path=trf_paths,
+            path=None,
             mathType=float
         ):
         self.path = None
+        if self.path == None:
+            self.path = trf_paths
         self.mathType=mathType
         if path != None:
             self.setPath(path)

@@ -2,6 +2,7 @@ from algorithm.LogNum import LogNum
 from hmm.HMMLoader import HMMLoader
 from alignment import Fasta
 from adapters.TRFDriver import TRFDriver, trf_paths, Repeat
+from adapters.HMMDriver import HMMDriver
 from alignment.AlignmentIterator import AlignmentPositionGenerator
 from repeats.RepeatRealigner import RepeatRealigner
 from tools import perf
@@ -43,7 +44,7 @@ def get_model(args):
     return loader.load(args.model)["model"]
 
 
-def compute_annotations(args, alignment_filename):
+def compute_annotations(args, alignment_filename, model):
     annotations = dict()
     if 'trf' in args.tracks:
         trf = None
@@ -82,7 +83,15 @@ def compute_annotations(args, alignment_filename):
                 cons = set([repeat.consensus for repeat in repeats[seq_name]])
                 annotations['trf_cons'][seq_name] = cons
             print annotations
-                
+    
+    if 'hmm' in args.tracks:
+        paths = None;
+        if args.trf != None and len(args.trf) > 0:
+            paths = args.trf
+        driver = HMMDriver(paths, args.mathType, model)
+        if trf:
+            repeats = driver.run(alignment_filename)
+            annotations['hmm'] = repeats
             
     perf.msg("Hints computed in {time} seconds.")
     perf.replace()
@@ -130,7 +139,7 @@ def parse_arguments():
     parser.add_argument('--bind_file', nargs='*', help='Replace filenames in '
                         + 'the input_file model.', default=[]) 
     parser.add_argument('--bind_constant', nargs='*', help='Replace constants'
-                         + ' in the input_file model.', default=[])
+                         + ' in the input_fmodelile model.', default=[])
     parser.add_argument('--bind_constant_file', nargs='*', help='Replace' + 
                         ' constants in the input_file model.', default=[])
     parser.add_argument('--alignment_regexp', default='', 
@@ -146,7 +155,7 @@ def parse_arguments():
     parser.add_argument('--cons_count', default=1, help='Shift count for repeats.',
                         type=int)
     parser.add_argument('--tracks', help='Comma separated list of ' + \
-                        'annotation tracks (trf, original_repeats, trf_cons)', 
+                        'annotation tracks (trf, original_repeats, trf_cons, hmm)', 
                         type=lambda x: set(x.split(',')),
                         default='trf')
     io_to_dict = lambda x: dict([tuple(y.split(':')) for y in x.split(',')])
@@ -189,7 +198,7 @@ def parse_arguments():
     
 
 def realign_file(args, model, output_filename, alignment_filename):
-    annotations = compute_annotations(args, alignment_filename)
+    annotations = compute_annotations(args, alignment_filename, model)
     with Open(output_filename, 'w') as output_file_object:
         for aln in Fasta.load(
             alignment_filename, 

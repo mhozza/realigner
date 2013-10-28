@@ -10,7 +10,6 @@ import itertools
 from algorithm.LogNum import LogNum
 from hmm.HMMLoader import HMMLoader
 import hashlib
-from repeats.RepeatRealigner import jsonize
 
 model_cache = dict()
 
@@ -156,24 +155,14 @@ def compute_statistics(repeats):
             ind += 1
     return D
 
-# Chcem len zobrat zarovnanie a vypocitat vsetky repeaty pre neho
-def main(args):
-    # TODO: build model params
-    if args.model == None:
-        print("You have to provide model")
-        exit(1)
-    loader = HMMLoader(LogNum)
-    for state in loader.load(args.model)['model'].states:
-        if state.onechar == 'R':
-            model = state
-    
+def do_find_repeats(alignment_file, paramSeq, model, mathType, _stats, separator):
     modelParam = {
-        "mathType": LogNum,
+        "mathType": mathType,
         "modelFactory": model,
     } 
     driver = TRFDriver()
-    trf_repeats = driver.run(args.fasta)
-    alignments = Fasta.load(args.fasta, '\.[0-9]*$', Alignment)
+    trf_repeats = driver.run(alignment_file, paramSeq)
+    alignments = Fasta.load(alignment_file, separator, Alignment)
     D = dict()
     stats = defaultdict(int)
     count = 1;
@@ -188,10 +177,33 @@ def main(args):
         repeats = find_repeats_in_alignment(alignment, consensus_list, modelParam)
         print repeats
         D.update(repeats)
-        if args.stats != None:
+        if _stats != None:
             s = compute_statistics(repeats)
             for key, value in s.iteritems():
                 stats[key] += value
+    return D, stats
+    
+
+# Chcem len zobrat zarovnanie a vypocitat vsetky repeaty pre neho
+def main(args):
+    # TODO: build model params
+    if args.model == None:
+        print("You have to provide model")
+        exit(1)
+    loader = HMMLoader(LogNum)
+    for state in loader.load(args.model)['model'].states:
+        if state.onechar == 'R':
+            model = state
+    #BEGIN COPY
+    D, stats = do_find_repeats(
+        args.fasta,
+        None,
+        model,
+        LogNum,
+        args.stats,
+        '\.[0-9]*$',
+    )
+    #END COPY
     if args.stats != None:
         out_stats = dict()
         for k, v in stats.iteritems():

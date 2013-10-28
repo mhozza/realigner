@@ -82,7 +82,7 @@ class RepeatRealigner(Realigner):
         if 'Repeat' in self.model.statenameToID:
             RX = RepeatGenerator(None, self.repeat_width, self.cons_count)
             RY = RepeatGenerator(None, self.repeat_width, self.cons_count)
-            for (rt, ch) in [('trf', 'R'), ('original_repeats', 'r')]:
+            for (rt, ch) in [('trf', 'R'), ('original_repeats', 'r'), ('hmm', 'h')]:
                 if rt in self.annotations:
                     RX.addRepeats(self.annotations[rt][self.X_name])
                     RY.addRepeats(self.annotations[rt][self.Y_name])
