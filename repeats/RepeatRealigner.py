@@ -155,7 +155,7 @@ class RepeatRealigner(Realigner):
     def realign(self, x, dx, y, dy, ignore=set(), positionGenerator=None):
         """Realign part of sequences."""
         # TODO: split this into multiple function
-        
+       
         D = [
             defaultdict(lambda *_: (self.mathType(0.0), (-1, -1, -1)))
             for _ in range(dx + 1)

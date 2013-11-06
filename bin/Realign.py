@@ -89,7 +89,7 @@ def compute_annotations(args, alignment_filename, model):
         if args.trf != None and len(args.trf) > 0:
             paths = args.trf
         driver = HMMDriver(paths, args.mathType, model)
-        if trf:
+        if driver:
             repeats = driver.run(alignment_filename)
             annotations['hmm'] = repeats
             

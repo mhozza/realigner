@@ -12,9 +12,17 @@ def reverseStrand(t):
     ret.reverse()
     return ''.join(ret)
 
+def matched(expr, name):
+    if len(expr) == 0:
+        return True
+    for ex in expr:
+        if ex.search(name):
+            return True
+    return False
 
-def Maf2FastaGen(input_file):
-    
+def Maf2FastaGen(input_file, sequences):
+    regs = map(re.compile, sequences)
+
     with Open(input_file, 'r') as inp:
         aln_count = 0
         output = []
@@ -26,8 +34,9 @@ def Maf2FastaGen(input_file):
                 continue
             if line[0] == 'a':
                 #out.write("\n")
-                aln_count += 1
-                yield output
+                if len(output) > 0 and (len(regs) == 0 or (len(output) == len(regs))):
+                    aln_count += 1
+                    yield output
                 output = []
                 continue
             line = tuple(re.split('\s+', line))
@@ -36,15 +45,17 @@ def Maf2FastaGen(input_file):
             s, src, start, size, strand, srcSize, text = line
             #if strand == '-':
             #    text = reverseStrand(text)
-            output.append((src, aln_count, text))
-    yield output
+            if matched(regs, src): 
+                output.append((src, aln_count, text))
+    if len(output) > 0 and (len(regs) == 0 or (len(output) == len(regs))):
+        yield output
     
 
 @perf.runningTimeDecorator
-def main(input_file, output_file):
+def main(input_file, output_file, sequences):
     
     with Open(output_file, 'w') as out:
-        for alignment in Maf2FastaGen(input_file):
+        for alignment in Maf2FastaGen(input_file, sequences):
             for src, aln_count, text in alignment:
                 out.write('>{0}.{1}\n{2}\n'.format(src, aln_count, text))
                 
@@ -53,6 +64,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert MAF to FASTA')
     parser.add_argument('input', type=str, help="Input file")
     parser.add_argument('output', type=str, help="Output file")
+    parser.sequences('--sequences', nargs='*', default=[], help="Regexps for sequence selections")
     parsed_arg = parser.parse_args()
-    main(parsed_arg.input, parsed_arg.output)
+    main(parsed_arg.input, parsed_arg.output, parsed_arg.sequences)
     perf.printAll()

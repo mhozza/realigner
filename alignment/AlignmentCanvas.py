@@ -12,7 +12,6 @@ def alignment_column_to_annotation(column):
         return 'M'
     else:
         return '-'
-    
 
 class AlignmentCanvas():
     
@@ -207,4 +206,6 @@ class AlignmentCanvas():
                     D.rectangle(rect, outline=(0, 0, 0, 255), 
                                     fill=color) 
         del D  
-        I.save(output_filename)
+        if output_filename != None:
+            I.save(output_filename)
+        return I

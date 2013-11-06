@@ -74,4 +74,4 @@ def save(alignment, filename, width = 80):
 
 
 def alnToSeq(sequence):
-    return sequence.replace("-","")
+    return sequence.replace("-","").upper()

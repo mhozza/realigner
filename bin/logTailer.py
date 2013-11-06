@@ -126,7 +126,7 @@ class PerfAggregator:
                 total = sum(v)
                 mean = total / len(v)
                 variance = sum([(mean - x)**2 for x in v]) / len(v)
-                print('{}{} {} seconds [Deviation: {}, {} data points].'.format(
+                print('{}{} {:.3} seconds [Deviation: {:.3}, {} data points].'.format(
                     self.prefix[k], k, mean, math.sqrt(variance), len(v)
                 )) 
       
@@ -135,8 +135,9 @@ class ErrorAggregator:
     
     def __init__(self):
         self.centers = defaultdict(int)
+        self.examples = defaultdict(list)
         
-    def addDataPoint(self, e):
+    def addDataPoint(self, e, filename):
         if e == None:
             return
         if len(e.strip()) == 0:
@@ -149,6 +150,7 @@ class ErrorAggregator:
             #print 'dist', d, len(self.centers)
             if d < 0.15:
                 self.centers[k] += 1
+                self.examples[k].append(filename)
                 return
         self.centers[e] += 1     
         
@@ -156,7 +158,13 @@ class ErrorAggregator:
         lst = list(self.centers.iteritems())
         lst.sort(key=lambda x: x[1])
         for error, count in lst:
-            print(colored('This error occured {} times:\n'.format(count),
+            d = defaultdict(list)
+            for x in self.examples[error][:10]:
+                v = x.split('.')[-1];
+                k = '.'.join(x.split('.')[:-1])
+                d[k].append(v)
+            out = ['{base}.{{{value}}}'.format(base=k, value = ','.join(v)) for k, v in d.iteritems()]
+            print(colored('Error examples: {}\nThis error occured {} times:\n'.format(' '.join(out), count),
                           'red') + error)
 
 
@@ -181,7 +189,7 @@ for (job_id, job_name), data in jobs:
     for _, filename in data:
         p, e = parse_error_log(filename)
         perf.addDataPoint(p)
-        error.addDataPoint(e)
+        error.addDataPoint(e, filename)
     print("""
 ===============================================================================
 """ + colored("""Job: {} ({})""".format(job_name.split('/')[-1], job_id),

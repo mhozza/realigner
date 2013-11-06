@@ -21,6 +21,7 @@ def build_model(consensus, modelParam):
         return model_cache[consensus]
     model = model_factory.getHMM(consensus)
     repProb = model_factory.repProb
+    repProb = 0.01
     original_init_states = []
     original_end_states = []
     for i in range(len(model.states)):
@@ -201,7 +202,7 @@ def main(args):
         model,
         LogNum,
         args.stats,
-        '\.[0-9]*$',
+        '$',
     )
     #END COPY
     if args.stats != None:

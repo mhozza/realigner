@@ -60,11 +60,12 @@ class HMMDriver:
         dont_parse=False,
     ):  
         output_file=sequencefile + '.hmm_repeats'
-        if not os.path.exists(output_file) or \
-            os.path.getmtime(sequencefile) >= os.path.getmtime(output_file):
+        if os.path.exists(output_file) and \
+            os.path.getmtime(sequencefile) <= os.path.getmtime(output_file):
             if dont_parse:
                 return output_file
-            out = json.load(output_file)
+            with open(output_file) as f:
+                out = json.load(f)
             for k, v in out.iteritems():
                 out[k] = map(lambda x: Repeat(*x), v) # pass to constructor
             return out
