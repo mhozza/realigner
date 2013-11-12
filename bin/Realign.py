@@ -175,6 +175,7 @@ def parse_arguments():
                         help='Fix indels in repeat issue in posterior-type decoders.')
     parser.add_argument('--correctly_merge_consensus', default=False, type=bool, 
                         help='Fix indels in repeat issue in posterior-type decoders.')
+    parser.add_argument('--ignore_consensus', action='store_true')
     parser.add_argument('--draw', default='', type=str, 
                         help='output file for image')
     parsed_arg = parser.parse_args()
@@ -223,7 +224,7 @@ def realign_file(args, model, output_filename, alignment_filename):
                                   {'input':args.intermediate_input_files,
                                    'output':args.intermediate_output_files},
                                   args.repeat_width, args.cons_count, 
-                                  args.merge_consensus, args.correctly_merge_consensus, args.ignore_states,
+                                  args.merge_consensus, args.correctly_merge_consensus, args.ignore_consensus, args.ignore_states,
                                   args.resolve_indels)
             aln = realigner.realign(0, len(seq1), 0, len(seq2))
             perf.msg("Sequence was realigned in {time} seconds.")

@@ -7,6 +7,7 @@ from tools.file_wrapper import Open
 import json
 from algorithm.LogNum import LogNum
 import hashlib
+from repeats.HighOrderRepeatState import HighOrderState
 
 def JCModelDist(c1, c2, time):
     if c1 == c2:
@@ -326,4 +327,157 @@ def createProfileHMMv2(mathType, consensus, time, backgroundProb, trans):
     #        raise TypeError
     #    json.dump(hmm.toJSON(), f, indent=4, sort_keys=True, 
     #              default=LogNumToJson)
+    return hmm
+
+
+def createKRepeatHMM(
+    mathType,
+    maxK,
+    time,
+    backgroundProb,
+    indelProb,
+    indelExtProb,
+    repeatProb,
+    endProb,
+):
+    
+    probabilities = backgroundProb
+    alphabet = [x for x, _ in backgroundProb]
+    for a in alphabet:
+        for b in alphabet:
+            probabilities.append((a + b, JCModelDist(a, b, time)))
+    states = list()
+    transitions = list()
+        
+    initTemplate = {
+        '__name__': 'State',
+        'name': 'I{}',
+        'startprob': mathType(0.0),
+        'endprob': endProb,
+        'emission': backgroundProb,
+        'durations': [(1, mathType(1.0))],
+    }
+    
+    for order in range(1, maxK + 1):
+        if order == 1:
+            initTemplate['startprob'] = mathType(1.0)
+        transitions.append({
+            'from': 'I{}'.format(order),
+            'to': 'R{}'.format(order),
+            'prob': repeatProb,
+        })
+        if order < maxK:
+            transitions.append({
+                'from': 'I{}'.format(order),
+                'to': 'I{}'.format(order + 1),
+                'prob': mathType(1.0) - repeatProb - endProb,
+            })
+        else:
+            initTemplate['endprob'] = mathType(1.0) - repeatProb
+        initTemplate['name'] = 'I{}'.format(order)
+        state = State(mathType)
+        state.load(initTemplate)  
+        states.append(states)
+            
+    silentTemplate = {
+        '__name__': 'GeneralizedState',
+        'name': 'S{}{}',
+        'startprob': mathType(0.0),
+        'endprob': mathType(0.0),
+        'emission': [('', mathType(1.0))],
+        'durations': [(0, mathType(1.0))],
+    }
+    
+    for order in range(1, maxK):
+        silentTemplate['name'] = 'SI{}'.format(order)
+        state = GeneralizedState(mathType)
+        state.load(silentTemplate)
+        states.append(state)
+        end_p = mathType(1.0)
+        if order < maxK - 1:
+            transitions.append({
+                'from': 'SI{}'.format(order),
+                'to': 'SI{}'.format(order + 1),
+                'prob': indelExtProb
+            })
+            end_p -= indelExtProb
+        transitions.append({
+            'from': 'SI{}'.format(order),
+            'to': 'R{}'.format(order + 1),
+            'prob': end_p
+        })
+        silentTemplate['name'] = 'SD{}'.format(order)
+        state = GeneralizedState(mathType)
+        state.load(silentTemplate)
+        states.append(state)
+        end_p = mathType(1.0)
+        if order > 1:
+            transitions.append({
+                'from': 'SD{}'.format(order + 1),
+                'to': 'SD{}'.format(order),
+                'prob': indelExtProb
+            })
+            end_p -= indelExtProb
+        transitions.append({
+            'from': 'SD{}'.format(order),
+            'to': 'R{}'.format(order),
+            'prob': end_p
+        })
+    
+    repeatTemplate = {
+        '__name__': 'HighOrderState',
+        'name': 'R{}',
+        'startprob': mathType(0.0),
+        'endprob': 1.0,
+        'emission': probabilities,
+        'durations': [(1, mathType(1.0))],
+        'order': 0
+    }
+    for order in range(1, maxK + 1):
+        repeatTemplate['name'] = 'R{}'.format(order)
+        repeatTemplate['order'] = order
+        state = HighOrderState(mathType)
+        state.load(repeatTemplate)
+        state.append(state)
+        stayprob = mathType(1.0)
+        if order > 1:
+            transitions.append({
+                'from': 'R{}'.format(order),
+                'to': 'SD{}'.format(order - 1),
+                'prob': indelProb,
+            })
+            stayprob -= indelProb
+        if order < maxK:
+            transitions.append({
+                'from': 'R{}'.format(order),
+                'to': 'SI{}'.format(order),
+                'prob': indelProb,
+            })
+            stayprob -= indelProb
+        transitions.append({
+            'from': 'R{}'.format(order),
+            'to': 'R{}'.format(order),
+            'prob': indelProb,
+        })
+    hmm = GeneralizedHMM(mathType)
+    hmm.load({
+        '__name__': 'GeneralizedHMM',
+        'states': states,
+        'transitions': transitions,
+    })
+    for i in range(len(states)):
+        hmm.states[i].normalizeTransitions()
+    hmm.reorderStatesTopologically()
+    with Open('submodels/K.{}.{}.{}.js'.format(maxK, time, indelProb)) as f:
+        def LogNumToJson(obj):
+            if isinstance(obj, LogNum):
+                return '{0} {1}'.format(str(float(obj)),str(obj.value))
+            raise TypeError
+        json.dump(
+            hmm.toJSON(),
+            f,
+            indent=4,
+            sort_keys=True, 
+            default=LogNumToJson
+        )
     return hmm

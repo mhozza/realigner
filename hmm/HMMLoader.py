@@ -6,6 +6,8 @@ from repeats.RepeatAlignmentState import PairRepeatState
 from hmm.SpecialHMMs import JukesCantorGenerator, \
                                BackgroundProbabilityGenerator
 from repeats.RepeatLengthDistribution import RepeatLengthDistribution
+from repeats.HighOrderRepeatState import HighOrderRepeatState
+from repeats.HighOrderRepeatState import HighOrderState
 import json
 from algorithm.LogNum import LogNum
 
@@ -36,6 +38,8 @@ class HMMLoader(ConfigFactory):
             GeneralizedPairHMM, 
             GeneralizedPairState,
             PairRepeatState,
+            HighOrderState,
+            HighOrderRepeatState,
             RepeatLengthDistribution,
             LogNum,
         ]:
