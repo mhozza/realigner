@@ -7,7 +7,7 @@ from tools.file_wrapper import Open
 import json
 from algorithm.LogNum import LogNum
 import hashlib
-from repeats.HighOrderRepeatState import HighOrderState
+from hmm.HighOrderState import HighOrderState
 
 def JCModelDist(c1, c2, time):
     if c1 == c2:
