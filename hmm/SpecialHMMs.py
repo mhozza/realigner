@@ -377,7 +377,7 @@ def createKRepeatHMM(
         initTemplate['name'] = 'I{}'.format(order)
         state = State(mathType)
         state.load(initTemplate)  
-        states.append(states)
+        states.append(state)
             
     silentTemplate = {
         '__name__': 'GeneralizedState',
@@ -411,7 +411,7 @@ def createKRepeatHMM(
         state.load(silentTemplate)
         states.append(state)
         end_p = mathType(1.0)
-        if order > 1:
+        if order < maxK - 1:
             transitions.append({
                 'from': 'SD{}'.format(order + 1),
                 'to': 'SD{}'.format(order),
@@ -438,7 +438,7 @@ def createKRepeatHMM(
         repeatTemplate['order'] = order
         state = HighOrderState(mathType)
         state.load(repeatTemplate)
-        state.append(state)
+        states.append(state)
         stayprob = mathType(1.0)
         if order > 1:
             transitions.append({
@@ -468,7 +468,8 @@ def createKRepeatHMM(
     for i in range(len(states)):
         hmm.states[i].normalizeTransitions()
     hmm.reorderStatesTopologically()
-    with Open('submodels/K.{}.{}.{}.js'.format(maxK, time, indelProb)) as f:
+    with Open('submodels/K-{}-{}-{}.js'.format(maxK, time, indelProb), 'w') as f:
+        print f
         def LogNumToJson(obj):
             if isinstance(obj, LogNum):
                 return '{0} {1}'.format(str(float(obj)),str(obj.value))

@@ -127,7 +127,7 @@ class RepeatRealigner(Realigner):
             x = jsonize(self.posteriorTable)
             if 'posterior' in self.io_files['output']:
                 with Open(self.io_files['output']['posterior'], 'w') as f:
-                    json.dump(x, f,indent=4)
+                    json.dump(x, f,indent=4, sort_keys=True)
         else:          
             with open(self.io_files['input']['posterior'], 'r') as f:
                 self.posteriorTable = dejsonize(json.load(f), self.mathType)
@@ -169,6 +169,7 @@ class RepeatRealigner(Realigner):
         for (_x, _y)in positionGenerator:
             bestScore = self.mathType(0.0)
             bestFrom = (-1, -1, -1)
+            something = False
             for ((fr, _sdx, _sdy), prob) in \
                 self.posteriorTable[x + _x][y + _y].iteritems():
                 if fr in ignore:
@@ -178,9 +179,10 @@ class RepeatRealigner(Realigner):
                 sc = D[_x - _sdx][_y - _sdy][0] + \
                     (self.mathType(_sdx + _sdy) * \
                     prob )
-                if sc >= bestScore:
+                if sc >= bestScore or (not something):
                     bestScore = sc
                     bestFrom = (fr, _sdx, _sdy)
+                    something = True
             D[_x][_y] = (bestScore, bestFrom)
         # backtrack
         _x = dx

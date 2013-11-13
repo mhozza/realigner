@@ -22,7 +22,7 @@ class HighOrderState(State):
         if x - self.order >= 0:
             base = x - self.order
             wat = X[base : base + dx] + wat
-        return self.emissiond[wat]
+        return self.emissions[wat]
 
 
 

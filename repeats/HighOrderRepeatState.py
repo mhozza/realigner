@@ -17,9 +17,10 @@ class HighOrderRepeatState(PairRepeatState):
         self.repeatProb = self.mathType(0.0)
         self.endProb = self.mathType(0.0)
         self.model = None
+        self.memoize = dict()
 
     def load(self, dictionary):
-        State.load(self, dictionary)
+        PairRepeatState.load(self, dictionary)
         if 'maxK' not in dictionary:
             raise ParseException('maxK was not found in state')
         self.maxK = int(dictionary['maxK'])
@@ -72,6 +73,12 @@ class HighOrderRepeatState(PairRepeatState):
             self.memoize[(x, ddx, tp)] = ret[ddx]
         return ret[dx]
 
+    def emissionX(self, X, x, dx, cons_list):
+        return self.getEmission(X, x, dx, 0)
+
+    def emissionY(self, X, x, dx, cons_list):
+        return self.getEmission(X, x, dx, 1)
+    
     def emission(self, X, x, dx, Y, y, dy):
         xp = self.getEmission(X, x, dx, 0)
         yp = self.getEmission(Y, y, dy, 1)

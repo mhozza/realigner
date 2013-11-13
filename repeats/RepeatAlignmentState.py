@@ -134,6 +134,8 @@ class PairRepeatState(State):
                 dictionary['consensusdistribution'],
                 mathType=self.mathType
             ))
+        else:
+            self.consensusDistribution = defaultdict(lambda *x: self.mathType(1.0))
         if 'repeatlengthdistribution' in dictionary:
             tp = type(dictionary['repeatlengthdistribution'])
             if tp == dict:
