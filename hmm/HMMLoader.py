@@ -7,7 +7,7 @@ from hmm.SpecialHMMs import JukesCantorGenerator, \
                                BackgroundProbabilityGenerator
 from repeats.RepeatLengthDistribution import RepeatLengthDistribution
 from repeats.HighOrderRepeatState import HighOrderRepeatState
-from repeats.HighOrderRepeatState import HighOrderState
+from hmm.HighOrderState import HighOrderState
 import json
 from algorithm.LogNum import LogNum
 
