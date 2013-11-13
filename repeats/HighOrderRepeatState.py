@@ -3,7 +3,10 @@ from repeats.RepeatAlignmentState import PairRepeatState
 from tools.Exceptions import ParseException
 from tools.my_rand import dist_to_json
 from hmm.SpecialHMMs import createKRepeatHMM
-from hmm.HighOrderState import HighOrderState
+from collections import defaultdict
+import json
+from duplicity.tempdir import default
+import math
 
 class HighOrderRepeatState(PairRepeatState):
 
@@ -54,7 +57,7 @@ class HighOrderRepeatState(PairRepeatState):
         )
 
     def toJSON(self):
-        ret = State.toJSON(self)
+        ret = PairRepeatState.toJSON(self)
         ret['maxK'] = self.maxK
         ret['time'] = self.time
         ret['backgroundprob'] = dist_to_json(self.backgroundProb)
@@ -89,3 +92,57 @@ class HighOrderRepeatState(PairRepeatState):
 
     def sampleEmission(self):
         return None
+    
+    def trainModel(self, sequences):
+        
+        while True:
+            # Do BW counts
+            end = self.mathType(0.0)
+            notEnd = self.mathType(0.0)
+            transitions = [defaultdict(self.mathType)
+                           for _ in range(len(self.model.states))]
+            emissions = [defaultdict(self.mathType)
+                         for _ in range(len(self.model.states))]
+            for sequence in sequences:
+                trans, emi, prob = self.model.getBaumWelchCount(
+                    sequence,
+                    0,
+                    len(sequence)
+                )
+                end += prob
+                notEnd += prob * len(sequence)
+                for i in len(trans):
+                    for k, p in trans[i].iteritems():
+                        transitions[i][k] += prob * p
+                for i in len(emi):
+                    for k, p in emi[i].iteritems():
+                        emissions[i][k] += prob * p
+            print json.dumps(transitions, sort_keys=True, indent=4)
+            print json.dumps(emissions, sort_keys=True, indent=4)
+            # Estimate new parameters
+            newParam = defaultdict(lambda *x:self.mathType(0.0))
+            def name_wat(name):
+                return name[0]
+            for fr in range(len(transitions)):
+                fr_name = name_wat(self.model.states[fr].stateName)
+                for to, p in transitions[fr].iteritems():
+                    to_name = name_wat(self.model.states[to].stateName)
+                    newParam[fr_name + to_name] += p
+            self.repeatProb = newParam['IR'] / newParam['II']
+            self.endProb = end / notEnd
+            self.indelExtProb = newParam['SS'] / newParam['SR']
+            self.indelProb = newParam['RS'] / newParam['RR'] / self.mathType(2.0)
+            self.time = self.time
+            same = 0
+            notSame = 0
+            for i in range(len(emissions)):
+                for k, _ in emissions[i].iteritems():
+                    if len(k) == 2:
+                        if k[0] == k[1]:
+                            same += 1
+                        else:
+                            notSame += 1
+            A = float(same) / float(same + notSame)
+            self.time = - 3.0 / 4.0 * math.log((A - 0.25) / 0.75)
+            # Create new model
+            self.load(self.toJSON())

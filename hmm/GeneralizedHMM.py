@@ -252,8 +252,13 @@ class GeneralizedHMM(HMM):
                     for sdx, prob in ft[i][stateID].iteritems():
                         transitions[stateID][followingID] += (
                             prob * transprob * bt[i][followingID])
-                        emissions[stateID][X[x + i - sdx: x + i]] += (
-                            prob * transprob * bt[i][followingID])
+                        emissions[stateID][self.states[stateID].getEmissionText(
+                            X,
+                            x + i - sdx,
+                            sdx
+                        )] += (
+                            prob * transprob * bt[i][followingID]
+                        )
             
         return transitions, emissions, probability
 

@@ -80,6 +80,8 @@ class State(ConfigObject):
     def durationGenerator(self):
         yield((1, self.mathType(1.0)))
 
+    def getEmissionText(self, X, x, dx):
+        return X[x:x+dx]
 
     def emission(self, X, x, _=1):
         if x >= len(X):

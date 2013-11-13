@@ -1,4 +1,5 @@
 from hmm.HMM import State
+from tools.Exceptions import ParseException
 
 
 class HighOrderState(State):
@@ -17,7 +18,15 @@ class HighOrderState(State):
         ret['order'] = self.order
         return ret
 
+    def getEmissionText(self, X, x, dx):
+        wat = X[x : x + dx]
+        if x - self.order >= 0:
+            base = x - self.order
+            wat = X[base : base + dx] + wat
+        return wat
+
     def emission(self, X, x, dx):
+        # If you change this, change also getEmissionText
         wat = X[x : x + dx]
         if x - self.order >= 0:
             base = x - self.order
