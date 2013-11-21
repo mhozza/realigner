@@ -340,8 +340,11 @@ def createKRepeatHMM(
     repeatProb,
     endProb,
 ):
-    
-    probabilities = backgroundProb
+   
+    tp  = type(backgroundProb)
+    if tp in [dict, defaultdict]:
+        backgroundProb = list(backgroundProb.iteritems())
+    probabilities = list(backgroundProb)
     alphabet = [x for x, _ in backgroundProb]
     for a in alphabet:
         for b in alphabet:
@@ -350,11 +353,11 @@ def createKRepeatHMM(
     transitions = list()
         
     initTemplate = {
-        '__name__': 'State',
+        '__name__': 'GeneralizedState',
         'name': 'I{}',
         'startprob': mathType(0.0),
         'endprob': endProb,
-        'emission': backgroundProb,
+        'emission': backgroundProb,#,[('', mathType(1.0))],#backgroundProb,
         'durations': [(1, mathType(1.0))],
     }
     
@@ -375,7 +378,7 @@ def createKRepeatHMM(
         else:
             initTemplate['endprob'] = mathType(1.0) - repeatProb
         initTemplate['name'] = 'I{}'.format(order)
-        state = State(mathType)
+        state = GeneralizedState(mathType)
         state.load(initTemplate)  
         states.append(state)
             
@@ -388,10 +391,19 @@ def createKRepeatHMM(
         'durations': [(0, mathType(1.0))],
     }
     
+    insertTemplate = {
+        '__name__': 'GeneralizedState',
+        'name': 'S{}{}',
+        'startprob': mathType(0.0),
+        'endprob': mathType(0.0),
+        'emission': backgroundProb, 
+        'durations': [(1, mathType(1.0))],
+    }
+
     for order in range(1, maxK):
-        silentTemplate['name'] = 'SI{}'.format(order)
+        insertTemplate['name'] = 'SI{}'.format(order)
         state = GeneralizedState(mathType)
-        state.load(silentTemplate)
+        state.load(insertTemplate)
         states.append(state)
         end_p = mathType(1.0)
         if order < maxK - 1:
@@ -417,6 +429,7 @@ def createKRepeatHMM(
                 'to': 'SD{}'.format(order),
                 'prob': indelExtProb
             })
+        if order > 1:
             end_p -= indelExtProb
         transitions.append({
             'from': 'SD{}'.format(order),
@@ -428,7 +441,7 @@ def createKRepeatHMM(
         '__name__': 'HighOrderState',
         'name': 'R{}',
         'startprob': mathType(0.0),
-        'endprob': 1.0,
+        'endprob': endProb,
         'emission': probabilities,
         'durations': [(1, mathType(1.0))],
         'order': 0
@@ -457,7 +470,7 @@ def createKRepeatHMM(
         transitions.append({
             'from': 'R{}'.format(order),
             'to': 'R{}'.format(order),
-            'prob': indelProb,
+            'prob': stayprob,
         })
     hmm = GeneralizedHMM(mathType)
     hmm.load({

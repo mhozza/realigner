@@ -59,6 +59,8 @@ def dist_to_json(distribution):
     tp = type(distribution)
     if tp in [dict, defaultdict]:
         return distribution
+    elif tp in [list]:
+        return dict(distribution)
     elif hasattr(distribution, 'toJSON'):
         return distribution.toJSON()
     else:

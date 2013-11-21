@@ -4,8 +4,8 @@ from tools.Exceptions import ParseException
 from tools.my_rand import dist_to_json
 from hmm.SpecialHMMs import createKRepeatHMM
 from collections import defaultdict
+from algorithm.LogNum import LogNum
 import json
-from duplicity.tempdir import default
 import math
 
 class HighOrderRepeatState(PairRepeatState):
@@ -58,6 +58,7 @@ class HighOrderRepeatState(PairRepeatState):
 
     def toJSON(self):
         ret = PairRepeatState.toJSON(self)
+        del ret['consensusdistribution']
         ret['maxK'] = self.maxK
         ret['time'] = self.time
         ret['backgroundprob'] = dist_to_json(self.backgroundProb)
@@ -94,16 +95,49 @@ class HighOrderRepeatState(PairRepeatState):
         return None
     
     def trainModel(self, sequences):
-        
-        while True:
+       
+        iteration = 0
+        for _ in range(12):
+            iteration += 1
+            print 'Iteration {}'.format(iteration)
+            def model_to_dot(model):
+                
+                nodes = []
+                edges = []
+
+                for state in model.states:
+                    em_strs = []
+                    for k, v in state.emissions.iteritems():
+                        em_strs.append("""'{}': {:.5}""".format(k, float(v)))
+                    nodes.append("""
+                 {name} [
+                    shape="record"
+                    label="{name2} | {emissions}"
+                 ];
+                """.format(name=state.stateName, name2=state.stateName, emissions=len(em_strs))
+                )
+                for f, x in model.transitions.iteritems():
+                    for t, p in model.transitions[f].iteritems():
+                        edges.append(""" 
+                        {f} -> {t} [label="{p:.5}"];
+                        """.format(f=model.states[f].stateName, t=model.states[t].stateName, p=float(p)))
+                dot = """digraph {{
+                {}
+                {}
+            }}""".format('\n'.join(nodes), '\n'.join(edges))
+                return dot;
+            with open('mmm.{}.dot'.format(iteration), 'w') as f:
+                f.write(model_to_dot(self.model))
             # Do BW counts
             end = self.mathType(0.0)
             notEnd = self.mathType(0.0)
-            transitions = [defaultdict(self.mathType)
+            transitions = [defaultdict(lambda *x:self.mathType(0.0))
                            for _ in range(len(self.model.states))]
-            emissions = [defaultdict(self.mathType)
+            emissions = [defaultdict(lambda *x:self.mathType(0.0))
                          for _ in range(len(self.model.states))]
-            for sequence in sequences:
+            sn = 0
+            for sequence in sequences[:1000]:
+                sn += 1
                 trans, emi, prob = self.model.getBaumWelchCount(
                     sequence,
                     0,
@@ -111,38 +145,59 @@ class HighOrderRepeatState(PairRepeatState):
                 )
                 end += prob
                 notEnd += prob * len(sequence)
-                for i in len(trans):
+                for i in range(len(trans)):
                     for k, p in trans[i].iteritems():
                         transitions[i][k] += prob * p
-                for i in len(emi):
+                for i in range(len(emi)):
                     for k, p in emi[i].iteritems():
                         emissions[i][k] += prob * p
-            print json.dumps(transitions, sort_keys=True, indent=4)
-            print json.dumps(emissions, sort_keys=True, indent=4)
             # Estimate new parameters
             newParam = defaultdict(lambda *x:self.mathType(0.0))
             def name_wat(name):
                 return name[0]
+            stateProb = defaultdict(lambda *x:self.mathType(0.0))
             for fr in range(len(transitions)):
                 fr_name = name_wat(self.model.states[fr].stateName)
                 for to, p in transitions[fr].iteritems():
+                    if p != p:
+                        # skip Nan
+                        continue
                     to_name = name_wat(self.model.states[to].stateName)
                     newParam[fr_name + to_name] += p
-            self.repeatProb = newParam['IR'] / newParam['II']
-            self.endProb = end / notEnd
-            self.indelExtProb = newParam['SS'] / newParam['SR']
-            self.indelProb = newParam['RS'] / newParam['RR'] / self.mathType(2.0)
+                    stateProb[self.model.states[fr].stateName] += p
+                    stateProb[self.model.states[to].stateName] += p
+            print 'IR: {} II: {} II+IR: {}'.format(newParam['IR'], newParam['II'], newParam['II'] + newParam['IR'])
+            def smooth(x):
+                if x < 0.01:
+                    return self.mathType(0.01)
+                if x > 0.99:
+                    return self.mathType(0.99)
+                return x
+            self.repeatProb = smooth(newParam['IR'] / (newParam['II'] + newParam['IR']))
+            self.endProb = smooth(end / (notEnd + end))
+            self.indelExtProb = smooth(newParam['SS'] / (newParam['SR'] + newParam['SS']))
+            self.indelProb = smooth(newParam['RS'] / (newParam['RR'] + newParam['RS']) / self.mathType(2.0))
             self.time = self.time
+            print 'repeatProb={} endProb={} indelExtProb={} indelProb={} prev_time={} emission='.format(self.repeatProb, self.endProb, self.indelExtProb, self.indelProb, self.time, (self.model.states[self.model.statenameToID['R1']].__dict__))
+            kkk = max(stateProb.values())
+            for k in stateProb: stateProb[k] = float(stateProb[k])/float(kkk)
+            print json.dumps(stateProb, sort_keys=True)
             same = 0
             notSame = 0
             for i in range(len(emissions)):
-                for k, _ in emissions[i].iteritems():
+                for k, p in emissions[i].iteritems():
                     if len(k) == 2:
                         if k[0] == k[1]:
-                            same += 1
+                            same += p
                         else:
-                            notSame += 1
-            A = float(same) / float(same + notSame)
+                            notSame += p
+            A = same / (same + notSame)
+            add = same + notSame
+            print same/add, notSame/add, A
+            if A <= 0.25: A = 0.25001
             self.time = - 3.0 / 4.0 * math.log((A - 0.25) / 0.75)
+            if self.time < 0.005:
+                self.time = 0.005
             # Create new model
-            self.load(self.toJSON())
+            js = self.toJSON()
+            self.load(js)

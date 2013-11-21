@@ -188,9 +188,12 @@ class RepeatRealigner(Realigner):
         _x = dx
         _y = dy
         aln = []
+        #print 'BackTrack {} {} {} {} {} {}'.format(x, dx, y, dy, ignore, positionGenerator)
+        #print json.dumps(D, sort_keys=True, indent=4)
         while _x > 0 or _y > 0:
             (_, (fr, _dx, _dy)) = D[_x][_y]
             aln.append((fr, _dx, _dy))
+            #print _x, _y, _dx, _dy
             assert(_dx >= 0 and _dy >= 0)
             _x -= _dx
             _y -= _dy             
@@ -208,8 +211,18 @@ class RepeatRealigner(Realigner):
                 window = ( (x + _x, x + _x + _dx),
                            (y + _y, y + _y + _dy))
                 pG = list()
+                #print 'Prepare'
+                #print x, _x, _dx, y, _y, _dy
+                #print index
+                #print positionGenerator[index:index+10]
+                #print positionGenerator[-100+index:index+100]
+                #print window
                 while index < len(positionGenerator) and \
-                      positionGenerator[index][0] <= window[0][1]:
+                      positionGenerator[index][0] <= window[0][1] and \
+                      (
+                          positionGenerator[index][0] < window[0][1] or \
+                          positionGenerator[index][1] <= window[1][1] \
+                      ):
                     if window[0][0] <= positionGenerator[index][0] and \
                        positionGenerator[index][0] <= window[0][1] and \
                        window[1][0] <= positionGenerator[index][1] and \

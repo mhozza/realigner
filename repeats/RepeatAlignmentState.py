@@ -138,7 +138,7 @@ class PairRepeatState(State):
             self.consensusDistribution = defaultdict(lambda *x: self.mathType(1.0))
         if 'repeatlengthdistribution' in dictionary:
             tp = type(dictionary['repeatlengthdistribution'])
-            if tp == dict:
+            if tp in [dict, defaultdict]:
                 self.repeatLengthDistribution = \
                     default_dist(normalize_dict(
                         dictionary['repeatlengthdistribution'],
@@ -174,10 +174,12 @@ class PairRepeatState(State):
         ret['backgroundprob'] = self.backgroundProbability
         ret['time'] = self.time
         ret['transitionmatrix'] = self.transitionMatrix
-        ret['consensusdistribution'] = \
-            dist_to_json(self.consensusDistribution)
-        ret['repeatlengthdistribution'] = \
-            dist_to_json(self.repeatLengthDistribution)
+        if self.consensusDistribution != None:
+            ret['consensusdistribution'] = \
+                dist_to_json(self.consensusDistribution)
+        if self.repeatLengthDistribution != None:
+            ret['repeatlengthdistribution'] = \
+                dist_to_json(self.repeatLengthDistribution)
         ret['trackemissions'] = self.trackEmissions
         if self.version != None:
             ret['version'] = self.version

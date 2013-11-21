@@ -23,6 +23,7 @@ class HighOrderState(State):
         if x - self.order >= 0:
             base = x - self.order
             wat = X[base : base + dx] + wat
+#        print self.stateName, self.order, len(X), x, dx, wat
         return wat
 
     def emission(self, X, x, dx):

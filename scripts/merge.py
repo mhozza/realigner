@@ -6,7 +6,7 @@ import re
 from alignment import Fasta
 
 
-def main(files_filename, output_filename):
+def main(files_filename, output_filename, suffix):
     X = ""
     Y = ""
     A = ""
@@ -28,7 +28,7 @@ def main(files_filename, output_filename):
             keep = False
             
             if filename.count('keep') == 0:
-                filename = filename[:-2] + "blockRepeatRealignerTrfLot.fa"
+                filename = filename[:-2] + suffix
                 try:
                     with Open(filename, 'r') as f:
                         l = len(''.join(f).strip())
@@ -58,5 +58,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('list_of_files')
     parser.add_argument('output')
+    parser.add_argument('suffix')
     args = parser.parse_args()
-    main(args.list_of_files, args.output)
+    main(args.list_of_files, args.output, args.suffix)

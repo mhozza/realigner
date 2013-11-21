@@ -159,7 +159,7 @@ class ErrorAggregator:
         lst.sort(key=lambda x: x[1])
         for error, count in lst:
             d = defaultdict(list)
-            for x in self.examples[error][:10]:
+            for x in self.examples[error]:
                 v = x.split('.')[-1];
                 k = '.'.join(x.split('.')[:-1])
                 d[k].append(v)
@@ -180,7 +180,7 @@ for (job_id, job_name), _ in jobs:
 for k in names:
     names[k] = max(names[k])
 
-jobs = [x for x in jobs if names[x[0][1]] == x[0][0]]
+#jobs = [x for x in jobs if names[x[0][1]] == x[0][0]]
 
 aggregated_data = list()
 for (job_id, job_name), data in jobs:

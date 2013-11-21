@@ -230,9 +230,9 @@ class GeneralizedHMM(HMM):
         return retTable
     
     def getBaumWelchCount(self, X, x, dx, memoryPattern=None, initialRow=None):
-        transitions = [defaultdict(self.mathType)
+        transitions = [defaultdict(lambda *x:self.mathType(0.0))
                        for _ in range(len(self.states))]
-        emissions = [defaultdict(self.mathType)
+        emissions = [defaultdict(lambda *x:self.mathType(0.0))
                      for _ in range(len(self.states))]
         forwardTable = self.getForwardTable(X, x, dx, memoryPattern, initialRow)
         ft = [[] for _ in range(len(forwardTable))]
