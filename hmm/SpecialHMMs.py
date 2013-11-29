@@ -339,8 +339,13 @@ def createKRepeatHMM(
     indelExtProb,
     repeatProb,
     endProb,
+    initEndProb = None,
+    silEndProb = None,
 ):
-   
+    if initEndProb == None:
+        initEndProb = endProb
+    if silEndProb == None:
+        silEndProb = endProb
     tp  = type(backgroundProb)
     if tp in [dict, defaultdict]:
         backgroundProb = list(backgroundProb.iteritems())
@@ -351,12 +356,23 @@ def createKRepeatHMM(
             probabilities.append((a + b, JCModelDist(a, b, time)))
     states = list()
     transitions = list()
-        
+    
+    end_state = GeneralizedState(mathType)
+    end_state.load({
+        '__name__': 'GeneralizedState',
+        'name': 'End',
+        'startprob': mathType(0.0),
+        'endprob': mathType(1.0),
+        'emission': [('', mathType(1.0))],
+        'durations': [(0, mathType(1.0))],
+    })
+    states.append(end_state)
+
     initTemplate = {
         '__name__': 'GeneralizedState',
         'name': 'I{}',
         'startprob': mathType(0.0),
-        'endprob': endProb,
+        'endprob': mathType(0.0),
         'emission': backgroundProb,#,[('', mathType(1.0))],#backgroundProb,
         'durations': [(1, mathType(1.0))],
     }
@@ -369,14 +385,19 @@ def createKRepeatHMM(
             'to': 'R{}'.format(order),
             'prob': repeatProb,
         })
+        transitions.append({
+            'from': 'I{}'.format(order),
+            'to': 'End',
+            'prob': initEndProb,
+        })
+        self_prob = mathType(1.0)
+        self_prob -= repeatProb + initEndProb
         if order < maxK:
             transitions.append({
                 'from': 'I{}'.format(order),
                 'to': 'I{}'.format(order + 1),
-                'prob': mathType(1.0) - repeatProb - endProb,
+                'prob': self_prob
             })
-        else:
-            initTemplate['endprob'] = mathType(1.0) - repeatProb
         initTemplate['name'] = 'I{}'.format(order)
         state = GeneralizedState(mathType)
         state.load(initTemplate)  
@@ -415,6 +436,12 @@ def createKRepeatHMM(
             end_p -= indelExtProb
         transitions.append({
             'from': 'SI{}'.format(order),
+            'to': 'End',
+            'prob': silEndProb
+        })
+        end_p -= silEndProb
+        transitions.append({
+            'from': 'SI{}'.format(order),
             'to': 'R{}'.format(order + 1),
             'prob': end_p
         })
@@ -423,6 +450,12 @@ def createKRepeatHMM(
         state.load(silentTemplate)
         states.append(state)
         end_p = mathType(1.0)
+        transitions.append({
+            'from': 'SD{}'.format(order),
+            'to': 'End',
+            'prob': silEndProb,
+        })
+        end_p -= silEndProb
         if order < maxK - 1:
             transitions.append({
                 'from': 'SD{}'.format(order + 1),
@@ -441,7 +474,7 @@ def createKRepeatHMM(
         '__name__': 'HighOrderState',
         'name': 'R{}',
         'startprob': mathType(0.0),
-        'endprob': endProb,
+        'endprob': mathType(0.0),
         'emission': probabilities,
         'durations': [(1, mathType(1.0))],
         'order': 0
@@ -453,6 +486,12 @@ def createKRepeatHMM(
         state.load(repeatTemplate)
         states.append(state)
         stayprob = mathType(1.0)
+        transitions.append({
+            'from': 'R{}'.format(order),
+            'to': 'End',
+            'prob': endProb,
+        })
+        stayprob -= endProb
         if order > 1:
             transitions.append({
                 'from': 'R{}'.format(order),
@@ -481,11 +520,11 @@ def createKRepeatHMM(
     for i in range(len(states)):
         hmm.states[i].normalizeTransitions()
     hmm.reorderStatesTopologically()
-    with Open('submodels/K-{}-{}-{}.js'.format(maxK, time, indelProb), 'w') as f:
+    with Open('submodels/newK-{}-{}-{}-{}.js'.format(maxK, time, indelProb, repeatProb), 'w') as f:
         print f
         def LogNumToJson(obj):
             if isinstance(obj, LogNum):
-                return '{0} {1}'.format(str(float(obj)),str(obj.value))
+                return '{0}'.format(str(float(obj)))
             raise TypeError
         json.dump(
             hmm.toJSON(),

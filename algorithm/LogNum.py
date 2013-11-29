@@ -14,6 +14,7 @@ NegativeInfinity = float("-inf")
 
 class LogNum(ConfigObject):
     value = float("-inf")
+    __slots__ = ('value',)
     
     def __init__(self, value = float(0), log = True):
         if isinstance(value, LogNum):

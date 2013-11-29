@@ -6,7 +6,7 @@ import re
 from alignment import Fasta
 
 
-def main(files_filename, output_filename, suffix):
+def main(files_filename, output_filename, suffix, base_dir):
     X = ""
     Y = ""
     A = ""
@@ -29,6 +29,8 @@ def main(files_filename, output_filename, suffix):
             
             if filename.count('keep') == 0:
                 filename = filename[:-2] + suffix
+                if base_dir != None:
+                    filename = base_dir + '/' + filename.split('/')[-1]
                 try:
                     with Open(filename, 'r') as f:
                         l = len(''.join(f).strip())
@@ -59,5 +61,6 @@ if __name__ == '__main__':
     parser.add_argument('list_of_files')
     parser.add_argument('output')
     parser.add_argument('suffix')
+    parser.add_argument('base_dir', default=None)
     args = parser.parse_args()
-    main(args.list_of_files, args.output, args.suffix)
+    main(args.list_of_files, args.output, args.suffix, args.base_dir)

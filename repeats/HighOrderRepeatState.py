@@ -45,6 +45,14 @@ class HighOrderRepeatState(PairRepeatState):
         if 'endprob' not in dictionary:
             raise ParseException('endprob was not found in state')
         self.endProb = dictionary['endprob']
+        if 'silendprob' not in dictionary:
+            self.silEndProb = self.endProb
+        else:   
+            self.silEndProb = dictionary['silendprob']
+        if 'initendprob' not in dictionary:
+            self.initEndProb = self.endProb
+        else:
+            self.initEndProb = dictionary['initendprob']
         self.model = createKRepeatHMM(
             self.mathType,
             self.maxK,
@@ -54,6 +62,8 @@ class HighOrderRepeatState(PairRepeatState):
             self.indelExtProb,
             self.repeatProb,
             self.endProb,
+            self.initEndProb,
+            self.silEndProb,
         )
 
     def toJSON(self):
@@ -66,6 +76,8 @@ class HighOrderRepeatState(PairRepeatState):
         ret['indelextprob'] = self.indelExtProb
         ret['repeatprob'] = self.repeatProb
         ret['endprob'] = self.endProb
+        ret['silendprob'] = self.silEndProb
+        ret['initendprob'] = self.initEndProb
         return ret
 
     def getEmission(self, X, x, dx, tp):
@@ -136,7 +148,7 @@ class HighOrderRepeatState(PairRepeatState):
             emissions = [defaultdict(lambda *x:self.mathType(0.0))
                          for _ in range(len(self.model.states))]
             sn = 0
-            for sequence in sequences[:1000]:
+            for sequence in sequences[:10]:
                 sn += 1
                 trans, emi, prob = self.model.getBaumWelchCount(
                     sequence,
@@ -154,6 +166,7 @@ class HighOrderRepeatState(PairRepeatState):
             # Estimate new parameters
             newParam = defaultdict(lambda *x:self.mathType(0.0))
             def name_wat(name):
+                #if name=='I10': return 'X'
                 return name[0]
             stateProb = defaultdict(lambda *x:self.mathType(0.0))
             for fr in range(len(transitions)):
@@ -173,15 +186,25 @@ class HighOrderRepeatState(PairRepeatState):
                 if x > 0.99:
                     return self.mathType(0.99)
                 return x
-            self.repeatProb = smooth(newParam['IR'] / (newParam['II'] + newParam['IR']))
-            self.endProb = smooth(end / (notEnd + end))
-            self.indelExtProb = smooth(newParam['SS'] / (newParam['SR'] + newParam['SS']))
-            self.indelProb = smooth(newParam['RS'] / (newParam['RR'] + newParam['RS']) / self.mathType(2.0))
+            I_all = newParam['II'] + newParam['IR'] + newParam['IE']
+            S_all = newParam['SR'] + newParam['SS'] + newParam['SE']
+            R_all = newParam['RR'] + newParam['RS'] + newParam['RE']
+            self.repeatProb = smooth(newParam['IR'] / I_all) 
+            self.endProb = smooth(newParam['RE'] / R_all)
+            self.silEndProb = smooth(newParam['SE'] / S_all)
+            self.initEndProb = smooth(newParam['IE'] / I_all)
+            self.indelExtProb = smooth(newParam['SS'] / S_all)
+            self.indelProb = smooth(newParam['RS'] / R_all / self.mathType(2.0))
             self.time = self.time
-            print 'repeatProb={} endProb={} indelExtProb={} indelProb={} prev_time={} emission='.format(self.repeatProb, self.endProb, self.indelExtProb, self.indelProb, self.time, (self.model.states[self.model.statenameToID['R1']].__dict__))
+            print 'repeatProb={} {{,sil,init}}endProb={}/{}/{} indelExtProb={} indelProb={} prev_time={} emission='.format(self.repeatProb, self.endProb, self.silEndProb, self.initEndProb, self.indelExtProb, self.indelProb, self.time, (self.model.states[self.model.statenameToID['R1']].__dict__))
             kkk = max(stateProb.values())
             for k in stateProb: stateProb[k] = float(stateProb[k])/float(kkk)
-            print json.dumps(stateProb, sort_keys=True)
+            dede = list()
+            for k in stateProb: 
+                if k[0] == 'S': 
+                    dede.append(k)
+            for k in dede: stateProb[k]
+            print json.dumps([stateProb], sort_keys=True)
             same = 0
             notSame = 0
             for i in range(len(emissions)):

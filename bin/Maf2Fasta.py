@@ -46,25 +46,29 @@ def Maf2FastaGen(input_file, sequences):
             #if strand == '-':
             #    text = reverseStrand(text)
             if matched(regs, src): 
-                output.append((src, aln_count, text))
+                output.append((src, aln_count, text, [start, size, strand, srcSize]))
     if len(output) > 0 and (len(regs) == 0 or (len(output) == len(regs))):
         yield output
     
 
 @perf.runningTimeDecorator
-def main(input_file, output_file, sequences):
+def main(input_file, output_file, sequences, output_type):
     
     with Open(output_file, 'w') as out:
         for alignment in Maf2FastaGen(input_file, sequences):
-            for src, aln_count, text in alignment:
-                out.write('>{0}.{1}\n{2}\n'.format(src, aln_count, text))
+            for src, aln_count, text, rest in alignment:
+                if output_type=="normal": 
+                    out.write('>{0}.{1}\n{2}\n'.format(src, aln_count, text))
+                elif output_type=="params":
+                    out.write('>{0}.{1} {2}\n'.format(src, aln_count, ' '.join(rest)))
                 
                 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert MAF to FASTA')
     parser.add_argument('input', type=str, help="Input file")
     parser.add_argument('output', type=str, help="Output file")
+    parser.add_argument('--output_type', default="normal", type=str)
     parser.sequences('--sequences', nargs='*', default=[], help="Regexps for sequence selections")
     parsed_arg = parser.parse_args()
-    main(parsed_arg.input, parsed_arg.output, parsed_arg.sequences)
+    main(parsed_arg.input, parsed_arg.output, parsed_arg.sequences, parsed_arg.output_type)
     perf.printAll()
