@@ -7,6 +7,8 @@ from collections import defaultdict
 from algorithm.LogNum import LogNum
 import json
 import math
+from copy import deepcopy
+from hmm.hmm_transform import double_track_hmm
 
 class HighOrderRepeatState(PairRepeatState):
 
@@ -224,14 +226,14 @@ class HighOrderRepeatState(PairRepeatState):
             # Create new model
             js = self.toJSON()
             self.load(js)
-
+       
     def expand(self, _=None):
         json = self.model.toJSON()
         prefix = self.stateName + '_'
 
-        states = json['states']
+        states = map(deepcopy, self.model.states)
         for i in range(len(states)):
-            states[i]['name'] = prefix = states[i]['name']
+            states[i].stateName = prefix + states[i].stateName
         transitions = map(
             lambda x: {
                 'from': prefix + x['from'],
@@ -240,4 +242,4 @@ class HighOrderRepeatState(PairRepeatState):
             },
             json['transitions'],
         )
-        return states, transitions, prefix + 'I1', prefix + 'End'
+        return double_track_hmm(states, transitions, prefix + 'I1', prefix + 'End', self.mathType)

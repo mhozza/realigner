@@ -75,7 +75,7 @@ class RepeatRealigner(Realigner):
    
     @perf.runningTimeDecorator
     def marginalizeGaps(self, table):
-        gapdict = defaultdict(lambda _: self.mathType(0.0))
+        gapdict = defaultdict(lambda *_: self.mathType(0.0))
         for i in range(len(table)):
             for j, D in table[i].iteritems():
                 for (s, x, y), p in D.iteritems():
@@ -84,10 +84,13 @@ class RepeatRealigner(Realigner):
                     if x == 0 and y == 0:
                         continue
                     if x == 0:
-                        y = 1
-                    if y == 1:
-                        x = 1
+                        y = j
+                    if y == 0:
+                        x = i
                     gapdict[(s, x, y)] += p
+        print 'fapdict'
+        print gapdict
+
         for i in range(len(table)):
             for j, D in table[i].iteritems():
                 for (s, x, y), p in D.iteritems():
@@ -95,23 +98,24 @@ class RepeatRealigner(Realigner):
                         continue
                     if x == 0 and y == 0:
                         continue
-                    nx = x
-                    ny = y
+                    nx = 0
+                    ny = 0
                     if x == 0:
-                        ny = 1
-                    if y == 1:
-                        nx = 1
+                        ny = j
+                    if y == 0:
+                        nx = i
+                    #table[i][j][(s, x, y)] = gapdict[(s, x, y)]
                     table[i][j][(s, x, y)] = gapdict[(s, nx, ny)]
         return table
 
     @perf.runningTimeDecorator
     def applyAnnotation(self, table, annotation):
         new = [defaultdict(
-            lambda _: defaultdict(lambda _: self.mathType(0.0))
+            lambda *_: defaultdict(lambda *_: self.mathType(0.0))
         ) for _ in range(len(table))]
         for i in range(len(table)):
             for j, D in table[i].iteritems():
-                for (s, x, y), p in D.iteritem():
+                for (s, x, y), p in D.iteritems():
                     new[i][j][(annotation[s], x, y)] += p
         return new
 
@@ -201,11 +205,19 @@ class RepeatRealigner(Realigner):
             annotation = []
             d = dict()
             for i in range(len(self.model.states)):
-                c = self.mode.states[i].getChar()
+                nm = self.model.states[i].stateName
+                if nm == 'InsertX':
+                    c = 'X'
+                elif nm == 'InsertY':
+                    c = 'T'
+                else:
+                    c = nm[0]
                 if c not in d:
                     d[c] = i
                 ind = d[c]
-                annotation.append[ind]
+                #print i, ind, c, self.model.states[i].stateName
+                annotation.append(ind)
+            #print annotation
             self.posteriorTable = self.applyAnnotation(self.posteriorTable, annotation)
         if self.marginalize_gaps:
             self.posteriorTable = self.marginalizeGaps(self.posteriorTable)
@@ -219,7 +231,7 @@ class RepeatRealigner(Realigner):
             else:
                 positionGenerator = AlignmentFullGenerator([self.X, self.Y]) 
         # compute table
-        one_math = self.mathType(0.0)
+        one_math = self.mathType(1.0)
         for (_x, _y)in positionGenerator:
             bestScore = self.mathType(0.0)
             bestFrom = (-1, -1, -1)
@@ -231,8 +243,8 @@ class RepeatRealigner(Realigner):
                 if _x - _sdx < 0 or _y - _sdy < 0:
                     continue
                 mult = self.mathType(_sdx + _sdy)
-                if args.posterior_score:
-                    mult = mathType(one_math)
+                if self.posterior_score:
+                    mult = one_math
                 sc = D[_x - _sdx][_y - _sdy][0] + \
                     (mult * \
                     prob )

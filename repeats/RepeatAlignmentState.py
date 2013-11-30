@@ -7,6 +7,7 @@ from tools.Exceptions import ParseException
 import math
 from multiprocessing import Pool
 from random import shuffle
+from hmm.hmm_transform import double_track_hmm
 
 class RepeatProfileFactory:
             
@@ -557,9 +558,9 @@ class PairRepeatState(State):
                 },
             ])
             json = model.toJSON()
-            st = json['states']
+            st = map(deepcopy, model.states)
             for i in range(len(st)):
-                st[i]['name'] = prefix + st[i]['name']
+                st[i].stateName = prefix + st[i].stateName
             states.extend(st)
             transitions.extend(map(
                 lambda x: {
@@ -569,11 +570,11 @@ class PairRepeatState(State):
                 },
                 json['transitions'],
             ))
-        transitions.append({
-            'from': init,
-            'to': init,
-            'prob': 1.0 - total,
-        })
+        #transitions.append({
+        #    'from': init,
+        #    'to': init,
+        #    'prob': 1.0 - total,
+        #})
         template = {
             '__name__': 'GeneralizedState',
             'name': init,
@@ -584,11 +585,11 @@ class PairRepeatState(State):
         }
         st = GeneralizedState(self.mathType)
         st.load(template)
-        states.append(st.toJSON())
+        states.append(st)
         template['name'] = end
         template['startprob'] = 0.0
         template['endprob'] = 1.0
         st = GeneralizedState(self.mathType)
         st.load(template)
-        states.append(st.toJSON())
-        return states, transitions, init, end
+        states.append(st)
+        return double_track_hmm(states, transitions, init, end, self.mathType)

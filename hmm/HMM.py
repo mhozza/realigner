@@ -5,6 +5,7 @@ from tools.Exceptions import ParseException
 from tools.my_rand import rand_generator
 from tools.tuplemetrics import tadd, tlesssome
 import sys
+from copy import deepcopy
 
 class State(ConfigObject):
         
@@ -326,36 +327,39 @@ class HMM(ConfigObject):
         new = self.__class__(self.mathType)
         json = self.toJSON()
         json['states'] = list()
-        json['transition'] = list()
+        json['transitions'] = list()
         d_from = dict()
         d_to = dict()
         for state in self.states:
-            expanded = states.expand(params)
+            expanded = state.expand(params)
             if expanded == None:
                 sn = state.stateName
                 d_from[sn] = sn
                 d_to[sn] = sn
-                json['states'].append(state.toJSON())
+                json['states'].append(deepcopy(state))
             else:
                 states, transitions, init, end = expanded 
                 sn = state.stateName
                 d_from[sn] = init
                 d_to[sn] = end
                 for i in range(len(states)):
-                    states[i]['startprob'] = 0.0
-                    states[i]['endprob'] = 0.0
+                    states[i].startProb = self.mathType(0.0)
+                    states[i].endProb = self.mathType(0.0)
                 json['states'].extend(states)
                 json['transitions'].extend(transitions)
         # Once we built the model, and dictionaries, we can translate transitions
         for fr in self.transitions:
-            for to, prob in self.transitions[fr]:
-                json['transition'].append({
+            for to, prob in self.transitions[fr].iteritems():
+                json['transitions'].append({
                     'from': d_from[self.states[fr].stateName],
                     'to': d_to[self.states[to].stateName],
                     'prob': float(prob),
                 })
+        # Problem: potrebujem tu mat mena tried, nie json
+        for i in range(len(json['states'])):
+            json['states'][i].clearTransitions()
         new.load(json)
-        for i in range(len(new.states)):
-            new.states[i].normalizeTransitions()
-        new.reorderStatesTopologically()
+        #for i in range(len(new.states)):
+        #    new.states[i].normalizeTransitions()
+        #new.reorderStatesTopologically()
         return new
