@@ -72,7 +72,49 @@ class RepeatRealigner(Realigner):
         Constructor
         """
         self.posteriorTable = None
-    
+   
+    @perf.runningTimeDecorator
+    def marginalizeGaps(self, table):
+        gapdict = defaultdict(lambda _: self.mathType(0.0))
+        for i in range(len(table)):
+            for j, D in table[i].iteritems():
+                for (s, x, y), p in D.iteritems():
+                    if x != 0 and y != 0:
+                        continue
+                    if x == 0 and y == 0:
+                        continue
+                    if x == 0:
+                        y = 1
+                    if y == 1:
+                        x = 1
+                    gapdict[(s, x, y)] += p
+        for i in range(len(table)):
+            for j, D in table[i].iteritems():
+                for (s, x, y), p in D.iteritems():
+                    if x != 0 and y != 0:
+                        continue
+                    if x == 0 and y == 0:
+                        continue
+                    nx = x
+                    ny = y
+                    if x == 0:
+                        ny = 1
+                    if y == 1:
+                        nx = 1
+                    table[i][j][(s, x, y)] = gapdict[(s, nx, ny)]
+        return table
+
+    @perf.runningTimeDecorator
+    def applyAnnotation(self, table, annotation):
+        new = [defaultdict(
+            lambda _: defaultdict(lambda _: self.mathType(0.0))
+        ) for _ in range(len(table))]
+        for i in range(len(table)):
+            for j, D in table[i].iteritems():
+                for (s, x, y), p in D.iteritem():
+                    new[i][j][(annotation[s], x, y)] += p
+        return new
+
     @perf.runningTimeDecorator
     def prepareData(self, *data):
         data = Realigner.prepareData(self, *data)
@@ -155,7 +197,18 @@ class RepeatRealigner(Realigner):
     def realign(self, x, dx, y, dy, ignore=set(), positionGenerator=None):
         """Realign part of sequences."""
         # TODO: split this into multiple function
-       
+        if self.one_char_annotation:
+            annotation = []
+            d = dict()
+            for i in range(len(self.model.states)):
+                c = self.mode.states[i].getChar()
+                if c not in d:
+                    d[c] = i
+                ind = d[c]
+                annotation.append[ind]
+            self.posteriorTable = self.applyAnnotation(self.posteriorTable, annotation)
+        if self.marginalize_gaps:
+            self.posteriorTable = self.marginalizeGaps(self.posteriorTable)
         D = [
             defaultdict(lambda *_: (self.mathType(0.0), (-1, -1, -1)))
             for _ in range(dx + 1)
@@ -166,6 +219,7 @@ class RepeatRealigner(Realigner):
             else:
                 positionGenerator = AlignmentFullGenerator([self.X, self.Y]) 
         # compute table
+        one_math = self.mathType(0.0)
         for (_x, _y)in positionGenerator:
             bestScore = self.mathType(0.0)
             bestFrom = (-1, -1, -1)
@@ -176,8 +230,11 @@ class RepeatRealigner(Realigner):
                     continue
                 if _x - _sdx < 0 or _y - _sdy < 0:
                     continue
+                mult = self.mathType(_sdx + _sdy)
+                if args.posterior_score:
+                    mult = mathType(one_math)
                 sc = D[_x - _sdx][_y - _sdy][0] + \
-                    (self.mathType(_sdx + _sdy) * \
+                    (mult * \
                     prob )
                 if sc >= bestScore or (not something):
                     bestScore = sc

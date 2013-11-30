@@ -314,7 +314,7 @@ def createProfileHMMv2(mathType, consensus, time, backgroundProb, trans):
         "states": states,
         "transitions": transitions,
     })
-    for i in range(len(states)):
+    for i in range(len(hmm.states)):
         hmm.states[i].normalizeTransitions()
     hmm.reorderStatesTopologically()
     nm = consensus
@@ -517,7 +517,7 @@ def createKRepeatHMM(
         'states': states,
         'transitions': transitions,
     })
-    for i in range(len(states)):
+    for i in range(len(hmm.states)):
         hmm.states[i].normalizeTransitions()
     hmm.reorderStatesTopologically()
     with Open('submodels/newK-{}-{}-{}-{}.js'.format(maxK, time, indelProb, repeatProb), 'w') as f:

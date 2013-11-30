@@ -144,7 +144,9 @@ class State(ConfigObject):
     
     def getChar(self):
         return self.onechar
- 
+
+    def expand(self, _=None):
+        return None
 
 class HMM(ConfigObject):
     
@@ -314,3 +316,46 @@ class HMM(ConfigObject):
             ret.append((em, state))
             state = self.sampleTransition(state)
         return ret
+
+    def expandModel(self, params):
+        # Potrebujem expandovat kazdy stav:
+        # Budem si vyrabat novy json model, tak to bude najjednoduhsie
+        # Kazdy stav bud vrati null, alebo paticu: (stavy, tranzicie, init, end)
+        states = list()
+        transitions = list()
+        new = self.__class__(self.mathType)
+        json = self.toJSON()
+        json['states'] = list()
+        json['transition'] = list()
+        d_from = dict()
+        d_to = dict()
+        for state in self.states:
+            expanded = states.expand(params)
+            if expanded == None:
+                sn = state.stateName
+                d_from[sn] = sn
+                d_to[sn] = sn
+                json['states'].append(state.toJSON())
+            else:
+                states, transitions, init, end = expanded 
+                sn = state.stateName
+                d_from[sn] = init
+                d_to[sn] = end
+                for i in range(len(states)):
+                    states[i]['startprob'] = 0.0
+                    states[i]['endprob'] = 0.0
+                json['states'].extend(states)
+                json['transitions'].extend(transitions)
+        # Once we built the model, and dictionaries, we can translate transitions
+        for fr in self.transitions:
+            for to, prob in self.transitions[fr]:
+                json['transition'].append({
+                    'from': d_from[self.states[fr].stateName],
+                    'to': d_to[self.states[to].stateName],
+                    'prob': float(prob),
+                })
+        new.load(json)
+        for i in range(len(new.states)):
+            new.states[i].normalizeTransitions()
+        new.reorderStatesTopologically()
+        return new

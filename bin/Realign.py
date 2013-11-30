@@ -176,6 +176,10 @@ def parse_arguments():
     parser.add_argument('--correctly_merge_consensus', default=False, type=bool, 
                         help='Fix indels in repeat issue in posterior-type decoders.')
     parser.add_argument('--ignore_consensus', action='store_true')
+    parser.add_argument('--expand_model', action='store_true')
+    parser.add_argument('--marginalize_gaps', action='store_true')
+    parser.add_argument('--one_char_annotation', action='store_true')
+    parser.add_argument('--posterior_score', action='store_true')
     parser.add_argument('--draw', default='', type=str, 
                         help='output file for image')
     parsed_arg = parser.parse_args()
@@ -199,7 +203,17 @@ def parse_arguments():
     
 
 def realign_file(args, model, output_filename, alignment_filename):
+    # begin of HACK
+    if args.expand_model:
+        old_tracks = args.tracks
+        args.tracks.add('trf_cons')
     annotations = compute_annotations(args, alignment_filename, model)
+    if args.expand_model:
+        consensuses = annotations['trf_cons']
+        args.tracks = old_tracks
+        if 'trf_cons' not in old_tracks:
+            del args.tracks['trf_cons']
+    # end of HACK
     with Open(output_filename, 'w') as output_file_object:
         for aln in Fasta.load(
             alignment_filename, 
@@ -217,14 +231,22 @@ def realign_file(args, model, output_filename, alignment_filename):
             seq1, seq2 = tuple(map(Fasta.alnToSeq, aln.sequences[:2]))
             perf.msg("Data loaded in {time} seconds.")
             perf.replace()
+            if args.expand_model:
+                # Potrebujem zistit konsenzy
+                A = consensuses[aln.names[0]]
+                B = consensuses[aln.names[1]]
+                cons = list(A.union(B))
+                real_model = model.expandModel({'consensus': cons})
+            else: 
+                real_model = model
             realigner = getRealigner(args.algorithm)()
             realigner.prepareData(seq1, aln.names[0], seq2, aln.names[1], aln, 
-                                  args.beam_width, drawer, model, args.mathType,
+                                  args.beam_width, drawer, real_model, args.mathType,
                                   annotations, 
                                   {'input':args.intermediate_input_files,
                                    'output':args.intermediate_output_files},
                                   args.repeat_width, args.cons_count, 
-                                  args.merge_consensus, args.correctly_merge_consensus, args.ignore_consensus, args.ignore_states,
+                                  args.merge_consensus, args.correctly_merge_consensus, args.ignore_consensus, args.marginalize_gaps, args.one_char_annotation, args.posterior_score, args.ignore_states,
                                   args.resolve_indels)
             aln = realigner.realign(0, len(seq1), 0, len(seq2))
             perf.msg("Sequence was realigned in {time} seconds.")

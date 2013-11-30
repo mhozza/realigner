@@ -213,6 +213,7 @@ class PairRepeatState(State):
 
     def __durationGenerator(self, X, Y):
         # TODO: fix distribution
+        # TODO: distribution might be bad...
         for con in self.cons_list:
             for xlen in X:
                 xrc = float(xlen) / len(con)
@@ -525,3 +526,69 @@ class PairRepeatState(State):
             if iterations > 5:
                 break
         self.improveModel(transitions, emissions)
+
+    def expand(self, params=None):
+        if params == None:
+            raise "Houston, we have a problem"
+        consensuses = params['consensus']
+        prefix_t = self.stateName + '_{}_'
+        prefix_i = 0
+        states = list()
+        transitions = list()
+        init = self.stateName + '_Init'
+        end = self.stateName + '_End'
+        total = 0.0
+        for consensus in consensuses:
+            prefix = prefix_t.format(prefix_i)
+            prefix_i += 1
+            model = self.factory.getHMM(consensus)
+            probability = self.consensusDistribution[consensus]
+            total += probability
+            transitions.extend([
+                {
+                    'from': init,
+                    'to': prefix + 'Init',
+                    'prob': probability,
+                },
+                {
+                    'from': prefix + 'End',
+                    'to': end,
+                    'prob': 1.0,
+                },
+            ])
+            json = model.toJSON()
+            st = json['states']
+            for i in range(len(st)):
+                st[i]['name'] = prefix + st[i]['name']
+            states.extend(st)
+            transitions.extend(map(
+                lambda x: {
+                    'from': prefix + x['from'],
+                    'to': prefix + x['to'],
+                    'prob': x['prob'],
+                },
+                json['transitions'],
+            ))
+        transitions.append({
+            'from': init,
+            'to': init,
+            'prob': 1.0 - total,
+        })
+        template = {
+            '__name__': 'GeneralizedState',
+            'name': init,
+            'startprob': 1.0,
+            'endprob': 0.0,
+            'emission': [('', mathType(1.0))],
+            'durations': [(0, mathType(1.0))],
+        }
+        st = GeneralizedState(self.mathType)
+        st.load(template)
+        states.append(st.toJSON())
+        template['name'] = end
+        template['startprob'] = 0.0
+        template['endprob'] = 1.0
+        st = GeneralizedState(self.mathType)
+        st.load(template)
+        states.append(st.toJSON())
+        return states, transitions, init, end

@@ -224,3 +224,20 @@ class HighOrderRepeatState(PairRepeatState):
             # Create new model
             js = self.toJSON()
             self.load(js)
+
+    def expand(self, _=None):
+        json = self.model.toJSON()
+        prefix = self.stateName + '_'
+
+        states = json['states']
+        for i in range(len(states)):
+            states[i]['name'] = prefix = states[i]['name']
+        transitions = map(
+            lambda x: {
+                'from': prefix + x['from'],
+                'to': prefix + x['to'],
+                'prob': x['prob'],
+            },
+            json['transitions'],
+        )
+        return states, transitions, prefix + 'I1', prefix + 'End'

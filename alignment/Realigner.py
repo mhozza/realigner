@@ -31,6 +31,9 @@ class Realigner(object):
         self.merge_consensus = False
         self.correctly_merge_consensus = False
         self.ignore_consensus = False
+        self.marginalize_gaps = False
+        self.one_char_annotation = False
+        self.posterior_score = False
         '''
         Constructor
         '''
@@ -38,10 +41,11 @@ class Realigner(object):
     def prepareData(self, *data):
         """Push data to realing. Including sequence. Precompute stuff you 
         need"""
-        arguments = 16
+        arguments = 19
         (self.X, self.X_name, self.Y, self.Y_name, self.alignment, self.width,
          self.drawer, self.model, self.mathType, self.annotations,
-         self.io_files, self.repeat_width, self.cons_count, self.merge_consensus, self.correctly_merge_consensus, self.ignore_consensus) = tuple(data[:arguments])
+         self.io_files, self.repeat_width, self.cons_count, self.merge_consensus, self.correctly_merge_consensus, self.ignore_consensus,
+         self.marginalize_gaps, self.one_char_annotation, self.posterior_score) = tuple(data[:arguments])
         self.positionGenerator = \
             list(AlignmentBeamGenerator(self.alignment, self.width))
         if 'Repeat' in self.model.statenameToID:
