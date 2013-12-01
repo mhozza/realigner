@@ -8,6 +8,8 @@ import math
 from multiprocessing import Pool
 from random import shuffle
 from hmm.hmm_transform import double_track_hmm
+from copy import deepcopy
+from hmm.GeneralizedHMM import GeneralizedState
 
 class RepeatProfileFactory:
             
@@ -580,8 +582,8 @@ class PairRepeatState(State):
             'name': init,
             'startprob': 1.0,
             'endprob': 0.0,
-            'emission': [('', mathType(1.0))],
-            'durations': [(0, mathType(1.0))],
+            'emission': [('', self.mathType(1.0))],
+            'durations': [(0, self.mathType(1.0))],
         }
         st = GeneralizedState(self.mathType)
         st.load(template)

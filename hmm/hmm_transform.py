@@ -2,16 +2,18 @@ import types
 from copy import deepcopy
 
 def new_emission_X(self, X, x, dx, Y, y, dy):
+#    assert(dy != 0)
     return self.__class__.emission(self, X, x, dx)
 
 def new_emission_Y(self, X, x, dx, Y, y, dy):
+#    assert(dx != 0)
     return self.__class__.emission(self, Y, y, dy)
 
-def new_durationGenerator_X(self, _, __):
+def new_durationGenerator_X(self, _=None, __=None):
     for l, p in self.__class__.durationGenerator(self):
         yield (l, 0), p
 
-def new_durationGenerator_Y(self, _, __):
+def new_durationGenerator_Y(self, _=None, __=None):
     for l, p in self.__class__.durationGenerator(self):
         yield (0, l), p
 

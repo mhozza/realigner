@@ -88,8 +88,8 @@ class RepeatRealigner(Realigner):
                     if y == 0:
                         x = i
                     gapdict[(s, x, y)] += p
-        print 'fapdict'
-        print gapdict
+        #print 'fapdict'
+        #print gapdict
 
         for i in range(len(table)):
             for j, D in table[i].iteritems():
@@ -168,6 +168,7 @@ class RepeatRealigner(Realigner):
                 positionGenerator=self.positionGenerator
             )
             
+            #print "fuuuu", probability
             self.posteriorTable = divide(self.posteriorTable, probability)
             
             x = jsonize(self.posteriorTable)
@@ -258,6 +259,7 @@ class RepeatRealigner(Realigner):
         _y = dy
         aln = []
         #print 'BackTrack {} {} {} {} {} {}'.format(x, dx, y, dy, ignore, positionGenerator)
+        #print json.dumps(jsonize(self.posteriorTable), indent=4, sort_keys=True)
         #print json.dumps(D, sort_keys=True, indent=4)
         while _x > 0 or _y > 0:
             (_, (fr, _dx, _dy)) = D[_x][_y]

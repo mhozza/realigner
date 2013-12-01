@@ -260,19 +260,27 @@ class HMM(ConfigObject):
             other = []
             for i in order:
                 durations = list(self.states[i].durationGenerator())
+                silent_b = False
                 if len(durations) > 1:
                     other.append(i)
                 elif len(durations) == 0:
                     silent.append(i)
-                elif durations[0][0] == 0:
+                    silent_b = True
+                elif durations[0][0] in [0, (0, 0)]:
                     silent.append(i)
+                    silent_b = True
                 else:
                     other.append(i)
-            other.extend(silent)
-            return other
+                #print i, self.states[i].stateName, silent_b
+            silent.extend(other)
+            return silent
+#            other.extend(silent)
+#            return other
         reorder = Graphs.orderToDict(
             silentFirst(self, reversed(
                 Graphs.toposort(self.transitions))))
+#        print "loool"
+#        print reorder
         transitions = defaultdict(dict)
         for (key, value) in self.transitions.iteritems():
             newval = dict()
@@ -343,23 +351,59 @@ class HMM(ConfigObject):
                 d_from[sn] = init
                 d_to[sn] = end
                 for i in range(len(states)):
-                    states[i].startProb = self.mathType(0.0)
-                    states[i].endProb = self.mathType(0.0)
+                    states[i].startProbability = self.mathType(0.0)
+                    states[i].endProbability = self.mathType(0.0)
+                    if states[i].stateName == init:
+                        states[i].startProbability = state.startProbability
+                    if states[i].stateName == end:
+                        states[i].endProbability = state.endProbability
                 json['states'].extend(states)
                 json['transitions'].extend(transitions)
         # Once we built the model, and dictionaries, we can translate transitions
         for fr in self.transitions:
             for to, prob in self.transitions[fr].iteritems():
                 json['transitions'].append({
-                    'from': d_from[self.states[fr].stateName],
-                    'to': d_to[self.states[to].stateName],
-                    'prob': float(prob),
+                    'from': d_to[self.states[fr].stateName],
+                    'to': d_from[self.states[to].stateName],
+                    'prob': self.mathType(prob),
                 })
         # Problem: potrebujem tu mat mena tried, nie json
         for i in range(len(json['states'])):
             json['states'][i].clearTransitions()
         new.load(json)
-        #for i in range(len(new.states)):
-        #    new.states[i].normalizeTransitions()
-        #new.reorderStatesTopologically()
+        for i in range(len(new.states)):
+            new.states[i].normalizeTransitions()
+        #print "huhuhuh"
+        new.reorderStatesTopologically()
+#        import json
+#        print json.dumps(new.toJSON(), sort_keys=True, indent=2)
+        def model_to_dot(model):
+            nodes = []
+            edges = []
+            index = -1
+            for state in model.states:
+                index += 1
+                em_strs = []
+                for k, v in state.emissions.iteritems():
+                    em_strs.append("""'{}': {:.5}""".format(k, float(v)))
+                nodes.append("""
+             {name} [
+                shape="record"
+                label="{index} - {name2} | {emissions} | {start} | {end}"
+             ];
+            """.format(name=state.stateName, name2=state.stateName, emissions=len(em_strs), start=state.startProbability, end=state.endProbability, index=index)
+            )
+            for f, x in model.transitions.iteritems():
+                for t, p in model.transitions[f].iteritems():
+                    edges.append(""" 
+                    {f} -> {t} [label="{p:.5}"];
+                    """.format(f=model.states[f].stateName, t=model.states[t].stateName, p=float(p)))
+            dot = """digraph {{
+            {}
+            {}
+        }}""".format('\n'.join(nodes), '\n'.join(edges))
+            return dot;
+        with open('model.dot', 'w') as f:
+            f.write(model_to_dot(new))
+
         return new
