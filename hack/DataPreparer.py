@@ -8,7 +8,7 @@ class DataPreparer:
         self._window = window
 
     def _get_window_range(self, position):
-        return range(position - self._window//2, position + (1 + self._window)//2)
+        return range(position - self.window_size//2, position + (1 + self.window_size)//2)
 
     def _prepare_sequence(self, sequence, position, annotation):
         """
@@ -18,7 +18,10 @@ class DataPreparer:
         """
         data = list()
         for i in self._get_window_range(position):
-            b = sequence[i]
+            if 0 <= i < len(sequence):
+                b = sequence[i]
+            else:
+                b = '-'
             a = AnnotationLoader.get_annotation_at(annotation, position)
             data.append(b)
             data.append(a)
