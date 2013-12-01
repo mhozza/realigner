@@ -12,18 +12,23 @@ import pickle
 
 from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
-
-import hack.DataLoader
+from hack.DataLoader import DataLoader
 
 
 class PairClassifier:
-    def _getClassifier(self):
+    def _get_classifier(self):
         return RandomForestClassifier(**self.params)
 
-    def __init__(self, filename="data/randomforest.clf",
-                 training_data_dir="data/train_sequences",
-                 params={"n_estimators": 100, "n_jobs": 4, "max_depth": 50}, autotrain=True,
-                 memoization=True):
+    def __init__(
+        self, filename="data/randomforest.clf",
+        training_data_dir="data/train_sequences",
+        params={"n_estimators": 100, "n_jobs": 4, "max_depth": 50}, autotrain=True,
+        memoization=True,
+    ):
+        """
+
+        @rtype : PairClassifier
+        """
         self.default_filename = filename
         self.training_data_dir = training_data_dir
         self.params = params
@@ -34,9 +39,9 @@ class PairClassifier:
             if path.isfile(self.default_filename):
                 self.load(self.default_filename)
         else:
-            self.classifier = self._getClassifier()
+            self.classifier = self._get_classifier()
             if autotrain:
-                dl = hack.DataLoader.DataLoader()
+                dl = DataLoader()
                 data, target = (list(), list())
                 for seq in dl.loadDirectory(self.training_data_dir):
                     d, t = dl.prepareTrainingData(seq)
@@ -55,18 +60,19 @@ class PairClassifier:
         pickle.dump(self.classifier, f)
         f.close()
 
-    def removeDefaultFile(self):
+    def remove_default_file(self):
         os.remove(self.default_filename)
 
     def reset(self):
         if self.classifier:
             del self.classifier
-        self.classifier = self._getClassifier()
+        self.classifier = self._get_classifier()
 
     def fit(self, data, target):
         self.classifier.fit(data, target)
 
     def predict(self, data):
+        d = None
         if self.memoization:
             d = tuple(data)
             if d in self.mem:
@@ -81,8 +87,9 @@ class PairClassifier:
         return res
 
 
+
 if __name__ == "__main__":
-    pathToData = "data/"
+    pathToData = "../data/"
     c = PairClassifier(
         filename=pathToData + "randomforest.dat",
         training_data_dir=pathToData + "train_sequences",
@@ -95,17 +102,20 @@ if __name__ == "__main__":
         autotrain=False,
         memoization=False,
     )
-    d = hack.DataLoader.DataLoader()
-    x, y = d.prepareTrainingData(d.loadSequence(pathToData + "train_sequences/s1.fa"), 1)
-    x2, y2 = d.prepareTrainingData(
-        d.loadSequence(pathToData + "train_sequences/s1.fa", pathToData + "train_sequences/s1_na.js"), 1)
+
+    dl = DataLoader()
+    _, s_x, a_x, s_y, a_y = dl.loadSequence(pathToData + 'train_sequences/s1.fa')
+    x, y = dl.prepareTrainingData(s_x, a_x, s_y, a_y, 1)
+    _, s_x, a_x, s_y, a_y = dl.loadSequence(pathToData + "train_sequences/s1.fa", pathToData + "train_sequences/s1_na.js")
+    x2, y2 = dl.prepareTrainingData(s_x, a_x, s_y, a_y, 1)
+
     #    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa"),5)
     #    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa", pathToData+"sequences/simulated_alignment_na.js"),1)
     #    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa"),5)
     #    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa", pathToData+"sequences/short_na.js"),5)
-    px, py = d.prepareTrainingData(d.loadSequence(pathToData + "train_sequences/s2.fa"), 1)
-    px2, py2 = d.prepareTrainingData(
-        d.loadSequence(pathToData + "train_sequences/s2.fa", pathToData + "train_sequences/s2_na.js"), 1)
+    px, py = dl.prepareTrainingData(dl.loadSequence(pathToData + "train_sequences/s2.fa"), 1)
+    px2, py2 = dl.prepareTrainingData(
+        dl.loadSequence(pathToData + "train_sequences/s2.fa", pathToData + "train_sequences/s2_na.js"), 1)
 
     #    print zip(x,y)
     #    px,py = x,y

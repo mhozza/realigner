@@ -1,16 +1,16 @@
 {
     	"contants": [
  	    {
- 	        "__name__": "@trans?",   	 
-	        "MM": 0.94,
-	        "MX": 0.03,
-	        "MY": 0.03,
-	        "XM": 0.94,
-	        "YM": 0.94,
-	        "XX": 0.03,
-	        "XY": 0.03,
-	        "YY": 0.03,
-	        "YX": 0.03
+ 	        "__name__": "@trans?",
+	        "MM": 0.98,
+	        "MX": 0.01,
+	        "MY": 0.01,
+	        "XM": 0.9,
+	        "YM": 0.9,
+	        "XX": 0.09,
+	        "XY": 0.01,
+	        "YY": 0.09,
+	        "YX": 0.01
             }
 	],
 	"model": {
@@ -34,11 +34,7 @@
 			"endprob": 1.0,
 			"durations": [[[1, 1], 1.0]],
 			"emission": {
-				"__name__": "JukesCantorGenerator",
-				"alphabet": "ACGT",
-				"timeX": 0.01,
-				"timeY": 0.04,
-				"backgroundprob": {"__name__": "backgroundprob", "alphabet": "ACGT"}
+
 			},
 			"onechar": "M"
 		    },
@@ -48,9 +44,9 @@
 			"startprob": 0.33,
 			"endprob": 1.0,
 			"durations": [[[1, 0], 1.0]],
-			"emission": {"__name__": "backgroundprob", "alphabet": "ACGT", 
+			"emission": {"__name__": "backgroundprob", "alphabet": "ACGT",
 					 "tracks": 2, "track": 0},
-			"onechar": "X"    	
+			"onechar": "X"
 		    },
 		    {
 			"__name__": "SimpleState",
@@ -58,10 +54,10 @@
 			"startprob": 0.33,
 			"endprob": 1.0,
 			"durations": [[[0, 1], 1.0]],
-			"emission": {"__name__": "backgroundprob", "alphabet": "ACGT", 
+			"emission": {"__name__": "backgroundprob", "alphabet": "ACGT",
 					 "tracks": 2, "track": 1},
-			    "onechar": "Y"    	
+			    "onechar": "Y"
 		    }
-		]	
+		]
 	}
 }

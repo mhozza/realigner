@@ -1,7 +1,7 @@
 from tools.file_wrapper import Open
 import re
 
-def loadGenerator(filename): 
+def loadGenerator(filename):
     with Open(filename, 'r') as f:
         seq_name = ""
         sequence = ""
