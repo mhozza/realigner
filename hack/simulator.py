@@ -72,13 +72,12 @@ def create_dna_mutation_coin(s):
     return BiasedCoin(p[s])
 
 
-def main(n):
+def main(n, datadir='data/train_sequences/'):
     s1name = "sequence1"
     s2name = "sequence2"
     s3name = "sequence3"
     annotation_name = 'gene'
 
-    datadir = '../data/train_sequences/'
     fname = "simulated_alignment"
     alignment_extension = ".fa"
     annotations_extension = ".bed"

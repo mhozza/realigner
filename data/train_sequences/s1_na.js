@@ -1,1 +1,0 @@
-{"__name__": "Annotations", "annotations": [], "sequences": [{"name": "sequence1", "annotations": [{"id": "gene", "file": "data/train_sequences/s1_sequence1_gene.bed"}]}, {"name": "sequence2", "annotations": [{"id": "gene", "file": "data/train_sequences/s1_sequence2_gene.bed"}]}]}
