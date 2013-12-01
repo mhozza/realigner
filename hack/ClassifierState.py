@@ -4,11 +4,12 @@ from hmm.PairHMM import GeneralizedPairState
 import sys
 from hack.DataPreparer import DataPreparer
 
+
 class ClassifierState(GeneralizedPairState):
     def __init__(self, *p):
         GeneralizedPairState.__init__(self, *p)
-        self.clf = PairClassifier()
         self.dp = DataPreparer()
+        self.clf = PairClassifier(self.dp)
         self.al = AnnotationLoader()
         self.annotations, self.aX, self.aY = self.al.get_annotations("data/sequences/simulated_alignment.js")
 
@@ -19,7 +20,7 @@ class ClassifierState(GeneralizedPairState):
             sys.stderr.write("WARNING: index out of bounds\n")
             return 0
 
-        return self.clf.predict(self.dp.prepare_data(X, x, self.aX, Y, y, self.aY))
+        return self.clf.prepare_predict(X, x, self.aX, Y, y, self.aY)
 
 
 class SimpleState(GeneralizedPairState):

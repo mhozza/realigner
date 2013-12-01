@@ -5,10 +5,10 @@ from hack.AnnotationLoader import AnnotationLoader
 
 class DataPreparer:
     def __init__(self, window=1):
-        self.window = window
+        self._window = window
 
     def _get_window_range(self, position):
-        return range(position - self.window//2, position + (1 + self.window)//2)
+        return range(position - self._window//2, position + (1 + self._window)//2)
 
     def _prepare_sequence(self, sequence, position, annotation):
         """
@@ -28,3 +28,7 @@ class DataPreparer:
         data_x = self._prepare_sequence(sequence_x, position_x, annotation_x)
         data_y = self._prepare_sequence(sequence_y, position_y, annotation_y)
         return data_x + data_y
+
+    @property
+    def window_size(self):
+        return self._window

@@ -13,6 +13,8 @@ import pickle
 from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
 from hack.DataLoader import DataLoader
+from hack.DataPreparer import DataPreparer
+from tools.Exceptions import InvalidValueException
 
 
 class PairClassifier:
@@ -20,7 +22,9 @@ class PairClassifier:
         return RandomForestClassifier(**self.params)
 
     def __init__(
-        self, filename="data/randomforest.clf",
+        self,
+        preparer=None,
+        filename="data/randomforest.clf",
         training_data_dir="data/train_sequences",
         params={"n_estimators": 100, "n_jobs": 4, "max_depth": 50}, autotrain=True,
         memoization=True,
@@ -29,6 +33,8 @@ class PairClassifier:
 
         @rtype : PairClassifier
         """
+        self._preparer = None
+        self.preparer = preparer
         self.default_filename = filename
         self.training_data_dir = training_data_dir
         self.params = params
@@ -43,8 +49,9 @@ class PairClassifier:
             if autotrain:
                 dl = DataLoader()
                 data, target = (list(), list())
-                for seq in dl.loadDirectory(self.training_data_dir):
-                    d, t = dl.prepareTrainingData(seq)
+                sequences = dl.loadDirectory(self.training_data_dir)
+                for _, s_x, a_x, s_y, a_y in sequences:
+                    d, t = dl.prepareTrainingData(s_x, a_x, s_y, a_y, self.preparer)
                     data += d
                     target += t
                 self.fit(data, target)
@@ -63,6 +70,23 @@ class PairClassifier:
     def remove_default_file(self):
         os.remove(self.default_filename)
 
+    @property
+    def preparer(self):
+        return self._preparer
+
+    @preparer.setter
+    def preparer(self, value):
+        if value is None:
+            self._preparer = DataPreparer(window=1)
+        elif value is DataPreparer:
+            self._preparer = value
+        else:
+            raise InvalidValueException('Value is not DataPreparer')
+
+    @preparer.deleter
+    def preparer(self):
+        del self._preparer
+
     def reset(self):
         if self.classifier:
             del self.classifier
@@ -70,6 +94,9 @@ class PairClassifier:
 
     def fit(self, data, target):
         self.classifier.fit(data, target)
+
+    def prepare_predict(self, *args):
+        self.predict(self.preparer.prepare(*args))
 
     def predict(self, data):
         d = None
@@ -87,35 +114,35 @@ class PairClassifier:
         return res
 
 
-
-if __name__ == "__main__":
-    pathToData = "../data/"
+def main():
+    path_to_data = "../data/"
     c = PairClassifier(
-        filename=pathToData + "randomforest.dat",
-        training_data_dir=pathToData + "train_sequences",
+        filename=path_to_data + "randomforest.dat",
+        training_data_dir=path_to_data + "train_sequences",
         autotrain=False,
         memoization=False,
     )
     c2 = PairClassifier(
-        filename=pathToData + "randomforest.dat",
-        training_data_dir=pathToData + "train_sequences",
+        filename=path_to_data + "randomforest.dat",
+        training_data_dir=path_to_data + "train_sequences",
         autotrain=False,
         memoization=False,
     )
 
     dl = DataLoader()
-    _, s_x, a_x, s_y, a_y = dl.loadSequence(pathToData + 'train_sequences/s1.fa')
-    x, y = dl.prepareTrainingData(s_x, a_x, s_y, a_y, 1)
-    _, s_x, a_x, s_y, a_y = dl.loadSequence(pathToData + "train_sequences/s1.fa", pathToData + "train_sequences/s1_na.js")
-    x2, y2 = dl.prepareTrainingData(s_x, a_x, s_y, a_y, 1)
+    dp = DataPreparer()
+    _, s_x, a_x, s_y, a_y = dl.loadSequence(path_to_data + 'train_sequences/s1.fa')
+    x, y = dl.prepareTrainingData(s_x, a_x, s_y, a_y, dp)
+    _, s_x, a_x, s_y, a_y = dl.loadSequence(path_to_data + "train_sequences/s1.fa", path_to_data + "train_sequences/s1_na.js")
+    x2, y2 = dl.prepareTrainingData(s_x, a_x, s_y, a_y, dp)
 
     #    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa"),5)
     #    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa", pathToData+"sequences/simulated_alignment_na.js"),1)
     #    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa"),5)
     #    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa", pathToData+"sequences/short_na.js"),5)
-    px, py = dl.prepareTrainingData(dl.loadSequence(pathToData + "train_sequences/s2.fa"), 1)
-    px2, py2 = dl.prepareTrainingData(
-        dl.loadSequence(pathToData + "train_sequences/s2.fa", pathToData + "train_sequences/s2_na.js"), 1)
+    #px, py = dl.prepareTrainingData(dl.loadSequence(pathToData + "train_sequences/s2.fa"), 1)
+    #px2, py2 = dl.prepareTrainingData(
+    #    dl.loadSequence(pathToData + "train_sequences/s2.fa", pathToData + "train_sequences/s2_na.js"), dp)
 
     #    print zip(x,y)
     #    px,py = x,y
@@ -138,30 +165,30 @@ if __name__ == "__main__":
 
     # for i in zip(p,yy):
     #     print(i)
-    dd1 = c.predict([px[i] for i in range(len(px)) if py[i]])
-    dd0 = c.predict([px[i] for i in range(len(px)) if not py[i]])
-    dd21 = c2.predict([px2[i] for i in range(len(px2)) if py2[i]])
-    dd20 = c2.predict([px2[i] for i in range(len(px2)) if not py2[i]])
-    k1 = gaussian_kde(dd1)
-    k0 = gaussian_kde(dd0)
-    k21 = gaussian_kde(dd21)
-    k20 = gaussian_kde(dd20)
-    xvals = linspace(0.0, 1.0, 500)
+    #dd1 = c.predict([px[i] for i in range(len(px)) if py[i]])
+    #dd0 = c.predict([px[i] for i in range(len(px)) if not py[i]])
+    #dd21 = c2.predict([px2[i] for i in range(len(px2)) if py2[i]])
+    #dd20 = c2.predict([px2[i] for i in range(len(px2)) if not py2[i]])
+    #k1 = gaussian_kde(dd1)
+    #k0 = gaussian_kde(dd0)
+    #k21 = gaussian_kde(dd21)
+    #k20 = gaussian_kde(dd20)
+    #xvals = linspace(0.0, 1.0, 500)
 
-    plt.subplot(1, 2, 1)
-    plt.hist([dd1, dd0, dd21, dd20],
-             10, normed=False, histtype='bar',
-             stacked=False,
-             label=["anotated 1", "anotated 0", "not anotated 1", "not anotated 0"])
-    plt.legend(loc=0)
-    plt.subplot(1, 2, 2)
-    plt.hold(True)
-    plt.plot(xvals, k1(xvals), label="anotated 1")
-    plt.plot(xvals, k0(xvals), label="anotated 0")
-    plt.plot(xvals, k21(xvals), label="not anotated 1")
-    plt.plot(xvals, k20(xvals), label="not anotated 0")
-    plt.legend(loc=0)
-    plt.show()
+    #plt.subplot(1, 2, 1)
+    #plt.hist([dd1, dd0, dd21, dd20],
+    #         10, normed=False, histtype='bar',
+    #         stacked=False,
+    #         label=["anotated 1", "anotated 0", "not anotated 1", "not anotated 0"])
+    #plt.legend(loc=0)
+    #plt.subplot(1, 2, 2)
+    #plt.hold(True)
+    #plt.plot(xvals, k1(xvals), label="anotated 1")
+    #plt.plot(xvals, k0(xvals), label="anotated 0")
+    #plt.plot(xvals, k21(xvals), label="not anotated 1")
+    #plt.plot(xvals, k20(xvals), label="not anotated 0")
+    #plt.legend(loc=0)
+    #plt.show()
 
 
     # plt.plot(histogram(yy, 100, density=False)[0])
@@ -205,4 +232,7 @@ if __name__ == "__main__":
 #     plt.plot(k(xvals))
 #     plt.show()
 
+
+if __name__ == "__main__":
+    main()
 

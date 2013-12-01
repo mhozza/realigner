@@ -9,11 +9,10 @@ from copy import deepcopy
 from numpy import array
 from os import path, listdir
 from random import randint
+from tools.Exceptions import ParseException
 
 import itertools
-import sys
 from hack.AnnotationLoader import AnnotationLoader
-from hack.DataPreparer import DataPreparer
 
 
 class AnnotatedBase:
@@ -30,7 +29,7 @@ class AnnotatedBase:
     def data(self):
         gap_val = -1.0  # hodnota kotrou sa ma nahradit '-'
 
-        m = {'A': 0.0, 'C': 1.0, 'G': 2.0, 'T': 3.0, '-': gap_val}
+        m = {'A': 0.0, 'C': 1.0, 'G': 2.0, 'T': 3.0, 'N': 4.0, '-': gap_val}
         res = [m[self.base]]
         for i in self.annotations.values():
             if i == '-':
@@ -62,15 +61,15 @@ class AnnotatedBaseCouple:
 
 class DataLoader:
     def getSequences(self, fname, sequence_regexp=None):
-        alignment_regexp = ""
+        alignment_regexp = ''
         if sequence_regexp is None:
             sequence_regexp = ["sequence1$", "sequence2$"]
 
-        #pre zaciatok berieme len prve zarovnanie
-        aln = Fasta.load(fname, alignment_regexp, Alignment, sequence_regexp ).next()
+        aln = next(
+            Fasta.load(fname, alignment_regexp, Alignment, sequence_regexp)
+        )
         if aln is None or len(aln.sequences) < 2:
-            sys.stderr.write("ERROR: not enough sequences in file\n")
-            exit(1)
+            raise ParseException('Not enough sequences in file\n')
         seq1 = aln.sequences[0]
         seq2 = aln.sequences[1]
         return seq1, seq2
@@ -80,22 +79,25 @@ class DataLoader:
         Loads sequence with from file 'fname'
         """
         if configFname is None:
-            configFname = path.splitext(fname)[0]
-            configFname += '.js'
+            configFname = path.splitext(fname)[0] + '.js'
 
         seqX, seqY = self.getSequences(fname)
         al = AnnotationLoader()
-        annotations, annotationsX, annotationsY = al.get_annotations(configFname)
-        #return self._SequenceToAnnotatedBaseCoupleList(annotations,
-        #                                               seqX, annotationsX,
-        #                                               seqY, annotationsY)
+        annotations, annotationsX, annotationsY = al.get_annotations(
+            configFname
+        )
 
         return annotations, seqX, annotationsX, seqY, annotationsY
 
-    def prepareTrainingData(self, sequence_x, annotations_x, sequence_y, annotations_y, window_size = 1):
+    def prepareTrainingData(
+        self,
+        sequence_x,
+        annotations_x,
+        sequence_y,
+        annotations_y,
+        preparer,
+    ):
         train_data = (list(), list())
-        dl = DataPreparer(window=window_size)
-
         sequence_xs = Fasta.alnToSeq(sequence_x)
         sequence_ys = Fasta.alnToSeq(sequence_y)
 
@@ -113,7 +115,14 @@ class DataLoader:
 
             matched_pos.add((pos_x, pos_y))
 
-            d = dl.prepare_data(sequence_xs, pos_x, annotations_x, sequence_ys, pos_y, annotations_y)
+            d = preparer.prepare_data(
+                sequence_xs,
+                pos_x,
+                annotations_x,
+                sequence_ys,
+                pos_y,
+                annotations_y,
+            )
             if d is not None:
                 train_data[0].append(d)
                 train_data[1].append(1)
@@ -122,12 +131,25 @@ class DataLoader:
         for i in range(seq_size):
             x = None
             while x is None:
-                x = randint(window_size//2, len(sequence_xs) - 1 - window_size//2)
+                x = randint(
+                    preparer.window_size//2,
+                    len(sequence_xs) - 1 - preparer.window_size//2,
+                )
             y = None
             while y is None or not (x, y) in matched_pos:
-                y = randint(window_size//2, len(sequence_ys) - 1 - window_size//2)
+                y = randint(
+                    preparer.window_size//2,
+                    len(sequence_ys) - 1 - preparer.window_size//2,
+                )
 
-            d = clf.prepare_data(sequence_xs, x, annotations_x, sequence_ys, y, annotations_y)
+            d = preparer.prepare_data(
+                sequence_xs,
+                x,
+                annotations_x,
+                sequence_ys,
+                y,
+                annotations_y,
+            )
             train_data[0].append(d)
             train_data[1].append(0)
 
@@ -135,11 +157,10 @@ class DataLoader:
 
     def loadDirectory(self, dirname):
         sequences = list()
-        for fn in listdir(dirname):
+        for fn in filter(
+            lambda x: path.splitext(x)[1] == '.fa', listdir(dirname)
+        ):
             fname = path.join(dirname, fn)
             if path.isfile(fname):
                 sequences.append(self.loadSequence(fname))
         return sequences
-
-
-
