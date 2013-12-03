@@ -50,12 +50,6 @@ class AnnotationLoader:
                 base_annotation[key] = annotations[key][i]
         return base_annotation
 
-#    def alnToAnnotation(self, annotations):
-#        newannotations = dict()
-#        for key in annotations:
-#            newannotations[key] =  annotations[key].replace("-","")
-#        return newannotations
-
     def _intervals_to_interval_map(self, intervals):
         """
         Converts intervals from track to intervalmap, for searching

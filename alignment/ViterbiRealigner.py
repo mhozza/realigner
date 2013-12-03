@@ -1,4 +1,6 @@
 import json
+from repeats.RepeatGenerator import RepeatGenerator
+from collections import defaultdict
 from alignment.Realigner import Realigner
 from algorithm.LogNum import LogNum
 from tools.file_wrapper import Open
@@ -7,7 +9,6 @@ from tools import perf
 
 
 class ViterbiRealigner(Realigner):
-    
     def __init__(self):
         self.table = None
         return
@@ -16,6 +17,19 @@ class ViterbiRealigner(Realigner):
     @perf.runningTimeDecorator
     def computeViterbiTable(self):
         if 'viterbi' not in self.io_files['input']:
+			for state in self.model.states:
+                cstate_class_name = 'hack.ClassifierState.ClassifierState'
+                if str(state.__class__) == cstate_class_name:  # skaredy hack
+                    _, ann_x, ann_y = AnnotationLoader().get_annotations(
+                        "data/sequences/simulated_alignment.js"
+                    )
+                    emission_table = SequenceTablePrecompute(
+                        self.positionGenerator, self.X, self.Y, ann_x, ann_y
+                    )
+                    # emission_table.parallel_compute(40)
+                    emission_table.compute()
+                    state.set_emission_table(emission_table)
+
             self.table = self.model.getViterbiTable(self.X, 0, len(self.X), 
                 self.Y, 0, len(self.Y), 
                 positionGenerator=self.positionGenerator)
@@ -71,6 +85,7 @@ class ViterbiRealigner(Realigner):
         X = ""
         Y = ""
         A = ""
+            
         for (state, (_x, _y), (_dx, _dy), _) in path:
             X += self.X[_x - _dx:_x] + ('-' * (max(_dx, _dy) - _dx))
             Y += self.Y[_y - _dy:_y] + ('-' * (max(_dx, _dy) - _dy))

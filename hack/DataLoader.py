@@ -134,13 +134,13 @@ class DataLoader:
                 x = randint(
                     preparer.window_size//2,
                     len(sequence_xs) - 1 - preparer.window_size//2,
-                )
+                    )
             y = None
-            while y is None or not (x, y) in matched_pos:
+            while y is None or (x, y) in matched_pos:
                 y = randint(
                     preparer.window_size//2,
                     len(sequence_ys) - 1 - preparer.window_size//2,
-                )
+                    )
 
             d = preparer.prepare_data(
                 sequence_xs,
@@ -149,7 +149,7 @@ class DataLoader:
                 sequence_ys,
                 y,
                 annotations_y,
-            )
+                )
             train_data[0].append(d)
             train_data[1].append(0)
 

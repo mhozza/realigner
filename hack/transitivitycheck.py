@@ -58,7 +58,7 @@ def score():
             sY = sequence_names[y]
             if sX != sY:
                 sequences.append(d.getSequences(
-                    '../data/sequences/simulated_alignment.{}_{}.realigned.fa'.format(
+                    'data/sequences/simulated_alignment.{}_{}.realigned.fa'.format(
                         sX, sY), [sX+'$', sY+'$']
                     )
                 )

@@ -26,7 +26,8 @@ class PairClassifier:
         preparer=None,
         filename="data/randomforest.clf",
         training_data_dir="data/train_sequences",
-        params={"n_estimators": 100, "n_jobs": 4, "max_depth": 50}, autotrain=True,
+        params={"n_estimators": 10, "n_jobs": 10, "max_depth": 20},
+        autotrain=True,
         memoization=True,
     ):
         """
@@ -96,11 +97,21 @@ class PairClassifier:
         self.classifier.fit(data, target)
 
     def prepare_predict(self, *args):
-        self.predict(self.preparer.prepare(*args))
+        return self.predict(self.preparer.prepare_data(*args))
 
-    def predict(self, data):
+    def multi_prepare_predict(self, data_list):
+        prepared_data = list()
+        for args in data_list:
+            prepared_data.append(self.preparer.prepare_data(*args))
+
+        return self.predict(prepared_data, False)
+
+
+    def predict(self, data, memoization=None):
         d = None
-        if self.memoization:
+        if memoization is None:
+            memoization = self.memoization
+        if memoization:
             d = tuple(data)
             if d in self.mem:
                 return self.mem[d]
@@ -109,7 +120,7 @@ class PairClassifier:
             #        hits = array([tree.predict(data) for tree in self.classifier.estimators_])
             #        res = [mean(hits[:,i]) for i in range(len(data))]
         res = self.classifier.predict_proba(data)[:, 1]
-        if self.memoization:
+        if memoization:
             self.mem[d] = res
         return res
 
@@ -122,19 +133,20 @@ def main():
         autotrain=False,
         memoization=False,
     )
-    c2 = PairClassifier(
-        filename=path_to_data + "randomforest.dat",
-        training_data_dir=path_to_data + "train_sequences",
-        autotrain=False,
-        memoization=False,
-    )
+    #c2 = PairClassifier(
+    #    filename=path_to_data + "randomforest.dat",
+    #    training_data_dir=path_to_data + "train_sequences",
+    #    autotrain=False,
+    #    memoization=False,
+    #)
 
     dl = DataLoader()
     dp = DataPreparer()
-    _, s_x, a_x, s_y, a_y = dl.loadSequence(path_to_data + 'train_sequences/s1.fa')
+    _, s_x, a_x, s_y, a_y = dl.loadSequence(path_to_data + 'train_sequences/simulated_alignment.fa')
     x, y = dl.prepareTrainingData(s_x, a_x, s_y, a_y, dp)
-    _, s_x, a_x, s_y, a_y = dl.loadSequence(path_to_data + "train_sequences/s1.fa", path_to_data + "train_sequences/s1_na.js")
-    x2, y2 = dl.prepareTrainingData(s_x, a_x, s_y, a_y, dp)
+
+    #_, s_x, a_x, s_y, a_y = dl.loadSequence(path_to_data + "train_sequences/s1.fa", path_to_data + "train_sequences/s1_na.js")
+    #x2, y2 = dl.prepareTrainingData(s_x, a_x, s_y, a_y, dp)
 
     #    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa"),5)
     #    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa", pathToData+"sequences/simulated_alignment_na.js"),1)
@@ -149,7 +161,8 @@ def main():
     #    px2,py2 = x2,y2
 
     c.fit(x, y)
-    c2.fit(x2, y2)
+
+    #c2.fit(x2, y2)
     # p = [array((i,j,k,l)) for k in range(2) for l in range(2) for i in range(4) for j in range(4) ]
     # yy = c.predict(p)
 
