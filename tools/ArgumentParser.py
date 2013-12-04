@@ -71,7 +71,6 @@ parse_arguments_capabilities_keywords = {
     'tracks': ([], {'help': 'Comma separated list of ' + 'annotation tracks (trf, original_repeats, trf_cons, hmm)', 'type': lambda x: set(x.split(',')), 'default': 'trf'}),
     'intermediate_input_files': ([], {'help': 'Comma separated' + 'list of key value pairs: "key:value". This files ' + 'used to skip load precomputed data in algorithms.', 'type': io_to_dict, 'default': {}}),
     'intermediate_output_files': ([], {'help': 'Comma separated' + 'list of key value pairs: "key:value". This files ' + 'used to skip store precomputed data in algorithms.', 'type': io_to_dict, 'default': {}}),
-    'ignore_states': ([], {'default': False, 'type': bool, 'help': 'Ignore states in posterior-type decoders.'}), 
     'merge_consensus': ([], {'default': False, 'type': bool, 'help': 'Fix indels in repeat issue in posterior-type decoders.'}),
     'correctly_merge_consensus': ([], {'default': False, 'type': bool, 'help': 'Fix indels in repeat issue in posterior-type decoders.'}),
     'ignore_consensus': ([], {'action': 'store_true'}),
