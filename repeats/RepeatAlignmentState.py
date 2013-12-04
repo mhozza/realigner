@@ -98,7 +98,6 @@ class PairRepeatState(State):
         self.memoizeY = defaultdict(dict)
         self.memoizeXsimple = dict()
         self.memoizeYsimple = dict()
-        self.merge_consensus = False
         self.correctly_merge_consensus = False
         #self.dgmemoize = dict()
         #self.rdgmemoize = dict()
@@ -247,14 +246,14 @@ class PairRepeatState(State):
                     xp *= self.repeatLengthDistribution[yrc]
                     self.consensus = con
                     yield((xlen, ylen), xp)
-            if self.merge_consensus or self.correctly_merge_consensus:
+            if self.correctly_merge_consensus:
                 break
 
     def getHMM(self, consensus):
         return self.factory.getHMM(consensus)
 
     def emissionX(self, X, x, dx, cons=None):
-        if self.merge_consensus or self.correctly_merge_consensus:
+        if self.correctly_merge_consensus:
             keyX = (x, dx)
             if keyX in self.memoizeXsimple:
                 return self.memoizeXsimple[keyX]
@@ -292,7 +291,7 @@ class PairRepeatState(State):
             return valX[dx]
 
     def emissionY(self, Y, y, dy, cons=None):
-        if self.merge_consensus or self.correctly_merge_consensus:
+        if self.correctly_merge_consensus:
             keyY = (y, dy)
             if keyY in self.memoizeYsimple:
                 return self.memoizeYsimple[keyY]
@@ -650,7 +649,6 @@ class PairRepeatState(State):
         RX.buildRepeatDatabase()
         RY.buildRepeatDatabase()
         self.addRepeatGenerator(RX, RY)
-        self.merge_consenus = realigner.merge_consensus
         self.correctly_merge_consensus = realigner.correctly_merge_consensus
 
 
@@ -659,7 +657,7 @@ class PairRepeatState(State):
         dx = len(realigner.X)
         dy = len(realigner.Y)
         x, y = 0, 0
-        if self.merge_consensus or self.correctly_merge_consensus:
+        if self.correctly_merge_consensus:
             for _x in range(dx + 1):
                 max_range = max([0] + list(self.repeatGeneratorX.getHints(x + _x)))
                 self.emissionX(realigner.X, x + _x, max_range, self.cons_list)

@@ -27,7 +27,6 @@ class Realigner(object):
         self.positionGenerator = None
         self.repeat_width = None
         self.cons_count = None
-        self.merge_consensus = False
         self.correctly_merge_consensus = False
         self.ignore_consensus = False
         self.marginalize_gaps = False
@@ -52,7 +51,6 @@ class Realigner(object):
         }
         self.repeat_width = self.args.repeat_width
         self.cons_count = self.args.cons_count
-        self.merge_consensus = self.args.merge_consensus
         self.correctly_merge_consensus = self.args.correctly_merge_consensus
         self.ignore_consensus = self.args.ignore_consensus 
         self.marginalize_gaps = self.args.marginalize_gaps
