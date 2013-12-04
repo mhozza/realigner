@@ -21,7 +21,7 @@ def model_to_dot(model):
     """.format(name=state.stateName, emissions=' | '.join(em_strs))
     )
     for f, x in model.transitions.iteritems():
-        for t, p in model.transitions[f].iteritems():
+        for t, p in x.iteritems():
             edges.append(""" 
             {f} -> {t} [label="{p:.5}"];
             """.format(f=model.states[f].stateName, t=model.states[t].stateName, p=float(p)))

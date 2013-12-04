@@ -1,21 +1,15 @@
-from algorithm.LogNum import LogNum
-from hmm.HMMLoader import HMMLoader
 from alignment import Fasta
-from adapters.TRFDriver import TRFDriver, trf_paths, Repeat
+from adapters.TRFDriver import TRFDriver, Repeat
 from adapters.HMMDriver import HMMDriver
 from alignment.AlignmentIterator import AlignmentPositionGenerator
-from repeats.RepeatRealigner import RepeatRealigner
 from tools import perf
 import os   
-import argparse
 import sys
 from alignment.Alignment import Alignment
 from tools.file_wrapper import Open
 from alignment.AlignmentCanvas import AlignmentCanvas
 import json
-from alignment.ViterbiRealigner import ViterbiRealigner
-from repeats.RepeatRealignerNoBlocks import RepeatRealignerNoBlocks
-
+from tools.ArgumentParser import parse_arguments
 
 def brainwash(className):
     dct = dict();
@@ -25,24 +19,6 @@ def brainwash(className):
         else: 
             dct[key] = None
     return type('Brainwashed' + className.__name__, (object,), dct)
-
-
-def get_model(args):
-    loader = HMMLoader(args.mathType) # TODO: rename HMMLoader to ModelLoader
-    for i in range(0, len(args.bind_file), 2):
-        loader.addFile(args.bind_file[i], args.bind_file[i + 1])
-    for i in range(0, len(args.bind_constant_file), 2):
-        loader.addConstant(
-            args.bind_constant_file[i],
-            loader.load(args.bind_constant_file[i + 1])
-        )
-    for i in range(0, len(args.bind_constant_file), 2):
-        loader.addConstant(
-            args.bind_constant_file[i],
-            loader.loads(args.bind_constant_file[i + 1]),
-        )
-    return loader.load(args.model)["model"]
-
 
 def compute_annotations(args, alignment_filename, model):
     annotations = dict()
@@ -97,111 +73,6 @@ def compute_annotations(args, alignment_filename, model):
     perf.replace()
     return annotations
 
-    
-def getMathType(s):
-    if s == 'LogNum':
-        return LogNum
-    elif s == 'float':
-        return float
-    else:
-        raise('Unknown type')
-    
-    
-def toList(s):
-    return [s]
-
-
-def getRealigner(s):
-    if s == 'repeat':
-        return RepeatRealigner
-    elif s == 'viterbi':
-        return ViterbiRealigner
-    elif s == 'repeat_no_blocks':
-        return RepeatRealignerNoBlocks
-    else:
-        raise('Unknown type')
-
-
-def parse_arguments():
-    parser = argparse.ArgumentParser(description='Realign sequence using ' + 
-                                     'informations from tandem repeat finder')
-    parser.add_argument('--mathType', '-m', type=str, default='float',
-                        choices=['LogNum', 'float'], help="Numeric type to use")
-    parser.add_argument('alignment', type=str, help="Input alignment")
-    parser.add_argument('output_file', type=str, help="Output file")
-    parser.add_argument('--model', type=str,
-                        default='data/models/repeatHMM.js', help="Model file")
-    parser.add_argument('--trf', type=toList, default=trf_paths
-                        , help="Location of tandem repeat finder binary")
-    parser.add_argument('--algorithm', type=str, 
-                        default='repeat_no_blocks', choices=['repeat', 'viterbi', 'repeat_no_blocks'],
-                        help="Which realignment algorithm to use")
-    parser.add_argument('--bind_file', nargs='*', help='Replace filenames in '
-                        + 'the input_file model.', default=[]) 
-    parser.add_argument('--bind_constant', nargs='*', help='Replace constants'
-                         + ' in the input_fmodelile model.', default=[])
-    parser.add_argument('--bind_constant_file', nargs='*', help='Replace' + 
-                        ' constants in the input_file model.', default=[])
-    parser.add_argument('--alignment_regexp', default='', 
-                        help='Regular expression used to separate alignment' +
-                        'in input file')
-    parser.add_argument('--sequence_regexp', nargs='+', default=["sequence1",
-                                                                 "sequence2"],
-                        help='Regular expressions used to select sequences.')
-    parser.add_argument('--beam_width', default=10, type=int, 
-                        help='Beam width.')
-    parser.add_argument('--repeat_width', default=0, help='Maximum possible' + 
-                        ' error of repeat annotation.', type=int)
-    parser.add_argument('--cons_count', default=1, help='Shift count for repeats.',
-                        type=int)
-    parser.add_argument('--tracks', help='Comma separated list of ' + \
-                        'annotation tracks (trf, original_repeats, trf_cons, hmm)', 
-                        type=lambda x: set(x.split(',')),
-                        default='trf')
-    io_to_dict = lambda x: dict([tuple(y.split(':')) for y in x.split(',')])
-    parser.add_argument('--intermediate_input_files', help='Comma separated' + 
-                        'list of key value pairs: "key:value". This files ' + 
-                        'used to skip load precomputed data in algorithms.',
-                        type=io_to_dict, default={})
-    parser.add_argument('--intermediate_output_files', help='Comma separated' + 
-                        'list of key value pairs: "key:value". This files ' + 
-                        'used to skip store precomputed data in algorithms.',
-                        type=io_to_dict, default={},)
-    parser.add_argument('--ignore_states', default=False, type=bool, 
-                        help='Ignore states in posterior-type decoders.')
-    parser.add_argument('--resolve_indels', default=False, type=bool, 
-                        help='Fix indels in repeat issue in posterior-type decoders.')
-    parser.add_argument('--merge_consensus', default=False, type=bool, 
-                        help='Fix indels in repeat issue in posterior-type decoders.')
-    parser.add_argument('--correctly_merge_consensus', default=False, type=bool, 
-                        help='Fix indels in repeat issue in posterior-type decoders.')
-    parser.add_argument('--ignore_consensus', action='store_true')
-    parser.add_argument('--expand_model', action='store_true')
-    parser.add_argument('--marginalize_gaps', action='store_true')
-    parser.add_argument('--one_char_annotation', action='store_true')
-    parser.add_argument('--posterior_score', action='store_true')
-    parser.add_argument('--draw', default='', type=str, 
-                        help='output file for image')
-    parsed_arg = parser.parse_args()
-    parsed_arg.mathType = getMathType(parsed_arg.mathType)
-    if 'trf_cons' in parsed_arg.tracks:
-        parsed_arg.cons_count = 0
-    # ====== Validate input parameters =========================================
-    if len(parsed_arg.bind_file) % 2 != 0:
-        sys.stderr.write('ERROR: If binding files, the number of arguments has'
-                         + 'to be divisible by 2\n')
-        return None 
-    if len(parsed_arg.bind_constant_file) % 2 != 0:
-        sys.stderr.write('ERROR: If binding constants (as files), the number of'
-                         + ' arguments has to be divisible by 2\n')
-        return None
-    if len(parsed_arg.bind_constant) % 2 != 0:
-        sys.stderr.write('ERROR: If binding constants, the number of'
-                         + ' arguments has to be divisible by 2\n')
-        return None
-    return parsed_arg
-    
-
 def realign_file(args, model, output_filename, alignment_filename):
     # begin of HACK
     if args.expand_model:
@@ -239,15 +110,11 @@ def realign_file(args, model, output_filename, alignment_filename):
                 real_model = model.expandModel({'consensus': cons})
             else: 
                 real_model = model
-            realigner = getRealigner(args.algorithm)()
+            realigner = args.algorithm()
+            realigner.setDrawer(drawer)
             realigner.prepareData(seq1, aln.names[0], seq2, aln.names[1], aln, 
-                                  args.beam_width, drawer, real_model, args.mathType,
-                                  annotations, 
-                                  {'input':args.intermediate_input_files,
-                                   'output':args.intermediate_output_files},
-                                  args.repeat_width, args.cons_count, 
-                                  args.merge_consensus, args.correctly_merge_consensus, args.ignore_consensus, args.marginalize_gaps, args.one_char_annotation, args.posterior_score, args.ignore_states,
-                                  args.resolve_indels)
+                                  real_model, annotations, args)
+                                                              
             aln = realigner.realign(0, len(seq1), 0, len(seq2))
             perf.msg("Sequence was realigned in {time} seconds.")
             perf.replace()
@@ -288,9 +155,6 @@ def worker(transformation):
                 sge_task_id,
                 min(sge_task_id + sge_step_size, sge_task_last + 1)
             )
-        
-    # ====== Load model ========================================================
-    model = get_model(args)
 
     # ====== Realign all sequences =============================================
     ret = 0
@@ -303,7 +167,7 @@ def worker(transformation):
             alignment_filename = \
                 alignment_filename_template.format(id=task_id - 1)
          
-        ret = max(ret,transformation(args, model, output_filename,
+        ret = max(ret,transformation(args, args.model, output_filename,
                                      alignment_filename))
     return ret
 

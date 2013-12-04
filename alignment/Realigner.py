@@ -34,6 +34,7 @@ class Realigner(object):
         self.marginalize_gaps = False
         self.one_char_annotation = False
         self.posterior_score = False
+        self.args = None
         '''
         Constructor
         '''
@@ -41,11 +42,25 @@ class Realigner(object):
     def prepareData(self, *data):
         """Push data to realing. Including sequence. Precompute stuff you 
         need"""
-        arguments = 19
-        (self.X, self.X_name, self.Y, self.Y_name, self.alignment, self.width,
-         self.drawer, self.model, self.mathType, self.annotations,
-         self.io_files, self.repeat_width, self.cons_count, self.merge_consensus, self.correctly_merge_consensus, self.ignore_consensus,
-         self.marginalize_gaps, self.one_char_annotation, self.posterior_score) = tuple(data[:arguments])
+        arguments = 8
+        (self.X, self.X_name, self.Y, self.Y_name, self.alignment,
+         self.model, self.annotations, self.args) = tuple(data[:arguments])
+         
+        self.width = self.args.beam_width
+        self.mathType = self.args.mathType
+        self.io_files = {
+            'input': self.args.intermediate_input_files,
+            'output': self.args.intermediate_output_files
+        }
+        self.repeat_width = self.args.repeat_width
+        self.cons_count = self.args.cons_count
+        self.merge_consensus = self.args.merge_consensus
+        self.correctly_merge_consensus = self.args.correctly_merge_consensus
+        self.ignore_consensus = self.args.ignore_consensus 
+        self.marginalize_gaps = self.args.marginalize_gaps
+        self.one_char_annotation = self.args.one_char_annotation 
+        self.posterior_score = self.args.posterior_score 
+
         self.positionGenerator = \
             list(AlignmentBeamGenerator(self.alignment, self.width))
         if 'Repeat' in self.model.statenameToID:
@@ -53,6 +68,8 @@ class Realigner(object):
             self.model.states[self.model.statenameToID['Repeat']].correctly_merge_consensus = self.correctly_merge_consensus
         return data[arguments:]
     
+    def setDrawer(self, drawer):
+        self.drawer = drawer
 
     def realign(self, x, dx, y, dy, ignore=set()):
         """Realign part of sequences."""

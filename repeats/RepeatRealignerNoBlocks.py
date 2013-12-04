@@ -22,9 +22,9 @@ class RepeatRealignerNoBlocks(RepeatRealigner):
     @perf.runningTimeDecorator
     def prepareData(self, *data):
         data = RepeatRealigner.prepareData(self, *data)
-        ignore_states = data[0]
-        resolve_indels = data[1]
-        arguments = 2
+        ignore_states = self.args.ignore_states
+        resolve_indels = self.args.resolve_indels
+        arguments = 0
        
         statefun = lambda x: x
         if ignore_states:
