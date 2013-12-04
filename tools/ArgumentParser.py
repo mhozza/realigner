@@ -3,10 +3,11 @@ import sys
 
 from adapters.TRFDriver import trf_paths
 from algorithm.LogNum import LogNum
+from alignment.BlockPosteriorRealigner import BlockPosteriorRealigner
+from alignment.PosteriorRealigner import PosteriorRealigner
+from alignment.RepeatRealignerNoBlocks import RepeatRealignerNoBlocks
 from alignment.ViterbiRealigner import ViterbiRealigner
 from hmm.HMMLoader import HMMLoader
-from repeats.RepeatRealigner import RepeatRealigner
-from repeats.RepeatRealignerNoBlocks import RepeatRealignerNoBlocks
 
 def get_math_type(s):
     if s == 'LogNum':
@@ -22,8 +23,10 @@ def toList(s):
 
 
 def get_realigner(s):
-    if s == 'repeat':
-        return RepeatRealigner
+    if s == 'posterior':
+        return PosteriorRealigner
+    if s == 'block_posterior':
+        return BlockPosteriorRealigner        
     elif s == 'viterbi':
         return ViterbiRealigner
     elif s == 'repeat_no_blocks':
@@ -59,7 +62,7 @@ parse_arguments_capabilities_keywords = {
     'mathType': (['-m'],{'type': str, 'default': 'float', 'choices': ['LogNum', 'float'], 'help': 'Numeric type to use'}),
     'model': ([], {'type': str, 'default': 'data/models/repeatHMM.js', 'help': 'Model file'}),
     'trf': ([], {'type': toList, 'default': trf_paths, 'help': 'Location of tandem repeat finder binary'}),
-    'algorithm': ([], {'type': str, 'default': 'repeat_no_blocks', 'choices': ['repeat', 'viterbi', 'repeat_no_blocks'], 'help': 'Which realignment algorithm to use'}),
+    'algorithm': ([], {'type': str, 'default': 'block_posterior', 'choices': ['posterior', 'block_posterior', 'viterbi', 'repeat_no_blocks'], 'help': 'Which realignment algorithm to use'}),
     'bind_file': ([], {'nargs': '*', 'help': 'Replace filenames in the input_file model.', 'default': []}), 
     'bind_constant': ([], {'nargs': '*', 'help': 'Replace constants in the input_fmodelile model.', 'default': []}),
     'bind_constant_file': ([], {'nargs': '*', 'help': 'Replace constants in the input_file model.', 'default': []}),
@@ -79,7 +82,6 @@ parse_arguments_capabilities_keywords = {
     'expand_model': ([], {'action': 'store_true'}),
     'marginalize_gaps': ([], {'action': 'store_true'}),
     'one_char_annotation': ([], {'action': 'store_true'}),
-    'posterior_score': ([], {'action': 'store_true'}),
     'draw': ([], {'default': '', 'type': str, 'help': 'output file for image'}),
 }
 

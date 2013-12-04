@@ -24,7 +24,7 @@ def divide(table, probability):
     return table
 
 
-class RepeatRealigner(Realigner):
+class PosteriorRealigner(Realigner):
     '''
     classdocs
     '''
@@ -63,7 +63,7 @@ class RepeatRealigner(Realigner):
                         ny = j
                     if y == 0:
                         nx = i
-                    #table[i][j][(s, x, y)] = gapdict[(s, x, y)]
+                    # table[i][j][(s, x, y)] = gapdict[(s, x, y)]
                     table[i][j][(s, x, y)] = gapdict[(s, nx, ny)]
         return table
 
@@ -138,8 +138,8 @@ class RepeatRealigner(Realigner):
         return data[arguments:]
 
     
-    #TODO: vymysli datovy model pre rozne tracky, refaktoruj
-    #TODO: sklearn ma nejake HMMka v sebe. Mozno by sme chceli porozmyslat ci 
+    # TODO: vymysli datovy model pre rozne tracky, refaktoruj
+    # TODO: sklearn ma nejake HMMka v sebe. Mozno by sme chceli porozmyslat ci 
     #      nechceme byt kompatibilny s nimi   
     def realign(self, x, dx, y, dy, ignore=set(), positionGenerator=None):
         """Realign part of sequences."""
@@ -171,11 +171,9 @@ class RepeatRealigner(Realigner):
         )
 
 
-    @perf.runningTimeDecorator
-    def computeBacktrackTable(self, x, dx, y, positionGenerator, ignore):
+    def _computeBacktrackTable(self, x, dx, y, positionGenerator, ignore, scf):
         D = [defaultdict(lambda*_:(self.mathType(0.0), (-1, -1, -1))) for 
             _ in range(dx + 1)]
-        one_math = self.mathType(1.0)
         for _x, _y in positionGenerator:
             bestScore = self.mathType(0.0)
             bestFrom = -1, -1, -1
@@ -186,21 +184,29 @@ class RepeatRealigner(Realigner):
                     continue
                 if _x - _sdx < 0 or _y - _sdy < 0:
                     continue
-                mult = self.mathType(_sdx + _sdy)
-                if self.posterior_score:
-                    mult = one_math
                 sc = D[_x - _sdx][_y - _sdy][0] + (
-                    mult * prob
+                     prob * scf(_sdx, _sdy)
                 )
                 if sc >= bestScore or (not something):
                     bestScore = sc
                     bestFrom = fr, _sdx, _sdy
                     something = True
-            
             D[_x][_y] = bestScore, bestFrom
-        
-        #print 'BackTrack {} {} {} {} {} {}'.format(x, dx, y, dy, ignore, positionGenerator)
+        # print 'BackTrack {} {} {} {} {} {}'.format(x, dx, y, dy, ignore, positionGenerator)
         return D
+    
+    
+    @perf.runningTimeDecorator
+    def computeBacktrackTable(self, x, dx, y, positionGenerator, ignore):
+        one_math = self.mathType(1.0)
+        return self._computeBacktrackTable(
+            x,
+            dx,
+            y,
+            positionGenerator,
+            ignore,
+            lambda _sdx, _sdy: one_math
+        )
 
 
     @perf.runningTimeDecorator
@@ -209,13 +215,13 @@ class RepeatRealigner(Realigner):
         _x = dx
         _y = dy
         aln = []
-        #from tools.debug import jbug
-        #jbug(self.posteriorTable, 'Posterior table')
-        #jbug(D, 'D')
+        # from tools.debug import jbug
+        # jbug(self.posteriorTable, 'Posterior table')
+        # jbug(D, 'D')
         while _x > 0 or _y > 0:
             (_, (fr, _dx, _dy)) = D[_x][_y]
             aln.append((fr, _dx, _dy))
-            #print _x, _y, _dx, _dy
+            # print _x, _y, _dx, _dy
             assert(_dx >= 0 and _dy >= 0)
             _x -= _dx
             _y -= _dy             
@@ -241,7 +247,7 @@ class RepeatRealigner(Realigner):
         for (stateID, _dx, _dy) in aln:
             alnPartLen = max(_dx, _dy)
             if alnPartLen > 1:
-                window = ( (x + _x, x + _x + _dx),
+                window = ((x + _x, x + _x + _dx),
                            (y + _y, y + _y + _dy))
                 pG = list()
                 while index < len(positionGenerator) and \
@@ -254,7 +260,7 @@ class RepeatRealigner(Realigner):
                        positionGenerator[index][0] <= window[0][1] and \
                        window[1][0] <= positionGenerator[index][1] and \
                        positionGenerator[index][1] <= window[1][1]:
-                        pG.append((positionGenerator[index][0] - window[0][0], 
+                        pG.append((positionGenerator[index][0] - window[0][0],
                                    positionGenerator[index][1] - window[1][0]))
                     index += 1
                 ign = set(ignore)
@@ -273,6 +279,6 @@ class RepeatRealigner(Realigner):
             _x += _dx
             _y += _dy
         return [(self.X_name, X_aligned),
-                ("annotation of " + self.X_name + " and " + self.Y_name, 
+                ("annotation of " + self.X_name + " and " + self.Y_name,
                  annotation),
                 (self.Y_name, Y_aligned)]

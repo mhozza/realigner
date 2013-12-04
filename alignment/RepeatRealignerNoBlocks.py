@@ -3,12 +3,11 @@ Created on Jan 17, 2013
 
 @author: mic
 '''
-from repeats.RepeatRealigner import RepeatRealigner
+from alignment.BlockPosteriorRealigner import BlockPosteriorRealigner
 from collections import defaultdict
-from algorithm.LogNum import LogNum
 from tools import perf
 
-class RepeatRealignerNoBlocks(RepeatRealigner):
+class RepeatRealignerNoBlocks(BlockPosteriorRealigner):
     '''
     classdocs
     '''
@@ -17,11 +16,11 @@ class RepeatRealignerNoBlocks(RepeatRealigner):
         """
         Constructor
         """
-        RepeatRealigner.__init__(self)
+        BlockPosteriorRealigner.__init__(self)
     
     @perf.runningTimeDecorator
     def prepareData(self, *data):
-        data = RepeatRealigner.prepareData(self, *data)
+        data = BlockPosteriorRealigner.prepareData(self, *data)
         ignore_states = self.args.ignore_states
         resolve_indels = self.args.resolve_indels
         arguments = 0

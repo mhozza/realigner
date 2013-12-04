@@ -32,7 +32,6 @@ class Realigner(object):
         self.ignore_consensus = False
         self.marginalize_gaps = False
         self.one_char_annotation = False
-        self.posterior_score = False
         self.args = None
         '''
         Constructor
@@ -58,7 +57,6 @@ class Realigner(object):
         self.ignore_consensus = self.args.ignore_consensus 
         self.marginalize_gaps = self.args.marginalize_gaps
         self.one_char_annotation = self.args.one_char_annotation 
-        self.posterior_score = self.args.posterior_score 
 
         self.positionGenerator = \
             list(AlignmentBeamGenerator(self.alignment, self.width))
