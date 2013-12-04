@@ -4,12 +4,8 @@ from hmm.GeneralizedHMM import GeneralizedState
 from hmm.HMM import HMM
 import operator
 from tools.my_rand import rand_generator
-from tools.structtools import recursiveArgMax, structToStr
-from tools.structtools import getStructure
-from alignment.ViterbiRealigner import jsonize
-from tools.file_wrapper import Open
+from tools.structtools import recursiveArgMax
 from tools import perf
-import json
 
 class GeneralizedPairState(GeneralizedState):
         
@@ -511,7 +507,7 @@ class GeneralizedPairHMM(HMM):
                                      memoryPattern=MemoryPatterns.last(dx),
                                      positionGenerator=positionGenerator)
         r = self.getTable(X, x, dx, Y, y, dy, [self.probabilityResult], 
-                          forwardTable, backwardTable, positionGenerator)
+                          table, [], positionGenerator) #TODO tu som robil zmenu
         return r[0]
 
 
@@ -635,10 +631,9 @@ class GeneralizedPairHMM(HMM):
         perf.msg('Tables were sorted in {time} seconds.')
         perf.replace()
 
-        #with Open('forward.js', 'w') as f:
-        #    json.dump(jsonize(forwardTable), f, indent=4, sort_keys=True)
-        #with Open('backward.js', 'w') as f:
-        #    json.dump(jsonize(backwardTable), f, indent=4, sort_keys=True)
+        #from tools.debug import jbug
+        #jbug(forwardTable, filename='forward.js')
+        #jbug(backwardTable, filename='backward.js')
         
         perf.msg('Tables were saved in {time} seconds.')
         perf.replace()

@@ -4,54 +4,7 @@ from collections import defaultdict
 from alignment.Realigner import Realigner
 from algorithm.LogNum import LogNum
 from tools.file_wrapper import Open
-from itertools import cycle
-
-def jsonize(inp):
-    t = type(inp)
-    if t == type(dict()) or t == type(defaultdict()):
-        output = dict()
-        for k, v in inp.iteritems():
-            output[str(k)] = jsonize(v)
-        return output
-    elif t == type(list()):
-        output = []
-        for x in inp:
-            output.append(jsonize(x))
-        return output
-    elif t == type(tuple()):
-        output = []
-        for x in inp:
-            output.append(jsonize(x))
-        return tuple(output)
-    elif t == type(LogNum()):
-        return inp.value
-    return inp
-
-
-
-def dejsonize(inp, converter):
-    if converter != tuple:
-        return converter(inp)
-    if len(converter) == 0:
-        return inp 
-    if len(converter) == 1:
-        return converter[0](inp)
-    tp = converter[0]
-    if tp in (list, tuple) and len(converter) == 2:
-        return tp([dejsonize(x, converter[1]) for x in inp])
-    elif tp in [dict, defaultdict]:
-        key = converter[1]
-        value = lambda x: x
-        if len(converter) > 2:
-            value = converter[2]
-        return dict([(dejsonize(k, key), dejsonize(v, value))
-                     for k, v in inp.iteritems()])
-    elif tp in [list, tuple]:
-        return tp([
-            dejsonize(x, tt) for tt in zip(inp, cycle(converter[1:])) 
-        ])
-    else:
-        raise 'Unknown type:' + str(tp)
+from tools.debug import jsonize, dejsonize_struct
 
 
 class ViterbiRealigner(Realigner):
@@ -94,7 +47,7 @@ class ViterbiRealigner(Realigner):
                 with Open(self.io_files['output']['viterbi'], 'w') as f:
                     json.dump(x, f,indent=4)
         else:
-            self.table = dejsonize(
+            self.table = dejsonize_struct(
                 json.load(Open(self.io_files['input']['viterbi'])),
                 (
                     list,
@@ -118,7 +71,7 @@ class ViterbiRealigner(Realigner):
                 with Open(self.io_files['output']['viterbi_path.js'], 'w') as f:
                     json.dump(jsonize(path), f, indent=4)
         else:
-            path = dejsonize(
+            path = dejsonize_struct(
                 json.load(Open(self.io_files['input']['viterbi_path'])),
                 (
                     list,

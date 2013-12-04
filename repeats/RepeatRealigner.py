@@ -9,26 +9,11 @@ from collections import defaultdict
 from alignment.AlignmentIterator import AlignmentFullGenerator, \
                                         AlignmentPositionGenerator
 import json
-from algorithm.LogNum import LogNum
 from tools import perf
 from tools.file_wrapper import Open
 from adapters.TRFDriver import Repeat
+from tools.debug import jsonize, dejsonize
 
-def jsonize(inp):
-    t = type(inp)
-    if t == dict or t == defaultdict:
-        output = dict()
-        for k, v in inp.iteritems():
-            output[str(k)] = jsonize(v)
-        return output
-    elif t == list or t == tuple:
-        output = []
-        for x in inp:
-            output.append(jsonize(x))
-        return output
-    elif t == type(LogNum()):
-        return inp.value
-    return inp
 
 def divide(table, probability):
     if type(table) == list:
@@ -39,27 +24,6 @@ def divide(table, probability):
     else:
         return table / probability
     return table
-
-def strtokey(x):
-    x = x.strip('()')
-    a = [int(l) for l in x.split(',')]
-    if len(a) == 1:
-        return a[0]
-    return tuple(a)
-                            
-def dejsonize(inp, mathType=float):
-    if type(inp) == dict or type(inp) == defaultdict:
-        out = defaultdict(lambda *x: defaultdict(mathType))
-        for k, v in inp.iteritems():
-            out[strtokey(k)] = dejsonize(v)
-        return out
-    elif type(inp) == list:
-        return map(dejsonize, inp)
-    else:
-        if mathType != float:
-            return mathType(inp, log=False)
-        else:
-            return inp
 
 
 class RepeatRealigner(Realigner):

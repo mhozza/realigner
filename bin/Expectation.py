@@ -7,32 +7,11 @@ import sys
 from alignment.AlignmentIterator import AlignmentBeamGenerator
 import json
 from repeats.RepeatGenerator import RepeatGenerator
-from collections import defaultdict
-from algorithm.LogNum import LogNum
+from tools.debug import jsonize_to_list
 
 # aj tak potrebujem pridať nejaký "realigner", lebo tam potrebujem pridat vselijake dalsie data
 # trenovatko si zoberie consenzus s hintov. Nebude to sice ciste, ale bude to funkcne.
 # Este by sa dalo zistit pravdepodobnosti a podla toho to zarovnat. To je ale grc, ale asi to tak spravim:-(
-def jsonize(inp):
-    t = type(inp)
-    if t == dict or t == defaultdict:
-        output = list()
-        for k, v in inp.iteritems():
-            output.append((jsonize(k), jsonize(v)))
-        return output
-    elif t == list:
-        output = []
-        for x in inp:
-            output.append(jsonize(x))
-        return output
-    elif t == type(LogNum()):
-        return inp.value
-    elif t == tuple:
-        output = []
-        for x in inp:
-            output.append(jsonize(x))
-        return tuple(output)
-    return inp
 
 def expectation_generator(args, model, alignment_filename, annotations):
     for aln in Fasta.load(
@@ -76,9 +55,12 @@ def expectation_generator(args, model, alignment_filename, annotations):
 def compute_expectations(args, model, output_filename, alignment_filename):
     annotations = compute_annotations(args, alignment_filename)
     with Open(output_filename, 'w') as fp:
-        json.dump(jsonize(list(expectation_generator(args, model, 
-                                                     alignment_filename,
-                                                     annotations))),
+        json.dump(jsonize_to_list(list(expectation_generator(
+            args,
+            model, 
+            alignment_filename,
+            annotations,
+        ))),
                   fp ,indent=4)
 
 
