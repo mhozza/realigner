@@ -1,5 +1,4 @@
 import json
-from repeats.RepeatGenerator import RepeatGenerator
 from alignment.Realigner import Realigner
 from algorithm.LogNum import LogNum
 from tools.file_wrapper import Open

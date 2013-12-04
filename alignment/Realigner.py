@@ -27,8 +27,7 @@ class Realigner(object):
         self.positionGenerator = None
         self.repeat_width = None
         self.cons_count = None
-        self.marginalize_gaps = False
-        self.one_char_annotation = False
+        self.posterior_processors = []
         self.args = None
         '''
         Constructor
@@ -49,8 +48,7 @@ class Realigner(object):
         }
         self.repeat_width = self.args.repeat_width
         self.cons_count = self.args.cons_count
-        self.marginalize_gaps = self.args.marginalize_gaps
-        self.one_char_annotation = self.args.one_char_annotation 
+        self.posterior_processors = self.args.posterior_processors 
 
         self.positionGenerator = \
             list(AlignmentBeamGenerator(self.alignment, self.width))

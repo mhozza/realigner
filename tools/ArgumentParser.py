@@ -4,7 +4,9 @@ import sys
 from adapters.TRFDriver import trf_paths
 from algorithm.LogNum import LogNum
 from alignment.BlockPosteriorRealigner import BlockPosteriorRealigner
-from alignment.PosteriorRealigner import PosteriorRealigner
+from alignment.PosteriorRealigner import PosteriorRealigner, \
+                                         marginalize_gaps_processor, \
+                                         one_char_processor
 from alignment.ViterbiRealigner import ViterbiRealigner
 from hmm.HMMLoader import HMMLoader
 
@@ -30,6 +32,15 @@ def get_realigner(s):
         return ViterbiRealigner
     else:
         raise('Unknown type')
+
+
+def get_posterior_processor(s):
+    if s == 'marginalize_gaps':
+        return marginalize_gaps_processor
+    elif s == 'one_char':
+        return one_char_processor
+    else:
+        raise('Unknown posterior processor type')
 
 
 def get_model(args):
@@ -72,8 +83,7 @@ parse_arguments_capabilities_keywords = {
     'intermediate_input_files': ([], {'help': 'Comma separated' + 'list of key value pairs: "key:value". This files ' + 'used to skip load precomputed data in algorithms.', 'type': io_to_dict, 'default': {}}),
     'intermediate_output_files': ([], {'help': 'Comma separated' + 'list of key value pairs: "key:value". This files ' + 'used to skip store precomputed data in algorithms.', 'type': io_to_dict, 'default': {}}),
     'expand_model': ([], {'action': 'store_true'}),
-    'marginalize_gaps': ([], {'action': 'store_true'}),
-    'one_char_annotation': ([], {'action': 'store_true'}),
+    'posterior_processors': ([], {'help': 'How to process posterior table, comma separated list of: marginalize_gaps,one_char ', 'type': lambda x: set(x.split(',') if x != '' else []) , 'default': ''}),
     'draw': ([], {'default': '', 'type': str, 'help': 'output file for image'}),
 }
 
@@ -121,5 +131,9 @@ def parse_arguments(
     parsed_arg.model = get_model(parsed_arg)
     # ====== Get Realigner =====================================================
     parsed_arg.algorithm = get_realigner(parsed_arg.algorithm)
+    parsed_arg.posterior_processors = map(
+        get_posterior_processor,
+        parsed_arg.posterior_processors
+    )
     return parsed_arg
     

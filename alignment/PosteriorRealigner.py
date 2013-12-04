@@ -24,6 +24,79 @@ def divide(table, probability):
     return table
 
 
+@perf.runningTimeDecorator
+def marginalize_gaps_processor(realigner, table):
+    gapdict = defaultdict(lambda *_: realigner.mathType(0.0))
+    for i in range(len(table)):
+        for j, D in table[i].iteritems():
+            for (s, x, y), p in D.iteritems():
+                if x != 0 and y != 0:
+                    continue
+                if x == 0 and y == 0:
+                    continue
+                if x == 0:
+                    y = j
+                if y == 0:
+                    x = i
+                gapdict[(s, x, y)] += p
+    for i in range(len(table)):
+        for j, D in table[i].iteritems():
+            for (s, x, y), p in D.iteritems():
+                if x != 0 and y != 0:
+                    continue
+                if x == 0 and y == 0:
+                    continue
+                nx = 0
+                ny = 0
+                if x == 0:
+                    ny = j
+                if y == 0:
+                    nx = i
+                # table[i][j][(s, x, y)] = gapdict[(s, x, y)]
+                table[i][j][(s, x, y)] = gapdict[(s, nx, ny)]
+    return table
+
+
+@perf.runningTimeDecorator
+def apply_annotation(realigner, table, annotation):
+    new = [defaultdict(
+        lambda *_: defaultdict(lambda *_: realigner.mathType(0.0))
+    ) for _ in range(len(table))]
+    for i in range(len(table)):
+        for j, D in table[i].iteritems():
+            for (s, x, y), p in D.iteritems():
+                new[i][j][(annotation[s], x, y)] += p
+    return new
+
+
+@perf.runningTimeDecorator
+def one_char_annotation(realigner):
+    annotation = []
+    d = dict()
+    for i in range(len(realigner.model.states)):
+        nm = realigner.model.states[i].stateName
+        if nm == 'InsertX':
+            c = 'X'
+        elif nm == 'InsertY':
+            c = 'T'
+        else:
+            c = nm[0]
+        if c not in d:
+            d[c] = i
+        ind = d[c]
+        annotation.append(ind)
+    return annotation
+
+
+@perf.runningTimeDecorator
+def one_char_processor(realigner, table):
+    annotation = one_char_annotation(realigner)
+    return apply_annotation(
+        realigner,
+        table,
+        annotation
+    )
+
 class PosteriorRealigner(Realigner):
     '''
     classdocs
@@ -35,70 +108,7 @@ class PosteriorRealigner(Realigner):
         """
         self.posteriorTable = None
    
-    @perf.runningTimeDecorator
-    def marginalizeGaps(self, table):
-        gapdict = defaultdict(lambda *_: self.mathType(0.0))
-        for i in range(len(table)):
-            for j, D in table[i].iteritems():
-                for (s, x, y), p in D.iteritems():
-                    if x != 0 and y != 0:
-                        continue
-                    if x == 0 and y == 0:
-                        continue
-                    if x == 0:
-                        y = j
-                    if y == 0:
-                        x = i
-                    gapdict[(s, x, y)] += p
-        for i in range(len(table)):
-            for j, D in table[i].iteritems():
-                for (s, x, y), p in D.iteritems():
-                    if x != 0 and y != 0:
-                        continue
-                    if x == 0 and y == 0:
-                        continue
-                    nx = 0
-                    ny = 0
-                    if x == 0:
-                        ny = j
-                    if y == 0:
-                        nx = i
-                    # table[i][j][(s, x, y)] = gapdict[(s, x, y)]
-                    table[i][j][(s, x, y)] = gapdict[(s, nx, ny)]
-        return table
-
-
-    @perf.runningTimeDecorator
-    def applyAnnotation(self, table, annotation):
-        new = [defaultdict(
-            lambda *_: defaultdict(lambda *_: self.mathType(0.0))
-        ) for _ in range(len(table))]
-        for i in range(len(table)):
-            for j, D in table[i].iteritems():
-                for (s, x, y), p in D.iteritems():
-                    new[i][j][(annotation[s], x, y)] += p
-        return new
-
-
-    @perf.runningTimeDecorator
-    def oneCharAnnotation(self):
-        annotation = []
-        d = dict()
-        for i in range(len(self.model.states)):
-            nm = self.model.states[i].stateName
-            if nm == 'InsertX':
-                c = 'X'
-            elif nm == 'InsertY':
-                c = 'T'
-            else:
-                c = nm[0]
-            if c not in d:
-                d[c] = i
-            ind = d[c]
-            annotation.append(ind)
-        return annotation
-    
-      
+   
     @perf.runningTimeDecorator
     def computePosterior(self):
         if 'posterior' not in self.io_files['input']:
@@ -143,16 +153,8 @@ class PosteriorRealigner(Realigner):
     #      nechceme byt kompatibilny s nimi   
     def realign(self, x, dx, y, dy, ignore=set(), positionGenerator=None):
         """Realign part of sequences."""
-        # TODO: split this into multiple function
-        if self.one_char_annotation:
-            annotation = self.oneCharAnnotation()
-            self.posteriorTable = self.applyAnnotation(
-                self.posteriorTable,
-                annotation
-            )
-        if self.marginalize_gaps:
-            self.posteriorTable = self.marginalizeGaps(self.posteriorTable)
-
+        for processor in self.posterior_processors:
+            self.posteriorTable = processor(self, self.posteriorTable)
         if positionGenerator == None:
             if self.positionGenerator != None:
                 positionGenerator = self.positionGenerator
