@@ -15,22 +15,6 @@ class ViterbiRealigner(Realigner):
    
    
     @perf.runningTimeDecorator
-    def computeRepeatHints(self):
-        RX = RepeatGenerator(None, self.repeat_width)
-        RY = RepeatGenerator(None, self.repeat_width)
-        for rt, ch in [('trf', 'R'), ('original_repeats', 'r'), ('hmm', 'h')]:
-            if rt in self.annotations:
-                RX.addRepeats(self.annotations[rt][self.X_name])
-                RY.addRepeats(self.annotations[rt][self.Y_name])
-                self.drawer.add_repeat_finder_annotation('X', ch, self.annotations[rt][self.X_name], (255, 0, 0, 255))
-                self.drawer.add_repeat_finder_annotation('Y', ch, self.annotations[rt][self.Y_name], (255, 0, 0, 255))
-        
-        RX.buildRepeatDatabase()
-        RY.buildRepeatDatabase()
-        self.model.states[self.model.statenameToID['Repeat']].addRepeatGenerator(RX, RY)
-
-
-    @perf.runningTimeDecorator
     def computeViterbiTable(self):
         if 'viterbi' not in self.io_files['input']:
             self.table = self.model.getViterbiTable(self.X, 0, len(self.X), 
@@ -62,10 +46,6 @@ class ViterbiRealigner(Realigner):
         data = Realigner.prepareData(self, *data)
         arguments = 0
         
-        # Add repeats
-        if 'Repeat' in self.model.statenameToID:
-            self.computeRepeatHints()
-                    
         self.computeViterbiTable()
         return data[arguments:]
 

@@ -148,6 +148,9 @@ class State(ConfigObject):
 
     def expand(self, _=None):
         return None
+    
+    def computeHints(self, realigner):
+        return None
 
 class HMM(ConfigObject):
     

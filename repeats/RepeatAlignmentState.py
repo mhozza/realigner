@@ -10,6 +10,11 @@ from random import shuffle
 from hmm.hmm_transform import double_track_hmm
 from copy import deepcopy
 from hmm.GeneralizedHMM import GeneralizedState
+from repeats.RepeatGenerator import RepeatGenerator
+from adapters.TRFDriver import Repeat
+from tools import perf
+
+
 
 class RepeatProfileFactory:
             
@@ -78,8 +83,8 @@ class RepeatProfileFactory:
     
     def clearCache(self):
         self.cache = dict()
+        
     
-
 class PairRepeatState(State):
     
     def __init__(self, *p):
@@ -595,3 +600,87 @@ class PairRepeatState(State):
         st.load(template)
         states.append(st)
         return double_track_hmm(states, transitions, init, end, self.mathType)
+    
+    
+    @perf.runningTimeDecorator
+    def precomputeRepeatGenerators(self, realigner):
+        RX = RepeatGenerator(
+            None,
+            realigner.repeat_width,
+            realigner.cons_count,
+        )
+        RY = RepeatGenerator(
+            None,
+            realigner.repeat_width,
+            realigner.cons_count
+        )
+        for rt, ch in [('trf', 'R'), ('original_repeats', 'r'), ('hmm', 'h')]:
+            if rt in realigner.annotations:
+                RX.addRepeats(realigner.annotations[rt][realigner.X_name])
+                RY.addRepeats(realigner.annotations[rt][realigner.Y_name])
+                realigner.drawer.add_repeat_finder_annotation(
+                    'X',
+                    ch,
+                    realigner.annotations[rt][realigner.X_name],
+                    (255, 0, 0, 255)
+                )
+                realigner.drawer.add_repeat_finder_annotation(
+                    'Y',
+                    ch,
+                    realigner.annotations[rt][realigner.Y_name],
+                    (255, 0, 0, 255)
+                )
+        
+        if 'trf_cons' in realigner.annotations:
+            x_len = len(realigner.X)
+            y_len = len(realigner.Y)
+            cons = list((
+                realigner.annotations['trf_cons'][realigner.X_name] |
+                realigner.annotations['trf_cons'][realigner.Y_name]
+            ))
+            if len(cons) > 0:
+                RX.addRepeats([
+                    Repeat(i, j, 0, cons[i % len(cons)], "") 
+                    for i in range(x_len) for j in range(i + 1, x_len)
+                ])
+                RY.addRepeats([
+                    Repeat(i, j, 0, cons[i % len(cons)], "")
+                    for i in range(y_len) for j in range(i + 1, y_len)
+                ])
+        RX.buildRepeatDatabase()
+        RY.buildRepeatDatabase()
+        self.addRepeatGenerator(RX, RY)
+        self.merge_consenus = realigner.merge_consensus
+        self.correctly_merge_consensus = realigner.correctly_merge_consensus
+
+
+    @perf.runningTimeDecorator
+    def precomputeEmissionCache(self, realigner):
+        dx = len(realigner.X)
+        dy = len(realigner.Y)
+        x, y = 0, 0
+        if self.merge_consensus or self.correctly_merge_consensus:
+            for _x in range(dx + 1):
+                max_range = max([0] + list(self.repeatGeneratorX.getHints(x + _x)))
+                self.emissionX(realigner.X, x + _x, max_range, self.cons_list)
+            
+            for _y in range(dy + 1):
+                max_range = max([0] + list(self.repeatGeneratorY.getHints(y + _y)))
+                self.emissionY(realigner.Y, y + _y, max_range, self.cons_list)
+        
+        else:
+            for cons in self.cons_list:
+                for _x in range(dx + 1):
+                    max_range = max([0] + list(self.repeatGeneratorX.getHints(x + _x)))
+                    self.emissionX(realigner.X, x + _x, max_range, cons)
+                
+                for _y in range(dy + 1):
+                    max_range = max([0] + list(self.repeatGeneratorY.getHints(y + _y)))
+                    self.emissionY(realigner.Y, y + _y, max_range, cons)
+
+
+    @perf.runningTimeDecorator
+    def computeHints(self, realigner):
+        State.computeHints(self, realigner)
+        self.precomputeRepeatGenerators(realigner)
+        self.precomputeEmissionCache(realigner)

@@ -594,27 +594,6 @@ class GeneralizedPairHMM(HMM):
         if positionGenerator != None:
             positionGenerator = list(positionGenerator)
         perf.push()
-        if 'Repeat' in self.statenameToID:
-            state = self.states[self.statenameToID['Repeat']]
-            # Cache all stuff 
-            cons_list = state.cons_list
-            if state.merge_consensus or state.correctly_merge_consensus:
-                for _x in range(dx + 1):
-                    max_range = max([0] + list(state.repeatGeneratorX.getHints(x + _x)))
-                    state.emissionX(X, x + _x, max_range, cons_list)
-                for _y in range(dy + 1):
-                    max_range = max([0] + list(state.repeatGeneratorY.getHints(y + _y)))
-                    state.emissionY(Y, y + _y, max_range, cons_list)
-            else:
-                for cons in cons_list:
-                    for _x in range(dx + 1):
-                        max_range = max([0] + list(state.repeatGeneratorX.getHints(x + _x)))
-                        state.emissionX(X, x + _x, max_range, cons)
-                    for _y in range(dy + 1):
-                        max_range = max([0] + list(state.repeatGeneratorY.getHints(y + _y)))
-                        state.emissionY(Y, y + _y, max_range, cons)
-        perf.msg('Emission cache was filled in {time} seconds.')
-        perf.replace()
         if forwardTable == None:
             forwardTable = self.getForwardTableGenerator(X, x, dx, Y, y, dy,
                 positionGenerator=positionGenerator)

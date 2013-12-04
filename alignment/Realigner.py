@@ -12,7 +12,6 @@ class Realigner(object):
     classdocs
     '''
 
-
     def __init__(self):
         self.X = None
         self.Y = None
@@ -63,9 +62,10 @@ class Realigner(object):
 
         self.positionGenerator = \
             list(AlignmentBeamGenerator(self.alignment, self.width))
-        if 'Repeat' in self.model.statenameToID:
-            self.model.states[self.model.statenameToID['Repeat']].merge_consensus = self.merge_consensus
-            self.model.states[self.model.statenameToID['Repeat']].correctly_merge_consensus = self.correctly_merge_consensus
+         
+        for i in range(len(self.model.states)):
+            self.model.states[i].computeHints(self)
+
         return data[arguments:]
     
     def setDrawer(self, drawer):

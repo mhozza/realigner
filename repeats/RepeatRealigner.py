@@ -4,14 +4,12 @@ Created on Jan 17, 2013
 @author: mic
 '''
 from alignment.Realigner import Realigner
-from repeats.RepeatGenerator import RepeatGenerator
 from collections import defaultdict
 from alignment.AlignmentIterator import AlignmentFullGenerator, \
                                         AlignmentPositionGenerator
 import json
 from tools import perf
 from tools.file_wrapper import Open
-from adapters.TRFDriver import Repeat
 from tools.debug import jsonize, dejsonize
 
 
@@ -69,6 +67,7 @@ class RepeatRealigner(Realigner):
                     table[i][j][(s, x, y)] = gapdict[(s, nx, ny)]
         return table
 
+
     @perf.runningTimeDecorator
     def applyAnnotation(self, table, annotation):
         new = [defaultdict(
@@ -100,49 +99,6 @@ class RepeatRealigner(Realigner):
         return annotation
     
       
-    @perf.runningTimeDecorator
-    def computeRepeatHints(self):
-        RX = RepeatGenerator(None, self.repeat_width, self.cons_count)
-        RY = RepeatGenerator(None, self.repeat_width, self.cons_count)
-        for rt, ch in [('trf', 'R'), ('original_repeats', 'r'), ('hmm', 'h')]:
-            if rt in self.annotations:
-                RX.addRepeats(self.annotations[rt][self.X_name])
-                RY.addRepeats(self.annotations[rt][self.Y_name])
-                self.drawer.add_repeat_finder_annotation(
-                    'X',
-                    ch,
-                    self.annotations[rt][self.X_name],
-                    (255, 0, 0, 255)
-                )
-                self.drawer.add_repeat_finder_annotation(
-                    'Y',
-                    ch,
-                    self.annotations[rt][self.Y_name],
-                    (255, 0, 0, 255)
-                )
-        
-        if 'trf_cons' in self.annotations:
-            x_len = len(self.X)
-            y_len = len(self.Y)
-            cons = list((
-                    self.annotations['trf_cons'][self.X_name] | 
-                    self.annotations['trf_cons'][self.Y_name]))
-            if len(cons) > 0:
-                RX.addRepeats([
-                    Repeat(i, j, 0, cons[i % len(cons)], "") 
-                    for i in range(x_len) for j in range(i + 1, x_len)
-                ])
-                RY.addRepeats([
-                    Repeat(i, j, 0, cons[i % len(cons)], "")
-                    for i in range(y_len) for j in range(i + 1, y_len)
-                ])
-        RX.buildRepeatDatabase()
-        RY.buildRepeatDatabase()
-        self.model.states[
-            self.model.statenameToID['Repeat']
-        ].addRepeatGenerator(RX, RY)
-
-
     @perf.runningTimeDecorator
     def computePosterior(self):
         if 'posterior' not in self.io_files['input']:
@@ -177,10 +133,7 @@ class RepeatRealigner(Realigner):
     def prepareData(self, *data):
         data = Realigner.prepareData(self, *data)
         arguments = 0
-        
-        if 'Repeat' in self.model.statenameToID:
-            self.computeRepeatHints()
-
+       
         self.computePosterior()       
         return data[arguments:]
 
