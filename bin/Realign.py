@@ -58,7 +58,6 @@ def compute_annotations(args, alignment_filename, model):
             for seq_name in repeats:
                 cons = set([repeat.consensus for repeat in repeats[seq_name]])
                 annotations['trf_cons'][seq_name] = cons
-            print annotations
     
     if 'hmm' in args.tracks:
         paths = None;

@@ -8,7 +8,7 @@ import math
 from random import shuffle
 from hmm.hmm_transform import double_track_hmm
 from copy import deepcopy
-from hmm.GeneralizedHMM import GeneralizedState
+from hmm.PairHMM import GeneralizedPairState
 from repeats.RepeatGenerator import RepeatGenerator
 from adapters.TRFDriver import Repeat
 from tools import perf
@@ -514,54 +514,60 @@ class PairRepeatState(State):
             model = self.factory.getHMM(consensus)
             probability = self.consensusDistribution[consensus]
             total += probability
-            transitions.extend([
-                {
-                    'from': init,
-                    'to': prefix + 'Init',
-                    'prob': probability,
-                },
-                {
-                    'from': prefix + 'End',
-                    'to': end,
-                    'prob': 1.0,
-                },
-            ])
             json = model.toJSON()
+            new_init = prefix + 'Init'
+            new_end = prefix + 'End'
             st = map(deepcopy, model.states)
             for i in range(len(st)):
                 st[i].stateName = prefix + st[i].stateName
-            states.extend(st)
-            transitions.extend(map(
+            tr = map(
                 lambda x: {
                     'from': prefix + x['from'],
                     'to': prefix + x['to'],
                     'prob': x['prob'],
                 },
                 json['transitions'],
-            ))
+            )
+            st, tr, new_init, new_end = double_track_hmm(
+                st, tr, new_init, new_end, self.mathType
+            )
+            transitions.extend(tr)
+            states.extend(st)
+            transitions.extend([
+                {
+                    'from': init,
+                    'to': new_init,
+                    'prob': probability,
+                },
+                {
+                    'from': new_end,
+                    'to': end,
+                    'prob': 1.0,
+                },
+            ])
         #transitions.append({
         #    'from': init,
         #    'to': init,
         #    'prob': 1.0 - total,
         #})
         template = {
-            '__name__': 'GeneralizedState',
+            '__name__': 'GeneralizedPairState',
             'name': init,
             'startprob': 1.0,
             'endprob': 0.0,
-            'emission': [('', self.mathType(1.0))],
-            'durations': [(0, self.mathType(1.0))],
+            'emission': [(('', ''), self.mathType(1.0))],
+            'durations': [((0, 0), self.mathType(1.0))],
         }
-        st = GeneralizedState(self.mathType)
+        st = GeneralizedPairState(self.mathType)
         st.load(template)
         states.append(st)
         template['name'] = end
         template['startprob'] = 0.0
         template['endprob'] = 1.0
-        st = GeneralizedState(self.mathType)
+        st = GeneralizedPairState(self.mathType)
         st.load(template)
         states.append(st)
-        return double_track_hmm(states, transitions, init, end, self.mathType)
+        return states, transitions, init, end
     
     
     @perf.runningTimeDecorator
