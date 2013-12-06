@@ -164,6 +164,7 @@ class HMM(ConfigObject):
         self.__reverse_transitions = list()
         self.transitionsSampler = None
         self.initStateSampler = None
+        self.io_files = {'input': {}, 'output': {}}
     
     
     def sampleTransition(self, state):
@@ -410,3 +411,6 @@ class HMM(ConfigObject):
             f.write(model_to_dot(new))
 
         return new
+
+    def add_io_files(self, io_files):
+        self.io_files = io_files

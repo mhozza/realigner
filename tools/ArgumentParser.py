@@ -129,6 +129,12 @@ def parse_arguments(
     
     # ====== Load model ========================================================
     parsed_arg.model = get_model(parsed_arg)
+    io_files = {'input': {}, 'output': {}}
+    if 'intermediate_input_files' in keywords:
+        io_files['input'] = parsed_arg.intermediate_output_files
+    if 'intermediate_output_files' in keywords:
+        io_files['output'] = parsed_arg.intermediate_output_files
+    parsed_arg.model.add_io_files(io_files)
     # ====== Get Realigner =====================================================
     parsed_arg.algorithm = get_realigner(parsed_arg.algorithm)
     parsed_arg.posterior_processors = map(

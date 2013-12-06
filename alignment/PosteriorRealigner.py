@@ -10,7 +10,7 @@ from alignment.AlignmentIterator import AlignmentFullGenerator, \
 import json
 from tools import perf
 from tools.file_wrapper import Open
-from tools.debug import jsonize, dejsonize
+from tools.debug import jcpoint
 
 
 def divide(table, probability):
@@ -39,6 +39,12 @@ def marginalize_gaps_processor(realigner, table):
                 if y == 0:
                     x = i
                 gapdict[(s, x, y)] += p
+    jcpoint(
+        lambda: gapdict,
+        'gapdict',
+        realigner.io_files,
+    )
+    # xxx = defaultdict(list)
     for i in range(len(table)):
         for j, D in table[i].iteritems():
             for (s, x, y), p in D.iteritems():
@@ -46,14 +52,19 @@ def marginalize_gaps_processor(realigner, table):
                     continue
                 if x == 0 and y == 0:
                     continue
-                nx = 0
-                ny = 0
+                nx = x
+                ny = y
                 if x == 0:
                     ny = j
                 if y == 0:
                     nx = i
-                # table[i][j][(s, x, y)] = gapdict[(s, x, y)]
+                # xxx[(s, nx, ny)].append(str(((i, j), (s, x, y))))
                 table[i][j][(s, x, y)] = gapdict[(s, nx, ny)]
+    # jcpoint(
+    #     lambda: xxx,
+    #     'gaplist',
+    #     realigner.io_files,
+    # )
     return table
 
 
@@ -111,20 +122,24 @@ class PosteriorRealigner(Realigner):
    
     @perf.runningTimeDecorator
     def computePosterior(self):
-        if 'posterior' not in self.io_files['input']:
-            self.posteriorTable, probability = self.model.getPosteriorTable(
+        self.posteriorTable = jcpoint(
+            lambda: divide(*self.model.getPosteriorTable(
                 self.X, 0, len(self.X),
                 self.Y, 0, len(self.Y),
                 positionGenerator=self.positionGenerator,
-            )
-            self.posteriorTable = divide(self.posteriorTable, probability)
-            x = jsonize(self.posteriorTable)
-            if 'posterior' in self.io_files['output']:
-                with Open(self.io_files['output']['posterior'], 'w') as f:
-                    json.dump(x, f, indent=4, sort_keys=True)
-        else:
-            with open(self.io_files['input']['posterior'], 'r') as f:
-                self.posteriorTable = dejsonize(json.load(f), self.mathType)
+            )),
+            'posterior',
+            self.io_files,
+            self.mathType,
+        )
+
+
+    @perf.runningTimeDecorator
+    def prepareData(self, *data):
+        data = Realigner.prepareData(self, *data)
+        arguments = 0
+       
+        self.computePosterior()       
         self.drawer.add_borders_line(
             100,
             (0, 255, 255, 255),
@@ -137,14 +152,6 @@ class PosteriorRealigner(Realigner):
             1,
             list(AlignmentPositionGenerator(self.alignment))
         )
-
-
-    @perf.runningTimeDecorator
-    def prepareData(self, *data):
-        data = Realigner.prepareData(self, *data)
-        arguments = 0
-       
-        self.computePosterior()       
         return data[arguments:]
 
     
@@ -155,6 +162,11 @@ class PosteriorRealigner(Realigner):
         """Realign part of sequences."""
         for processor in self.posterior_processors:
             self.posteriorTable = processor(self, self.posteriorTable)
+        jcpoint(
+            lambda: self.posteriorTable,
+            'processed',
+            self.io_files,
+        )
         if positionGenerator == None:
             if self.positionGenerator != None:
                 positionGenerator = self.positionGenerator
@@ -217,9 +229,7 @@ class PosteriorRealigner(Realigner):
         _x = dx
         _y = dy
         aln = []
-        # from tools.debug import jbug
-        # jbug(self.posteriorTable, 'Posterior table')
-        # jbug(D, 'D')
+        jcpoint(lambda: D, 'D', self.io_files)
         while _x > 0 or _y > 0:
             (_, (fr, _dx, _dy)) = D[_x][_y]
             aln.append((fr, _dx, _dy))

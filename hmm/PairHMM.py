@@ -6,6 +6,7 @@ import operator
 from tools.my_rand import rand_generator
 from tools.structtools import recursiveArgMax
 from tools import perf
+from tools.debug import jcpoint
 
 class GeneralizedPairState(GeneralizedState):
         
@@ -594,27 +595,33 @@ class GeneralizedPairHMM(HMM):
         if positionGenerator != None:
             positionGenerator = list(positionGenerator)
         perf.push()
-        if forwardTable == None:
-            forwardTable = self.getForwardTableGenerator(X, x, dx, Y, y, dy,
-                positionGenerator=positionGenerator)
+        forwardTable = jcpoint(
+            lambda:
+                forwardTable 
+                if forwardTable != None else
+                self.getForwardTableGenerator(X, x, dx, Y, y, dy,
+                    positionGenerator=positionGenerator),
+            'forward_table',
+            self.io_files, 
+            self.mathType,
+        )
         perf.msg('Forward table was computed in {time} seconds.')
         perf.replace()
-        if backwardTable == None:
-            backwardTable = self.getBackwardTable(X, x, dx, Y, y, dy,
-                positionGenerator=positionGenerator)
+        backwardTable = jcpoint(
+            lambda:
+                backwardTable
+                if backwardTable != None else
+                self.getBackwardTable(X, x, dx, Y, y, dy,
+                    positionGenerator=positionGenerator),
+            'backward_table',
+            self.io_files,
+            self.mathType,
+        )
         perf.msg('Backward table was computed in {time} seconds.')
         perf.replace()
         # Sort tables by first element (just in case)    
-        #sorted(forwardTable,key=lambda (x,_) : x)
         sorted(backwardTable,key=lambda (x,_) : x)
         perf.msg('Tables were sorted in {time} seconds.')
-        perf.replace()
-
-        #from tools.debug import jbug
-        #jbug(forwardTable, filename='forward.js')
-        #jbug(backwardTable, filename='backward.js')
-        
-        perf.msg('Tables were saved in {time} seconds.')
         perf.replace()
 
         # Convert forward table into list

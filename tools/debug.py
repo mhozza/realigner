@@ -3,6 +3,7 @@ from collections import defaultdict
 from itertools import cycle
 from tools.file_wrapper import Open
 
+import inspect
 import json
 
 
@@ -104,3 +105,22 @@ def jbug(structure, text=None, filename=None):
             f.write(dump)
     else:          
         print text + ': ' + dump
+
+def jcpoint(
+    structure_generator,
+    file_type,
+    io_files,
+    mathType=float,
+    serializer=jsonize,
+    deserializer=dejsonize,
+):
+    if file_type in io_files['input']:
+        with Open(io_files['input'][file_type], 'r') as f:
+            return deserializer(json.load(f),  mathType)
+    structure = structure_generator()
+    if file_type in io_files['output']:
+        if inspect.isgenerator(structure):
+            structure = list(structure)
+        with Open(io_files['output'][file_type], 'w') as f:
+            json.dump(serializer(structure), f, sort_keys=True, indent=4)
+    return structure
