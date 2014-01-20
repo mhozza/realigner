@@ -2,20 +2,13 @@ __author__ = 'michal'
 
 from hack.AnnotationLoader import AnnotationLoader
 from tools.Exceptions import ParseException
+import constants
 
 
 class DataPreparer:
     def __init__(self, window=1):
         self._window = window
-        gap_val = -1.0  # hodnota kotrou sa ma nahradit '-'
-        self.m = {
-            'A': 0.0,
-            'C': 1.0,
-            'G': 2.0,
-            'T': 3.0,
-            'N': 4.0,
-            '-': gap_val,
-        }
+        self.m = constants.bases
         self._cache = dict()
 
     def _get_window_range(self, position):

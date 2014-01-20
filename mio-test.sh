@@ -12,11 +12,12 @@ time $PYTHON bin/Realign.py \
 	--mathType LogNum \
 	--beam_width 30 \
 	--sequence_regexp $3 $4 \
-	--model data/models/ClassificationHMM.js\
+	    --model data/models/ClassificationHMM.js\
 	--algorithm viterbi\
 	$1\
 	$2
 
 	# --model data/models/SimpleHMM.js\
+	# --draw $2.png\
 	# working_dir_tmp/sampled_alignments/{id}.fa \
 	# working_dir_tmp/sampled_alignments/{id}.realigned.fa \

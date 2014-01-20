@@ -13,7 +13,7 @@ from tools.Exceptions import ParseException
 
 import itertools
 from hack.AnnotationLoader import AnnotationLoader
-
+import constants
 
 class AnnotatedBase:
     def __init__(self):
@@ -27,13 +27,11 @@ class AnnotatedBase:
         self.position = ab.position
 
     def data(self):
-        gap_val = -1.0  # hodnota kotrou sa ma nahradit '-'
-
-        m = {'A': 0.0, 'C': 1.0, 'G': 2.0, 'T': 3.0, 'N': 4.0, '-': gap_val}
+        m = constants.bases
         res = [m[self.base]]
         for i in self.annotations.values():
             if i == '-':
-                res.append(gap_val)
+                res.append(None)
             else:
                 res.append(float(i))
         return res

@@ -487,6 +487,7 @@ class GeneralizedPairHMM(HMM):
                 table[_x][_y],
                 selector=lambda x, y: max(x, y, key=lambda z, _: z)
             )
+
         path = [(stateID, (_x, _y), (_sdx, _sdy), prob)]
         stateID = previousStateId
         while stateID >= 0:

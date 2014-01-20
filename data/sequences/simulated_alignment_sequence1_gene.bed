@@ -1,11 +1,4 @@
 track type="bed" converted_by="track.serialize"
-chr1	603	610	gene
-chr1	611	619	gene
-chr1	620	622	gene
-chr1	623	628	gene
-chr1	629	641	gene
-chr1	642	653	gene
-chr1	654	658	gene
-chr1	659	660	gene
-chr1	661	672	gene
-chr1	673	677	gene
+chr1	2	4	gene
+chr1	5	9	gene
+chr1	10	17	gene

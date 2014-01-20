@@ -52,7 +52,9 @@ class PairClassifier:
                 data, target = (list(), list())
                 sequences = dl.loadDirectory(self.training_data_dir)
                 for _, s_x, a_x, s_y, a_y in sequences:
-                    d, t = dl.prepareTrainingData(s_x, a_x, s_y, a_y, self.preparer)
+                    d, t = dl.prepareTrainingData(
+                        s_x, a_x, s_y, a_y, self.preparer
+                    )
                     data += d
                     target += t
                 self.fit(data, target)
@@ -106,7 +108,6 @@ class PairClassifier:
 
         return self.predict(prepared_data, False)
 
-
     def predict(self, data, memoization=None):
         d = None
         if memoization is None:
@@ -116,9 +117,6 @@ class PairClassifier:
             if d in self.mem:
                 return self.mem[d]
 
-            #    	return self.classifier.predict(data)
-            #        hits = array([tree.predict(data) for tree in self.classifier.estimators_])
-            #        res = [mean(hits[:,i]) for i in range(len(data))]
         res = self.classifier.predict_proba(data)[:, 1]
         if memoization:
             self.mem[d] = res
@@ -126,7 +124,7 @@ class PairClassifier:
 
 
 def main():
-    path_to_data = "../data/"
+    path_to_data = "data/"
     c = PairClassifier(
         filename=path_to_data + "randomforest.dat",
         training_data_dir=path_to_data + "train_sequences",
@@ -141,20 +139,27 @@ def main():
     #)
 
     dl = DataLoader()
-    dp = DataPreparer()
-    _, s_x, a_x, s_y, a_y = dl.loadSequence(path_to_data + 'train_sequences/simulated_alignment.fa')
+    dp = DataPreparer(5)
+    _, s_x, a_x, s_y, a_y = dl.loadSequence(
+        path_to_data + 'train_sequences/simulated_alignment.fa'
+    )
     x, y = dl.prepareTrainingData(s_x, a_x, s_y, a_y, dp)
-
+    print x, y
     #_, s_x, a_x, s_y, a_y = dl.loadSequence(path_to_data + "train_sequences/s1.fa", path_to_data + "train_sequences/s1_na.js")
     #x2, y2 = dl.prepareTrainingData(s_x, a_x, s_y, a_y, dp)
 
-    #    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa"),5)
-    #    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/simulated_alignment.fa", pathToData+"sequences/simulated_alignment_na.js"),1)
-    #    x,y = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa"),5)
-    #    x2,y2 = d.prepareTrainingData(d.loadSequence(pathToData+"sequences/short.fa", pathToData+"sequences/short_na.js"),5)
-    #px, py = dl.prepareTrainingData(dl.loadSequence(pathToData + "train_sequences/s2.fa"), 1)
+    #    x,y = d.prepareTrainingData(d.loadSequence(path_to_data+"sequences/simulated_alignment.fa"),5)
+    #    x2,y2 = d.prepareTrainingData(d.loadSequence(path_to_data+"sequences/simulated_alignment.fa", path_to_data+"sequences/simulated_alignment_na.js"),1)
+    #    x,y = d.prepareTrainingData(d.loadSequence(path_to_data+"sequences/short.fa"),5)
+    #    x2,y2 = d.prepareTrainingData(d.loadSequence(path_to_data+"sequences/short.fa", path_to_data+"sequences/short_na.js"),5)
+    _, s_x, a_x, s_y, a_y = dl.loadSequence(
+        path_to_data + 'sequences/simulated_alignment.fa'
+    )
+    print _, s_x, a_x, s_y, a_y
+    px, py = dl.prepareTrainingData(s_x, a_x, s_y, a_y, dp)
+    print px, py
     #px2, py2 = dl.prepareTrainingData(
-    #    dl.loadSequence(pathToData + "train_sequences/s2.fa", pathToData + "train_sequences/s2_na.js"), dp)
+    #    dl.loadSequence(path_to_data + "train_sequences/s2.fa", path_to_data + "train_sequences/s2_na.js"), dp)
 
     #    print zip(x,y)
     #    px,py = x,y
@@ -165,7 +170,6 @@ def main():
     #c2.fit(x2, y2)
     # p = [array((i,j,k,l)) for k in range(2) for l in range(2) for i in range(4) for j in range(4) ]
     # yy = c.predict(p)
-
 
     # for i,j in enumerate(yy):
     #     if i % 16 ==0:
@@ -178,30 +182,38 @@ def main():
 
     # for i in zip(p,yy):
     #     print(i)
-    #dd1 = c.predict([px[i] for i in range(len(px)) if py[i]])
-    #dd0 = c.predict([px[i] for i in range(len(px)) if not py[i]])
+    dd1 = c.predict([px[i] for i in range(len(px)) if py[i]])
+    dd0 = c.predict([px[i] for i in range(len(px)) if not py[i]])
     #dd21 = c2.predict([px2[i] for i in range(len(px2)) if py2[i]])
     #dd20 = c2.predict([px2[i] for i in range(len(px2)) if not py2[i]])
-    #k1 = gaussian_kde(dd1)
-    #k0 = gaussian_kde(dd0)
+    k1 = gaussian_kde(dd1)
+    k0 = gaussian_kde(dd0)
     #k21 = gaussian_kde(dd21)
     #k20 = gaussian_kde(dd20)
-    #xvals = linspace(0.0, 1.0, 500)
+    xvals = linspace(0.0, 1.0, 500)
 
-    #plt.subplot(1, 2, 1)
-    #plt.hist([dd1, dd0, dd21, dd20],
-    #         10, normed=False, histtype='bar',
-    #         stacked=False,
-    #         label=["anotated 1", "anotated 0", "not anotated 1", "not anotated 0"])
-    #plt.legend(loc=0)
-    #plt.subplot(1, 2, 2)
-    #plt.hold(True)
-    #plt.plot(xvals, k1(xvals), label="anotated 1")
-    #plt.plot(xvals, k0(xvals), label="anotated 0")
+    plt.subplot(1, 2, 1)
+    plt.hist(
+        [
+            dd1,
+            dd0,
+            # dd21,
+            # dd20
+        ],
+        10,
+        normed=False,
+        histtype='bar',
+        stacked=False,
+        label=["anotated 1", "anotated 0", "not anotated 1", "not anotated 0"])
+    plt.legend(loc=0)
+    plt.subplot(1, 2, 2)
+    plt.hold(True)
+    plt.plot(xvals, k1(xvals), label="anotated 1")
+    plt.plot(xvals, k0(xvals), label="anotated 0")
     #plt.plot(xvals, k21(xvals), label="not anotated 1")
     #plt.plot(xvals, k20(xvals), label="not anotated 0")
     #plt.legend(loc=0)
-    #plt.show()
+    plt.show()
 
 
     # plt.plot(histogram(yy, 100, density=False)[0])

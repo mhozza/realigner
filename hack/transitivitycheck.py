@@ -4,52 +4,51 @@ __author__ = 'michal'
 from hack.DataLoader import DataLoader
 
 
-def create_transitive_alignemnt(p1, p2):
-    i = 0
-    j = 0
-    a = ''
-    c = ''
-    while i < len(p1[1]) and j < len(p2[0]):
-        b1 = p1[0][i]
-        b2 = p2[0][j]
+def create_alignemnt_function(p):
+    l = []
+    i0 = 0
+    i1 = 0
+    j0 = 0
+    j1 = 0
+    while i0 < len(p[0]) and i1 < len(p[1]):
+        l.append((j0, j1))
+        if p[0][i0] != '-':
+            j0 += 1
+        if p[1][i1] != '-':
+            j1 += 1
+        i0 += 1
+        i1 += 1
 
-        if b1 == b2:
-            a += p1[1][i]
-            c += p2[1][j]
-            i += 1
-            j += 1
-        elif b1 == '-':
-            a += p1[1][i]
-            c += '-'
-            i += 1
-        else:
-            a += '-'
-            c += p2[1][j]
-            j += 1
-    print p1[1]
-    print p1[0]
+    def f(ind):
+        l2 = set()
+        if type(ind) is not list:
+            ind = [ind]
 
-    print p2[0]
-    print p2[1]
-
-    return a, c
+        for i in ind:
+            l2 |= set(filter(lambda x: x[0] == i, l))
+        return map(lambda x: x[1], l2)
+    return f
 
 
-def compare(p1, p2):
-    print p1[0]
-    print p1[1]
-    print p2[1]
-    print p2[0]
-    s = abs(len(p1[0]) - len(p2[0]))
-    for i in range(min(len(p1[0]), len(p2[0]))):
-        if p1[0][i] != p2[0][i] or p1[1][i] != p2[1][i]:
+def compare(p1, p2, p3):
+    bs = p1[0]
+    bs.replace('-', '')
+    f1 = create_alignemnt_function(p1)
+    f2 = create_alignemnt_function(p2)
+    f3 = create_alignemnt_function(p3)
+
+    s = 0
+    for i in range(len(bs)):
+        if f3(f1(i)) == f2(i):
             s += 1
-    return 1 - float(s) / max(len(p1[0]), len(p2[0]))
+
+    return float(s)/len(bs)
 
 
 def score():
     sequence_names = ['sequence1', 'sequence2', 'sequence3']
     sequences = []
+    fname = 'data/sequences/simulated_alignment.{}_{}.realigned.fa'
 
     d = DataLoader()
     for x in range(len(sequence_names)-1):
@@ -58,12 +57,10 @@ def score():
             sY = sequence_names[y]
             if sX != sY:
                 sequences.append(d.getSequences(
-                    'data/sequences/simulated_alignment.{}_{}.realigned.fa'.format(
-                        sX, sY), [sX+'$', sY+'$']
-                    )
+                    fname.format(sX, sY), [sX+'$', sY+'$'])
                 )
 
-    return compare(create_transitive_alignemnt(sequences[0], sequences[1]), sequences[2])
+    return compare(*sequences)
 
 if __name__ == '__main__':
     print score()

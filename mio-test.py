@@ -12,6 +12,7 @@ def realign(src, dest, sX, sY):
 
 def main():
     src = 'data/sequences/simulated_alignment.fa'
+    dst = 'data/sequences/simulated_alignment.{}_{}.realigned.fa'
     sequences = ['sequence1', 'sequence2', 'sequence3']
 
     threads = list()
@@ -21,8 +22,7 @@ def main():
             sX = sequences[x]
             sY = sequences[y]
             if sX != sY:
-                dest = 'data/sequences/' \
-                       'simulated_alignment.{}_{}.realigned.fa'.format(sX, sY)
+                dest = dst.format(sX, sY)
                 threads.append(
                     threading.Thread(target=realign, args=(src, dest, sX, sY))
                 )
