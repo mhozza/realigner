@@ -1,24 +1,41 @@
 import json
+# from repeats.RepeatGenerator import RepeatGenerator
+# from collections import defaultdict
 from alignment.Realigner import Realigner
 from algorithm.LogNum import LogNum
 from tools.file_wrapper import Open
 from tools.debug import jsonize, dejsonize_struct
 from tools import perf
+from hack.AnnotationLoader import AnnotationLoader
+from hack.SequenceTablePrecompute import SequenceTablePrecompute
 
 
 class ViterbiRealigner(Realigner):
-    
     def __init__(self):
         self.table = None
         return
-   
-   
+
     @perf.runningTimeDecorator
     def computeViterbiTable(self):
         if 'viterbi' not in self.io_files['input']:
-            self.table = self.model.getViterbiTable(self.X, 0, len(self.X), 
-                self.Y, 0, len(self.Y), 
-                positionGenerator=self.positionGenerator)
+            for state in self.model.states:
+                cstate_class_name = 'hack.ClassifierState.ClassifierState'
+                if str(state.__class__) == cstate_class_name:  # skaredy hack
+                    _, ann_x, ann_y = AnnotationLoader().get_annotations(
+                        "data/sequences/simulated_alignment.js"
+                    )
+                    emission_table = SequenceTablePrecompute(
+                        self.positionGenerator, self.X, self.Y, ann_x, ann_y
+                    )
+                    # emission_table.parallel_compute(40)
+                    emission_table.compute()
+                    state.set_emission_table(emission_table)
+
+            self.table = self.model.getViterbiTable(
+                self.X, 0, len(self.X),
+                self.Y, 0, len(self.Y),
+                positionGenerator=self.positionGenerator
+            )
             x = jsonize(self.table)
             if 'viterbi' in self.io_files['output']:
                 with Open(self.io_files['output']['viterbi'], 'w') as f:
@@ -39,15 +56,13 @@ class ViterbiRealigner(Realigner):
                                 lambda x: LogNum(x, False),
                                 int)))))
 
-
     @perf.runningTimeDecorator
     def prepareData(self, *data):
         data = Realigner.prepareData(self, *data)
         arguments = 0
-        
+
         self.computeViterbiTable()
         return data[arguments:]
-
 
     @perf.runningTimeDecorator
     def realign(self, x, dx, y, dy):
@@ -67,15 +82,16 @@ class ViterbiRealigner(Realigner):
                         (tuple, int),
                         (tuple, int),
                         lambda x: LogNum(x, False))))
-        
+
         X = ""
         Y = ""
         A = ""
+
         for (state, (_x, _y), (_dx, _dy), _) in path:
             X += self.X[_x - _dx:_x] + ('-' * (max(_dx, _dy) - _dx))
             Y += self.Y[_y - _dy:_y] + ('-' * (max(_dx, _dy) - _dy))
             A += self.model.states[state].getChar() * max(_dx, _dy)
-            
-        return [(self.X_name, X), ("viterbi annotation of " + self.X_name + 
+
+        return [(self.X_name, X), ("viterbi annotation of " + self.X_name +
                                    " and " + self.Y_name, A),
                 (self.Y_name, Y)]

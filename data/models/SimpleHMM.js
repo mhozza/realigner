@@ -1,7 +1,7 @@
 {
     	"contants": [
  	    {
- 	        "__name__": "@trans?",   	 
+ 	        "__name__": "@trans?",
 	        "MM": 0.94,
 	        "MX": 0.03,
 	        "MY": 0.03,
@@ -48,9 +48,9 @@
 			"startprob": 0.33,
 			"endprob": 1.0,
 			"durations": [[[1, 0], 1.0]],
-			"emission": {"__name__": "backgroundprob", "alphabet": "ACGT", 
+			"emission": {"__name__": "backgroundprob", "alphabet": "ACGT",
 					 "tracks": 2, "track": 0},
-			"onechar": "X"    	
+			"onechar": "X"
 		    },
 		    {
 			"__name__": "GeneralizedPairState",
@@ -58,10 +58,10 @@
 			"startprob": 0.33,
 			"endprob": 1.0,
 			"durations": [[[0, 1], 1.0]],
-			"emission": {"__name__": "backgroundprob", "alphabet": "ACGT", 
+			"emission": {"__name__": "backgroundprob", "alphabet": "ACGT",
 					 "tracks": 2, "track": 1},
-			    "onechar": "Y"    	
+			    "onechar": "Y"
 		    }
-		]	
+		]
 	}
 }
