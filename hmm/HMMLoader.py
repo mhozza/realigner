@@ -11,7 +11,8 @@ from hmm.HighOrderState import HighOrderState
 import json
 from hack.ClassifierState import ClassifierState, SimpleState,\
     ClassifierIndelState
-from hack.ClassifierAnnotationState import ClassifierAnnotationState
+from hack.ClassifierAnnotationState import ClassifierAnnotationState,\
+    ClassifierAnnotationIndelState
 from algorithm.LogNum import LogNum
 
 
@@ -45,6 +46,7 @@ class HMMLoader(ConfigFactory):
             ClassifierState,
             ClassifierIndelState,
             ClassifierAnnotationState,
+            ClassifierAnnotationIndelState,
             HighOrderState,
             HighOrderRepeatState,
             RepeatLengthDistribution,

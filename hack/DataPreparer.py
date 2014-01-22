@@ -274,11 +274,6 @@ class IndelDataPreparer(DataPreparer):
                 annotations_s,
                 0,
             )
-            if len(d) != 18:
-                print x, y, len(sequence_rs), len(sequence_ss)
-                print sequence_rs[x], sequence_ss[y], len(d)
-                print d
-
 
             train_data[0].append(d)
             train_data[1].append(0)

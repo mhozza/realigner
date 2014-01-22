@@ -4,11 +4,12 @@ Created on Mar 28, 2013
 
 @author: Michal Hozza
 """
-from numpy.core.function_base import linspace
-from os import path
-from scipy.stats.kde import gaussian_kde
 import os
+import sys
 import pickle
+from os import path
+from numpy.core.function_base import linspace
+from scipy.stats.kde import gaussian_kde
 
 from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
@@ -48,6 +49,7 @@ class PairClassifier:
         else:
             self.classifier = self._get_classifier()
             if autotrain:
+                sys.err.write('Training clasifier')
                 dl = DataLoader()
                 data, target = (list(), list())
                 sequences = dl.loadDirectory(self.training_data_dir)
