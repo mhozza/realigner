@@ -101,10 +101,11 @@ class PairClassifier:
     def prepare_predict(self, *args):
         return self.predict(self.preparer.prepare_data(*args))
 
-    def multi_prepare_predict(self, data_list):
-        prepared_data = list()
-        for args in data_list:
-            prepared_data.append(self.preparer.prepare_data(*args))
+    def multi_prepare_predict(self, data):
+        prepared_data = [
+            self.preparer.prepare_data(*args)
+            for args in data
+        ]
 
         return self.predict(prepared_data, False)
 
@@ -118,6 +119,7 @@ class PairClassifier:
                 return self.mem[d]
 
         res = self.classifier.predict_proba(data)[:, 1]
+
         if memoization:
             self.mem[d] = res
         return res
@@ -260,4 +262,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -10,6 +10,7 @@ from repeats.HighOrderRepeatState import HighOrderRepeatState
 from hmm.HighOrderState import HighOrderState
 import json
 from hack.ClassifierState import ClassifierState, SimpleState
+from hack.ClassifierAnnotationState import ClassifierAnnotationState
 from algorithm.LogNum import LogNum
 
 def getInitializerObject(tp, mathType):
@@ -27,19 +28,20 @@ def getInitializerFunction(function, mathType):
 
 
 class HMMLoader(ConfigFactory):
-    
+
     def __init__(self, mathType=float):
         ConfigFactory.__init__(self)
         self.mathType = mathType
         for obj in [
-            HMM, 
-            State, 
-            GeneralizedHMM, 
-            GeneralizedState, 
-            GeneralizedPairHMM, 
+            HMM,
+            State,
+            GeneralizedHMM,
+            GeneralizedState,
+            GeneralizedPairHMM,
             GeneralizedPairState,
             PairRepeatState,
-			ClassifierState,
+            ClassifierState,
+			ClassifierAnnotationState,
             HighOrderState,
             HighOrderRepeatState,
             RepeatLengthDistribution,
@@ -48,19 +50,19 @@ class HMMLoader(ConfigFactory):
         ]:
 
             self.addFunction(obj.__name__, getInitializerObject(obj, mathType))
-        
+
         for (name, function) in [
             ("JukesCantorGenerator", JukesCantorGenerator),
             ("backgroundprob", BackgroundProbabilityGenerator),
         ]:
             self.addFunction(name, getInitializerFunction(function, mathType))
-        
+
         for (name, constant) in [
-            # STUB 
+            # STUB
         ]:
             self.addConstant(name, constant)
 
-            
+
 if __name__ == "__main__":
     a = HMMLoader()
     try:
