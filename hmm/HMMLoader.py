@@ -4,14 +4,16 @@ from hmm.GeneralizedHMM import GeneralizedHMM, GeneralizedState
 from hmm.PairHMM import GeneralizedPairHMM, GeneralizedPairState
 from repeats.RepeatAlignmentState import PairRepeatState
 from hmm.SpecialHMMs import JukesCantorGenerator, \
-                               BackgroundProbabilityGenerator
+    BackgroundProbabilityGenerator
 from repeats.RepeatLengthDistribution import RepeatLengthDistribution
 from repeats.HighOrderRepeatState import HighOrderRepeatState
 from hmm.HighOrderState import HighOrderState
 import json
-from hack.ClassifierState import ClassifierState, SimpleState
+from hack.ClassifierState import ClassifierState, SimpleState,\
+    ClassifierIndelState
 from hack.ClassifierAnnotationState import ClassifierAnnotationState
 from algorithm.LogNum import LogNum
+
 
 def getInitializerObject(tp, mathType):
     def __getInitializer(dictionary):
@@ -41,12 +43,13 @@ class HMMLoader(ConfigFactory):
             GeneralizedPairState,
             PairRepeatState,
             ClassifierState,
-			ClassifierAnnotationState,
+            ClassifierIndelState,
+            ClassifierAnnotationState,
             HighOrderState,
             HighOrderRepeatState,
             RepeatLengthDistribution,
             SimpleState,
-			LogNum,
+            LogNum,
         ]:
 
             self.addFunction(obj.__name__, getInitializerObject(obj, mathType))
@@ -72,4 +75,4 @@ if __name__ == "__main__":
     for r in rr:
         print r
         print r.toJSON()
-        print(json.dumps(r.toJSON(), sort_keys = True))
+        print(json.dumps(r.toJSON(), sort_keys=True))

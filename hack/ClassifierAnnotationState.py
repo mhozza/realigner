@@ -11,7 +11,7 @@ class ClassifierAnnotationState(ClassifierState):
         ClassifierState.__init__(self, *args, **kwargs)
 
 
-    def _emission(self, x, y, c):
+    def _emission(self, seq_x, x, seq_y, y, c):
         emissions = {
             ('A', 'A', 0): 0.013625452598054975,
             ('A', 'A', 1): 0.018483180413641397,
@@ -174,7 +174,7 @@ class ClassifierAnnotationState(ClassifierState):
             ('T', 'T', 8): 0.0005925243123353095,
             ('T', 'T', 9): 1.1848116623381514e-07,
         }
-        return emissions[(x, y, round((precision-1)*c))]
+        return emissions[(seq_x[x], seq_y[y], round((precision-1)*c))]
 
 
 class SupervisedHmmClassifierAnnotationStateTraining():

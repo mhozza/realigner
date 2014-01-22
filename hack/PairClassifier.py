@@ -23,7 +23,7 @@ class PairClassifier:
 
     def __init__(
         self,
-        preparer=None,
+        preparer,
         filename="data/randomforest.clf",
         training_data_dir="data/train_sequences",
         params={"n_estimators": 10, "n_jobs": 10, "max_depth": 20},
@@ -52,8 +52,8 @@ class PairClassifier:
                 data, target = (list(), list())
                 sequences = dl.loadDirectory(self.training_data_dir)
                 for _, s_x, a_x, s_y, a_y in sequences:
-                    d, t = dl.prepareTrainingData(
-                        s_x, a_x, s_y, a_y, self.preparer
+                    d, t = self.preparer.prepare_training_data(
+                        s_x, a_x, s_y, a_y
                     )
                     data += d
                     target += t
@@ -88,6 +88,7 @@ class PairClassifier:
 
     @preparer.deleter
     def preparer(self):
+        assert isinstance(self._preparer, DataPreparer)
         del self._preparer
 
     def reset(self):
@@ -128,6 +129,7 @@ class PairClassifier:
 def main():
     path_to_data = "data/"
     c = PairClassifier(
+        preparer=None,
         filename=path_to_data + "randomforest.dat",
         training_data_dir=path_to_data + "train_sequences",
         autotrain=False,
@@ -145,7 +147,7 @@ def main():
     _, s_x, a_x, s_y, a_y = dl.loadSequence(
         path_to_data + 'train_sequences/simulated_alignment.fa'
     )
-    x, y = dl.prepareTrainingData(s_x, a_x, s_y, a_y, dp)
+    x, y = dp.prepare_training_data(s_x, a_x, s_y, a_y, dp)
     print x, y
     #_, s_x, a_x, s_y, a_y = dl.loadSequence(path_to_data + "train_sequences/s1.fa", path_to_data + "train_sequences/s1_na.js")
     #x2, y2 = dl.prepareTrainingData(s_x, a_x, s_y, a_y, dp)
@@ -158,7 +160,7 @@ def main():
         path_to_data + 'sequences/simulated_alignment.fa'
     )
     print _, s_x, a_x, s_y, a_y
-    px, py = dl.prepareTrainingData(s_x, a_x, s_y, a_y, dp)
+    px, py = dp.prepare_training_data(s_x, a_x, s_y, a_y, dp)
     print px, py
     #px2, py2 = dl.prepareTrainingData(
     #    dl.loadSequence(path_to_data + "train_sequences/s2.fa", path_to_data + "train_sequences/s2_na.js"), dp)

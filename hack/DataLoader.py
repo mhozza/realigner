@@ -8,7 +8,6 @@ from alignment.Alignment import Alignment
 # from copy import deepcopy
 # from numpy import array
 from os import path, listdir
-from random import randint
 from tools.Exceptions import ParseException
 
 # import itertools
@@ -86,72 +85,6 @@ class DataLoader:
         )
 
         return annotations, seqX, annotationsX, seqY, annotationsY
-
-    def prepareTrainingData(
-        self,
-        sequence_x,
-        annotations_x,
-        sequence_y,
-        annotations_y,
-        preparer,
-    ):
-        train_data = (list(), list())
-        sequence_xs = Fasta.alnToSeq(sequence_x)
-        sequence_ys = Fasta.alnToSeq(sequence_y)
-
-        pos_x, pos_y = 0, 0
-
-        matched_pos = set()
-        for i in range(len(sequence_x)):
-            bx, by = sequence_x[i], sequence_y[i]
-            if bx != '-':
-                pos_x += 1
-                continue
-            if by != '-':
-                pos_y += 1
-                continue
-
-            matched_pos.add((pos_x, pos_y))
-
-            d = preparer.prepare_data(
-                sequence_xs,
-                pos_x,
-                annotations_x,
-                sequence_ys,
-                pos_y,
-                annotations_y,
-            )
-            if d is not None:
-                train_data[0].append(d)
-                train_data[1].append(1)
-
-        seq_size = len(train_data[0])
-        for i in range(seq_size):
-            x = None
-            while x is None:
-                x = randint(
-                    preparer.window_size//2,
-                    len(sequence_xs) - 1 - preparer.window_size//2,
-                    )
-            y = None
-            while y is None or (x, y) in matched_pos:
-                y = randint(
-                    preparer.window_size//2,
-                    len(sequence_ys) - 1 - preparer.window_size//2,
-                    )
-
-            d = preparer.prepare_data(
-                sequence_xs,
-                x,
-                annotations_x,
-                sequence_ys,
-                y,
-                annotations_y,
-                )
-            train_data[0].append(d)
-            train_data[1].append(0)
-
-        return train_data
 
     def loadDirectory(self, dirname):
         sequences = list()
