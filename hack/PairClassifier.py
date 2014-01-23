@@ -29,7 +29,7 @@ class PairClassifier:
         training_data_dir="data/train_sequences",
         params={"n_estimators": 50, "n_jobs": 10, "max_depth": 20},
         autotrain=True,
-        memoization=True,
+        memoization=False,
     ):
         """
 
@@ -160,26 +160,25 @@ def compute_graph_data(clf, data, target):
 
 def main():
     path_to_data = "data/"
+    window_size = 5
+    dp = DataPreparer(window_size)
+    idp = IndelDataPreparer(0, window_size)
+
     c = PairClassifier(
-        preparer=None,
-        filename=path.join(path_to_data, "randomforest.dat"),
+        preparer=dp,
+        filename=path.join(path_to_data, "randomforest.clf"),
         training_data_dir=path.join(path_to_data, "train_sequences"),
-        autotrain=False,
-        memoization=False,
+        autotrain=True,
     )
 
     ic = PairClassifier(
-        preparer=None,
-        filename=path.join(path_to_data, "randomforest.dat"),
+        preparer=idp,
+        filename=path.join(path_to_data, "randomforest_indel.clf"),
         training_data_dir=path.join(path_to_data, "train_sequences"),
-        autotrain=False,
-        memoization=False,
+        autotrain=True,
     )
 
-    window_size = 5
     dl = DataLoader()
-    dp = DataPreparer(window_size)
-    idp = IndelDataPreparer(0, window_size)
 
     _, s_x, a_x, s_y, a_y = dl.loadSequence(
         path.join(path_to_data, 'train_sequences/simulated_alignment.fa'),
@@ -187,11 +186,8 @@ def main():
     x, y = dp.prepare_training_data(s_x, a_x, s_y, a_y)
     ix, iy = idp.prepare_training_data(s_x, a_x, s_y, a_y)
 
-    for i in zip(x, y):
-        print(i)
-
-    c.fit(x, y)
-    ic.fit(ix, iy)
+    # c.fit(x, y)
+    # ic.fit(ix, iy)
 
     plot(*compute_graph_data(c, x, y))
     plot(*compute_graph_data(ic, ix, iy))

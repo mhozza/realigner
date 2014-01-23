@@ -36,8 +36,8 @@ class DataPreparer:
 
         @rtype : list
         """
-        if (c, position) in self._cache:
-            return self._cache[c, position]
+        # if (c, position) in self._cache:
+        #     return self._cache[c, position]
 
         data = list()
         for i in self._get_window_range(position):
@@ -49,7 +49,7 @@ class DataPreparer:
             data.append(self._prepare_base(b))
             data[len(data):] = self._prepare_annotations(a)
 
-        self._cache[c, position] = data
+        # self._cache[c, position] = data
         return data
 
     def prepare_data(
@@ -83,6 +83,7 @@ class DataPreparer:
         sequence_y,
         annotations_y,
     ):
+        self.clear_cache()
         train_data = (list(), list())
         sequence_xs = Fasta.alnToSeq(sequence_x)
         sequence_ys = Fasta.alnToSeq(sequence_y)
@@ -159,8 +160,8 @@ class IndelDataPreparer(DataPreparer):
 
         @rtype : list
         """
-        if (c, position) in self._cache:
-            return self._cache[c, position]
+        # if (c, position) in self._cache:
+        #     return self._cache[c, position]
 
         data = list()
         for i in self._get_space_window_range(position):
@@ -172,7 +173,7 @@ class IndelDataPreparer(DataPreparer):
             data.append(self._prepare_base(b))
             data[len(data):] = self._prepare_annotations(a)
 
-        self._cache[c, position] = data
+        # self._cache[c, position] = data
         return data
 
     def prepare_data(
@@ -204,6 +205,7 @@ class IndelDataPreparer(DataPreparer):
         sequence_y,
         annotations_y,
     ):
+        self.clear_cache()
         train_data = (list(), list())
 
         if self.insert_sequence == 0:

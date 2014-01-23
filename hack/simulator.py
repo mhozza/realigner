@@ -73,13 +73,12 @@ def create_dna_mutation_coin(s):
     return BiasedCoin(p[s])
 
 
-def main(n, datadir='data/train_sequences/'):
+def main(n, datadir='data/train_sequences/', fname='simulated_alignment'):
     s1name = "sequence1"
     s2name = "sequence2"
     s3name = "sequence3"
     annotation_name = 'gene'
 
-    fname = "simulated_alignment"
     alignment_extension = ".fa"
     annotations_extension = ".bed"
     config_extension = ".js"
@@ -153,12 +152,19 @@ def main(n, datadir='data/train_sequences/'):
     s1fname = os.path.join(
         datadir, fname+'_'+s1name+'_'+annotation_name+annotations_extension
     )
+    if os.path.isfile(s1fname):
+        os.remove(s1fname)
     s2fname = os.path.join(
         datadir, fname+'_'+s2name+'_'+annotation_name+annotations_extension
     )
+    if os.path.isfile(s2fname):
+        os.remove(s2fname)
     s3fname = os.path.join(
         datadir, fname+'_'+s3name+'_'+annotation_name+annotations_extension
     )
+    if os.path.isfile(s3fname):
+        os.remove(s3fname)
+
     intervals1 = sequence_to_intervals(
         get_sequence(human_gene, human_dna), annotation_name
     )
@@ -175,11 +181,6 @@ def main(n, datadir='data/train_sequences/'):
     annotations.addAnnotationFile(s1name, annotation_name,  s1fname)
     annotations.addAnnotationFile(s2name, annotation_name,  s2fname)
     annotations.addAnnotationFile(s3name, annotation_name,  s3fname)
-
-    if os.path.isfile(s1fname):
-        os.remove(s1fname)
-    if os.path.isfile(s2fname):
-        os.remove(s2fname)
 
     Fasta.save(
         [
@@ -204,5 +205,7 @@ def main(n, datadir='data/train_sequences/'):
         json.dump(annotations.toJSON(), f)
 
 if __name__ == "__main__":
-    main(5000, 'data/sequences')
-    # main(10000)
+    main(1000)
+    # main(100000, 'data/sequences')
+    # for i in range(5):
+    #     main(100000, fname='simulated_alignment{}'.format(i))
