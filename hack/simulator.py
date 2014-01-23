@@ -13,9 +13,10 @@ P_STOP_GENE = 0.01
 P_START_DELETE = 0.01
 P_STOP_DELETE = 0.1
 P_NOT_MUTATE_GENE = 0.9
-P_MUTATE_DNA_11 = 0.2
-P_MUTATE_DNA_1 = 0.3
-P_MUTATE_DNA_00 = 0.35
+
+P_MUTATE_DNA_11 = 0.8
+P_MUTATE_DNA_1 = 0.65
+P_MUTATE_DNA_00 = 0.6
 
 DNA_CHARS = ['A', 'C', 'G', 'T']
 
@@ -88,8 +89,6 @@ def main(n, datadir='data/train_sequences/'):
     if len(sys.argv) > 2:
         fname = sys.argv[2]
 
-    # srand(time(NULL));
-
     master_gene_sequence = MarkovChain(P_START_GENE, P_STOP_GENE)
     human_delete_sequence = MarkovChain(P_START_DELETE, P_STOP_DELETE)
     mouse_delete_sequence = MarkovChain(P_START_DELETE, P_STOP_DELETE)
@@ -151,12 +150,24 @@ def main(n, datadir='data/train_sequences/'):
         horse_dna.append(c3)
 
     # output
-    s1fname = datadir+fname+'_'+s1name+'_'+annotation_name+annotations_extension
-    s2fname = datadir+fname+'_'+s2name+'_'+annotation_name+annotations_extension
-    s3fname = datadir+fname+'_'+s3name+'_'+annotation_name+annotations_extension
-    intervals1 = sequence_to_intervals(get_sequence(human_gene, human_dna), annotation_name)
-    intervals2 = sequence_to_intervals(get_sequence(mouse_gene, mouse_dna), annotation_name)
-    intervals3 = sequence_to_intervals(get_sequence(horse_gene, horse_dna), annotation_name)
+    s1fname = os.path.join(
+        datadir, fname+'_'+s1name+'_'+annotation_name+annotations_extension
+    )
+    s2fname = os.path.join(
+        datadir, fname+'_'+s2name+'_'+annotation_name+annotations_extension
+    )
+    s3fname = os.path.join(
+        datadir, fname+'_'+s3name+'_'+annotation_name+annotations_extension
+    )
+    intervals1 = sequence_to_intervals(
+        get_sequence(human_gene, human_dna), annotation_name
+    )
+    intervals2 = sequence_to_intervals(
+        get_sequence(mouse_gene, mouse_dna), annotation_name
+    )
+    intervals3 = sequence_to_intervals(
+        get_sequence(horse_gene, horse_dna), annotation_name
+    )
 
     annotations = Annotations()
     annotations.setAnnotations([annotation_name])
@@ -171,8 +182,12 @@ def main(n, datadir='data/train_sequences/'):
         os.remove(s2fname)
 
     Fasta.save(
-        [(s1name, ''.join(human_dna)), (s2name, ''.join(mouse_dna)), (s3name, ''.join(horse_dna))],
-        datadir+fname+alignment_extension
+        [
+            (s1name, ''.join(human_dna)),
+            (s2name, ''.join(mouse_dna)),
+            (s3name, ''.join(horse_dna))
+        ],
+        os.path.join(datadir, fname+alignment_extension)
     )
 
     with track.new(s1fname, 'bed') as t:
@@ -185,8 +200,9 @@ def main(n, datadir='data/train_sequences/'):
         t.fields = ['start', 'end', 'name']
         t.write("chr1", intervals3)
 
-    with Open(datadir+fname+config_extension, "w") as f:
+    with Open(os.path.join(datadir, fname+config_extension), "w") as f:
         json.dump(annotations.toJSON(), f)
 
 if __name__ == "__main__":
-    main(1000)
+    main(5000, 'data/sequences')
+    # main(10000)

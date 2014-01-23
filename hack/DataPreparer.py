@@ -90,30 +90,28 @@ class DataPreparer:
         pos_x, pos_y = 0, 0
 
         matched_pos = set()
+        assert len(sequence_y) == len(sequence_x)
+
         for i in range(len(sequence_x)):
             bx, by = sequence_x[i], sequence_y[i]
-            if bx == '-':
+            if bx != '-' and by != '-':
+                matched_pos.add((pos_x, pos_y))
+                d = self.prepare_data(
+                    sequence_xs,
+                    pos_x,
+                    annotations_x,
+                    sequence_ys,
+                    pos_y,
+                    annotations_y,
+                )
+                if d is not None:
+                    train_data[0].append(d)
+                    train_data[1].append(1)
+
+            if bx != '-':
                 pos_x += 1
-                continue
-            if by == '-':
+            if by != '-':
                 pos_y += 1
-                continue
-
-            matched_pos.add((pos_x, pos_y))
-
-            d = self.prepare_data(
-                sequence_xs,
-                pos_x,
-                annotations_x,
-                sequence_ys,
-                pos_y,
-                annotations_y,
-            )
-            if d is not None:
-                train_data[0].append(d)
-                train_data[1].append(1)
-            pos_x += 1
-            pos_y += 1
 
         seq_size = len(train_data[0])
         for i in range(seq_size):
@@ -122,13 +120,13 @@ class DataPreparer:
                 x = randint(
                     self.window_size//2,
                     len(sequence_xs) - 1 - self.window_size//2,
-                    )
+                )
             y = None
             while y is None or (x, y) in matched_pos:
                 y = randint(
                     self.window_size//2,
                     len(sequence_ys) - 1 - self.window_size//2,
-                    )
+                )
 
             d = self.prepare_data(
                 sequence_xs,
@@ -137,7 +135,7 @@ class DataPreparer:
                 sequence_ys,
                 y,
                 annotations_y,
-                )
+            )
             train_data[0].append(d)
             train_data[1].append(0)
 
@@ -229,13 +227,13 @@ class IndelDataPreparer(DataPreparer):
             br, bs = reference[i], space[i]
             if bs != '-':
                 pos_s += 1
+                if br != '-':
+                    pos_r += 1
                 continue
             if br == '-':
-                pos_r += 1
                 continue
 
             matched_pos.add((pos_r, pos_s))
-
             d = self.prepare_data(
                 sequence_rs,
                 pos_r,
@@ -245,10 +243,10 @@ class IndelDataPreparer(DataPreparer):
                 annotations_s,
                 0,
             )
-
             if d is not None:
                 train_data[0].append(d)
                 train_data[1].append(1)
+            pos_r += 1
 
         seq_size = len(train_data[0])
         for i in range(seq_size):
