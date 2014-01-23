@@ -11,7 +11,7 @@ from os import path, listdir
 from tools.Exceptions import ParseException
 
 # import itertools
-from hack.AnnotationLoader import AnnotationLoader
+from classifier_alignment.AnnotationLoader import AnnotationLoader
 # import constants
 
 # class AnnotatedBase:

@@ -1,9 +1,9 @@
 import os
 print os.getcwd()
 
-from hack.PairClassifier import PairClassifier
+from classifier_alignment.PairClassifier import PairClassifier
 import itertools
-from hack.DataPreparer import DataPreparer
+from classifier_alignment.DataPreparer import DataPreparer
 
 
 window_size = 1

@@ -6,9 +6,9 @@ from algorithm.LogNum import LogNum
 from tools.file_wrapper import Open
 from tools.debug import jsonize, dejsonize_struct
 from tools import perf
-from hack.AnnotationLoader import AnnotationLoader
-from hack.SequenceTablePrecompute import SequenceTablePrecompute
-from hack.ClassifierState import ClassifierState
+from classifier_alignment.AnnotationLoader import AnnotationLoader
+from classifier_alignment.SequenceTablePrecompute import SequenceTablePrecompute
+from classifier_alignment.ClassifierState import ClassifierState
 
 
 class ViterbiRealigner(Realigner):

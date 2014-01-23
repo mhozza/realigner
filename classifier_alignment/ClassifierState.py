@@ -1,6 +1,6 @@
-from hack.PairClassifier import PairClassifier
-from hack.AnnotationLoader import AnnotationLoader
-from hack.DataPreparer import DataPreparer, IndelDataPreparer
+from classifier_alignment.PairClassifier import PairClassifier
+from classifier_alignment.AnnotationLoader import AnnotationLoader
+from classifier_alignment.DataPreparer import DataPreparer, IndelDataPreparer
 from hmm.PairHMM import GeneralizedPairState
 from tools.Exceptions import ParseException
 

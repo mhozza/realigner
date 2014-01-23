@@ -9,9 +9,9 @@ from repeats.RepeatLengthDistribution import RepeatLengthDistribution
 from repeats.HighOrderRepeatState import HighOrderRepeatState
 from hmm.HighOrderState import HighOrderState
 import json
-from hack.ClassifierState import ClassifierState, SimpleState,\
+from classifier_alignment.ClassifierState import ClassifierState, SimpleState,\
     ClassifierIndelState
-from hack.ClassifierAnnotationState import ClassifierAnnotationState,\
+from classifier_alignment.ClassifierAnnotationState import ClassifierAnnotationState,\
     ClassifierAnnotationIndelState
 from algorithm.LogNum import LogNum
 

@@ -2,7 +2,7 @@ __author__ = 'michal'
 
 from alignment import Fasta
 from random import randint
-from hack.AnnotationLoader import AnnotationLoader
+from classifier_alignment.AnnotationLoader import AnnotationLoader
 from tools.Exceptions import ParseException
 import constants
 

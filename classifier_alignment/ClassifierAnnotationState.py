@@ -1,6 +1,6 @@
 import os
-from hack.ClassifierState import ClassifierState, ClassifierIndelState
-from hack.DataLoader import DataLoader
+from classifier_alignment.ClassifierState import ClassifierState, ClassifierIndelState
+from classifier_alignment.DataLoader import DataLoader
 
 precision = 10
 pseudocount = 0.001

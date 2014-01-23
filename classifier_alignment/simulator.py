@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from alignment import Fasta
-from hack.AnnotationConfig import Annotations
+from classifier_alignment.AnnotationConfig import Annotations
 from tools.file_wrapper import Open
 import json
 import os

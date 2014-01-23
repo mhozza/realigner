@@ -1,8 +1,8 @@
 __author__ = 'michal'
 
 import sys
-from hack.PairClassifier import PairClassifier
-from hack.DataPreparer import DataPreparer
+from classifier_alignment.PairClassifier import PairClassifier
+from classifier_alignment.DataPreparer import DataPreparer
 
 
 class SequenceTablePrecompute():

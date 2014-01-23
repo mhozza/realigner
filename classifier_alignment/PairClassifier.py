@@ -13,8 +13,8 @@ from scipy.stats.kde import gaussian_kde
 
 from sklearn.ensemble import RandomForestRegressor
 import matplotlib.pyplot as plt
-from hack.DataLoader import DataLoader
-from hack.DataPreparer import DataPreparer, IndelDataPreparer
+from classifier_alignment.DataLoader import DataLoader
+from classifier_alignment.DataPreparer import DataPreparer, IndelDataPreparer
 from tools.Exceptions import InvalidValueException
 
 
