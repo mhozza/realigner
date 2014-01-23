@@ -1,5 +1,6 @@
 __author__ = 'michal'
 
+import sys
 from hack.PairClassifier import PairClassifier
 from hack.DataPreparer import DataPreparer
 
@@ -17,29 +18,19 @@ class SequenceTablePrecompute():
         self.print_status = True
 
     def compute(self):
-        #positions = [(x, y) for x, y in self.position_generator]
-        positions = [p for p in self.position_generator]
-
         if self.print_status:
-            print 'computing emission table'
-
+            sys.stderr.write('Computing emission table...\n')
         data = [
             (self.seq_x, x, self.ann_x, self.seq_y, y, self.ann_y)
-            for x, y in positions
+            for x, y in self.position_generator
         ]
-
         out = self.classifier.multi_prepare_predict(data)
-
-        if self.print_status:
-            print 'prediction done'
-
-        for i, d in enumerate(positions):
+        for i, d in enumerate(self.position_generator):
             self.table[d] = out[i]
+        if self.print_status:
+            sys.stderr.write('Emission table computed.\n')
 
     def get(self, x, y):
         if (x, y) in self.table:
             return self.table[(x, y)]
         return 0
-
-if __name__ == '__main__':
-    pass

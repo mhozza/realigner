@@ -27,7 +27,7 @@ class PairClassifier:
         preparer,
         filename="data/randomforest.clf",
         training_data_dir="data/train_sequences",
-        params={"n_estimators": 50, "n_jobs": 10, "max_depth": 20},
+        params={"n_estimators": 30, "n_jobs": 10, "max_depth": 20},
         autotrain=True,
         memoization=False,
     ):
