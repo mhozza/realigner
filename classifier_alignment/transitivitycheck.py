@@ -1,7 +1,7 @@
 #!/usr/bin/pypy
 __author__ = 'michal'
 
-from hack.DataLoader import DataLoader
+from classifier_alignment.DataLoader import DataLoader
 
 
 def create_alignemnt_function(p):

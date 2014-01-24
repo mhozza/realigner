@@ -3,7 +3,7 @@ __author__ = 'michal'
 
 import os
 import threading
-from hack import transitivitycheck
+from classifier_alignment import transitivitycheck
 
 
 def realign(src, dest, sX, sY):

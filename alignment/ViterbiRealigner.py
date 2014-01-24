@@ -6,8 +6,9 @@ from algorithm.LogNum import LogNum
 from tools.file_wrapper import Open
 from tools.debug import jsonize, dejsonize_struct
 from tools import perf
-from hack.AnnotationLoader import AnnotationLoader
-from hack.SequenceTablePrecompute import SequenceTablePrecompute
+from classifier_alignment.AnnotationLoader import AnnotationLoader
+from classifier_alignment.SequenceTablePrecompute import SequenceTablePrecompute
+from classifier_alignment.ClassifierState import ClassifierState
 
 
 class ViterbiRealigner(Realigner):
@@ -19,15 +20,13 @@ class ViterbiRealigner(Realigner):
     def computeViterbiTable(self):
         if 'viterbi' not in self.io_files['input']:
             for state in self.model.states:
-                cstate_class_name = 'hack.ClassifierState.ClassifierState'
-                if str(state.__class__) == cstate_class_name:  # skaredy hack
+                if isinstance(state, ClassifierState):
                     _, ann_x, ann_y = AnnotationLoader().get_annotations(
                         "data/sequences/simulated_alignment.js"
                     )
                     emission_table = SequenceTablePrecompute(
                         self.positionGenerator, self.X, self.Y, ann_x, ann_y
                     )
-                    # emission_table.parallel_compute(40)
                     emission_table.compute()
                     state.set_emission_table(emission_table)
 

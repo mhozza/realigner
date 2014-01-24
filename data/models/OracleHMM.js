@@ -91,7 +91,7 @@
     ],
     "states": [
       {
-        "__name__": "ClassifierState",
+        "__name__": "ClassifierAnnotationState",
         "name": "Match",
         "startprob": 0.33,
         "endprob": 1.0,
@@ -108,7 +108,7 @@
         "onechar": "M"
       },
       {
-        "__name__": "ClassifierIndelState",
+        "__name__": "ClassifierAnnotationIndelState",
         "name": "InsertX",
         "startprob": 0.33,
         "endprob": 1.0,
@@ -125,7 +125,7 @@
         "onechar": "X"
       },
       {
-        "__name__": "ClassifierIndelState",
+        "__name__": "ClassifierAnnotationIndelState",
         "name": "InsertY",
         "startprob": 0.33,
         "endprob": 1.0,

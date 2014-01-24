@@ -3,3 +3,7 @@
 /data/sequences
 /tmp
 .idea/*
+*.clf
+data/train_sequences/*
+data/sequences/*
+*.ipynb

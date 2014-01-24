@@ -2,7 +2,7 @@ __author__ = 'michal'
 from tools.intervalmap import intervalmap
 import track
 from tools.ConfigFactory import ConfigFactory
-from hack.AnnotationConfig import Annotations
+from classifier_alignment.AnnotationConfig import Annotations
 
 
 def getInitializerObject(tp, mathType):
