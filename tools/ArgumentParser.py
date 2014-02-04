@@ -60,7 +60,7 @@ def get_posterior_processor(s):
         raise('Unknown posterior processor type')
 
 
-def get_model(args, filename):
+def get_model(args, filename, allow_mask=True):
     loader = HMMLoader(args.mathType) # TODO: rename HMMLoader to ModelLoader
     for i in range(0, len(args.bind_file), 2):
         loader.addFile(args.bind_file[i], args.bind_file[i + 1])
@@ -75,7 +75,7 @@ def get_model(args, filename):
             loader.loads(args.bind_constant_file[i + 1]),
         )
     model = loader.load(filename)["model"]
-    if args.add_masked_to_distribution:
+    if args.add_masked_to_distribution and allow_mask:
         model.add_soft_masking_to_distribution()
     return model
 
@@ -155,7 +155,8 @@ def parse_arguments(
     if parsed_arg.annotation_model:
         parsed_arg.annotation_model = get_model(
             parsed_arg,
-            parsed_arg.annotation_model
+            parsed_arg.annotation_model,
+            allow_mask=False,
         )
     io_files = {'input': {}, 'output': {}}
     if 'intermediate_input_files' in keywords:
