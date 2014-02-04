@@ -50,7 +50,27 @@ class GeneralizedPairState(GeneralizedState):
         self.emissions = defaultdict(self.mathType)
         for k, v in emissions.iteritems():
             self.emissions[k] = self.mathType(v) / total
-         
+
+    def add_soft_masking_to_distribution(self):
+        d = defaultdict(lambda *_: defaultdict(list))
+        for (x, y), p in self.emissions.iteritems():
+            dx = len(x)
+            dy = len(y)
+            k = (dx, dy)
+            assert(dx <= 1)
+            assert(dy <= 1)
+            if dx == 1 and y != 'N':
+                d[k][('N', y)].append(p)
+            if dy == 1 and x != 'N':
+                d[k][(x, 'N')].append(p)
+            if dx == 1 and y == 1 and x != 'N' and y != 'N':
+                d[k][('N', 'N')].append(p)
+        for kk, v in d.iteritems():
+            for k, l in v.iteritems(): 
+                if len(l) == 0:
+                    continue
+                self.emissions[k] = self.mathType(sum(l) / len(l))
+
 
 class PosteriorTableProcessor:
     

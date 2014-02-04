@@ -72,7 +72,9 @@ class State(ConfigObject):
         self.endProbability = self.mathType(0.0)
         self._sampleEmission = None
 
-        
+    def add_soft_masking_to_distribution(self):
+        probs = [v for k, v in self.emissions.iteritems() if k != 'N']
+        self.emissoins['N'] = self.mathType(sum(probs) / len(probs))
 
     def serializeMe(self):
         return self.serialize
@@ -257,7 +259,11 @@ class HMM(ConfigObject):
         self.transitions = defaultdict(dict)
         for state in self.states:
             state.clearTransitions()
-        
+    
+    def add_soft_masking_to_distribution(self):
+        for state in self.states:
+            state.add_soft_masking_to_distribution()
+
     def reorderStatesTopologically(self):
         def silentFirst(self, order):
             silent = []

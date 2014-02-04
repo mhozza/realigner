@@ -9,6 +9,8 @@ from alignment.PosteriorRealigner import PosteriorRealigner, \
                                          one_char_processor
 from alignment.ViterbiRealigner import ViterbiRealigner
 from hmm.HMMLoader import HMMLoader
+from alignment.Masker import dummy_masker, replace_masker, \
+                             get_nonoverlaping_repeats
 
 def get_math_type(s):
     if s == 'LogNum':
@@ -34,6 +36,21 @@ def get_realigner(s):
         raise('Unknown type')
 
 
+def get_repeatmasker(s):
+    if s == 'replace':
+        return replace_masker
+    elif s == 'replace_nonoverlapping':
+        return lambda x, y: replace_masker(
+            x,
+            y,
+            _filter=get_nonoverlaping_repeats
+        )
+    elif s == '' or s == 'none':
+        return dummy_masker
+    else:
+        raise ('Unknown type')
+
+
 def get_posterior_processor(s):
     if s == 'marginalize_gaps':
         return marginalize_gaps_processor
@@ -57,7 +74,10 @@ def get_model(args):
             args.bind_constant_file[i],
             loader.loads(args.bind_constant_file[i + 1]),
         )
-    return loader.load(args.model)["model"]
+    model = loader.load(args.model)["model"]
+    if args.add_masked_to_distribution:
+        model.add_soft_masking_to_distribution()
+    return model
 
 io_to_dict = lambda x: dict([tuple(y.split(':')) for y in x.split(',')])
 
@@ -85,6 +105,8 @@ parse_arguments_capabilities_keywords = {
     'expand_model': ([], {'action': 'store_true'}),
     'posterior_processors': ([], {'help': 'How to process posterior table, comma separated list of: marginalize_gaps,one_char ', 'type': lambda x: set(x.split(',') if x != '' else []) , 'default': ''}),
     'draw': ([], {'default': '', 'type': str, 'help': 'output file for image'}),
+    'mask_repeats': ([], {'default': '', 'type': get_repeatmasker, 'help': 'Mask repeats'}),
+    'add_masked_to_distribution': ([], {'action': 'store_true', 'help':'Add \'N\' to distributions'}),
 }
 
 def parse_arguments(

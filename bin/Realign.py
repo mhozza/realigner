@@ -98,6 +98,7 @@ def realign_file(args, model, output_filename, alignment_filename):
             else:
                 drawer = AlignmentCanvas()
                 drawer.add_original_alignment(aln)
+            aln, unmask_repeats = args.mask_repeats(aln, annotations)
             seq1, seq2 = tuple(map(Fasta.alnToSeq, aln.sequences[:2]))
             perf.msg("Data loaded in {time} seconds.")
             perf.replace()
@@ -115,6 +116,7 @@ def realign_file(args, model, output_filename, alignment_filename):
                                   real_model, annotations, args)
                                                               
             aln = realigner.realign(0, len(seq1), 0, len(seq2))
+            aln = unmask_repeats(aln)
             perf.msg("Sequence was realigned in {time} seconds.")
             perf.replace()
             if len(args.draw) > 0:

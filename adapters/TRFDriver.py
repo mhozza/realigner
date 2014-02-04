@@ -23,12 +23,14 @@ class Repeat:
             repetitions=0, 
             consensus="",
             sequence="",
+            score=0,
         ):
         self.start = start
         self.end = end
         self.repetitions = repetitions
         self.consensus = consensus
         self.sequence = sequence
+        self.score = score
 
 
 class TRFDriver:
@@ -110,7 +112,7 @@ class TRFDriver:
                 continue
             repeats.append(
                 Repeat(int(line[0]) -1 , int(line[1]), self.mathType(line[3]),
-                       line[13], line[14]))
+                       line[13], line[14], line[7]))
         if sequence_name != "":
             output[sequence_name] = repeats
         return output
