@@ -4,8 +4,8 @@ from collections import defaultdict
 def get_nonoverlaping_repeats(repeat_list, length):
     # return list of non-overlaping repeats with maximal sum of scores
     repeat_list = sorted(repeat_list, key=lambda x:x.end)
-    D = [0 for _ in range(length + 1)]
-    I = [(None, -1) for _ in range(length + 1)]
+    D = [0 for _ in range(length + 2)]
+    I = [(None, -1) for _ in range(length + 2)]
     M = 0
     prev = 1
     for repeat in repeat_list:
@@ -14,7 +14,7 @@ def get_nonoverlaping_repeats(repeat_list, length):
                 D[i] = D[i - 1]
                 I[i] = I[i - 1]
         prev = repeat.end
-        X = D[repeat.start] + repeat.score
+        X = D[repeat.start] + float(repeat.score)
         if X >= D[repeat.end]:
             D[repeat.end] = X
             I[i] = (repeat, repeat.start)
@@ -45,6 +45,8 @@ def replace_masker(alignment, repeats, _filter=dummy_repeat_filter_function):
             rep.extend(repeats[rt][name])
         rep = _filter(rep, len(sequences[i]))
         for r in rep:
+            if r == None:
+                continue
             removed[name].append(r)
             for index in range(
                 alignment.seq_to_aln[i][r.start],
