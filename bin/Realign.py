@@ -77,7 +77,10 @@ def realign_file(args, model, output_filename, alignment_filename):
     if args.expand_model:
         old_tracks = args.tracks
         args.tracks.add('trf_cons')
-    annotations = compute_annotations(args, alignment_filename, model)
+    m = model
+    if args.annotation_model:
+        m = args.annotation_model
+    annotations = compute_annotations(args, alignment_filename, m)
     if args.expand_model:
         consensuses = annotations['trf_cons']
         args.tracks = old_tracks

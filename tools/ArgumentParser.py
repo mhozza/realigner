@@ -60,7 +60,7 @@ def get_posterior_processor(s):
         raise('Unknown posterior processor type')
 
 
-def get_model(args):
+def get_model(args, filename):
     loader = HMMLoader(args.mathType) # TODO: rename HMMLoader to ModelLoader
     for i in range(0, len(args.bind_file), 2):
         loader.addFile(args.bind_file[i], args.bind_file[i + 1])
@@ -74,7 +74,7 @@ def get_model(args):
             args.bind_constant_file[i],
             loader.loads(args.bind_constant_file[i + 1]),
         )
-    model = loader.load(args.model)["model"]
+    model = loader.load(filename)["model"]
     if args.add_masked_to_distribution:
         model.add_soft_masking_to_distribution()
     return model
@@ -89,6 +89,7 @@ parse_arguments_capabilities_ordered = [
 parse_arguments_capabilities_keywords = {    
     'mathType': (['-m'],{'type': str, 'default': 'float', 'choices': ['LogNum', 'float'], 'help': 'Numeric type to use'}),
     'model': ([], {'type': str, 'default': 'data/models/repeatHMM.js', 'help': 'Model file'}),
+    'annotation_model': ([], {'type': str, 'default': '', 'help': 'Model file'}),
     'trf': ([], {'type': toList, 'default': trf_paths, 'help': 'Location of tandem repeat finder binary'}),
     'algorithm': ([], {'type': str, 'default': 'block_posterior', 'choices': ['posterior', 'block_posterior', 'viterbi'], 'help': 'Which realignment algorithm to use'}),
     'bind_file': ([], {'nargs': '*', 'help': 'Replace filenames in the input_file model.', 'default': []}), 
@@ -150,7 +151,12 @@ def parse_arguments(
         return None
     
     # ====== Load model ========================================================
-    parsed_arg.model = get_model(parsed_arg)
+    parsed_arg.model = get_model(parsed_arg, parsed_arg.model)
+    if parsed_arg.annotation_model:
+        parsed_arg.annotation_model = get_model(
+            parsed_arg,
+            parsed_arg.annotation_model
+        )
     io_files = {'input': {}, 'output': {}}
     if 'intermediate_input_files' in keywords:
         io_files['input'] = parsed_arg.intermediate_output_files
