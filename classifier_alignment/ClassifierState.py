@@ -4,7 +4,7 @@ from classifier_alignment.DataPreparer import DataPreparer, IndelDataPreparer
 from hmm.PairHMM import GeneralizedPairState
 from tools.Exceptions import ParseException
 
-window_size = 1
+window_size = 5
 
 
 class ClassifierState(GeneralizedPairState):

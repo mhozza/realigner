@@ -130,6 +130,7 @@ class PairClassifier:
 
 def plot(hist0, hist1, gaus0, gaus1):
     xvals = linspace(0.0, 1.0, 500)
+    line_width = 3.0
 
     plt.figure()
     plt.subplot(1, 2, 1)
@@ -142,15 +143,43 @@ def plot(hist0, hist1, gaus0, gaus1):
         normed=False,
         histtype='bar',
         stacked=False,
-        label=["anotated 1", "anotated 0", "not anotated 1", "not anotated 0"])
+        label=["1", "0"]
+    )
     plt.legend(loc=0)
     plt.subplot(1, 2, 2)
     plt.hold(True)
-    plt.plot(xvals, gaus1(xvals), label="anotated 1")
-    plt.plot(xvals, gaus0(xvals), label="anotated 0")
+    plt.plot(xvals, gaus1(xvals), label="1", linewidth=line_width)
+    plt.plot(xvals, gaus0(xvals), label="0", linewidth=line_width)
 
 
-def compute_graph_data(clf, data, target):
+def plot1(hist, gaus):
+    xvals = linspace(0.0, 1.0, 500)
+    line_width = 3.0
+
+    plt.figure()
+    plt.subplot(1, 2, 1)
+    plt.hist(
+        [
+            hist
+        ],
+        10,
+        normed=False,
+        histtype='bar',
+        stacked=False,
+    )
+    plt.legend(loc=0)
+    plt.subplot(1, 2, 2)
+    plt.hold(True)
+    plt.plot(xvals, gaus(xvals), label="anotated 1", linewidth=line_width)
+
+
+def compute_graph_data(clf, data):
+    hist = clf.predict([data[i] for i in range(len(data))])
+    gaus = gaussian_kde(hist)
+    return hist, gaus
+
+
+def compute_01graph_data(clf, data, target):
     hist0 = clf.predict([data[i] for i in range(len(data)) if not target[i]])
     hist1 = clf.predict([data[i] for i in range(len(data)) if target[i]])
     gaus0 = gaussian_kde(hist0)
@@ -189,18 +218,18 @@ def main():
     # c.fit(x, y)
     # ic.fit(ix, iy)
 
-    plot(*compute_graph_data(c, x, y))
-    plot(*compute_graph_data(ic, ix, iy))
-
     _, s_x, a_x, s_y, a_y = dl.loadSequence(
         path.join(path_to_data, 'sequences/simulated_alignment.fa')
     )
-
     px, py = dp.prepare_training_data(s_x, a_x, s_y, a_y)
     ipx, ipy = idp.prepare_training_data(s_x, a_x, s_y, a_y)
 
-    plot(*compute_graph_data(c, px, py))
-    plot(*compute_graph_data(ic, ipx, ipy))
+    plot(*compute_01graph_data(c, x, y))
+    plot(*compute_01graph_data(ic, ix, iy))
+
+    plot(*compute_01graph_data(c, px, py))
+    plot(*compute_01graph_data(ic, ipx, ipy))
+
     plt.show()
 
 if __name__ == "__main__":

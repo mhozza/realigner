@@ -1,0 +1,4 @@
+pozret posterior realigner
+a naimplementovat do viterbiho
+drawer
+border lines

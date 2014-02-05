@@ -13,12 +13,12 @@ time $PYTHON bin/Realign.py \
 	--beam_width 30 \
 	--sequence_regexp $3 $4 \
 	--algorithm viterbi\
-	--model data/models/OracleHMM.js\
+    --model data/models/ClassificationHMM.js\
 	$1\
 	$2
 
+	# --model data/models/OracleHMM.js\
 	# --model data/models/SimpleHMM.js\
-    # --model data/models/ClassificationHMM.js\
 	# --draw $2.png\
 	# working_dir_tmp/sampled_alignments/{id}.fa \
 	# working_dir_tmp/sampled_alignments/{id}.realigned.fa \

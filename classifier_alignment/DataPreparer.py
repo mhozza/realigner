@@ -1,7 +1,7 @@
 __author__ = 'michal'
 
 from alignment import Fasta
-from random import randint
+from random import randint, sample
 from classifier_alignment.AnnotationLoader import AnnotationLoader
 from tools.Exceptions import ParseException
 import constants
@@ -11,7 +11,6 @@ class DataPreparer:
     def __init__(self, window=1):
         self._window = window
         self.m = constants.bases
-        self._cache = dict()
 
     def _get_window_range(self, position):
         return range(
@@ -30,14 +29,12 @@ class DataPreparer:
             l.append(annotation_dict[k])
         return l
 
-    def _prepare_sequence(self, sequence, position, annotation, c=0):
+    def _prepare_sequence(self, sequence, position, annotation):
         """
         Creates data window from sequence and position
 
         @rtype : list
         """
-        # if (c, position) in self._cache:
-        #     return self._cache[c, position]
 
         data = list()
         for i in self._get_window_range(position):
@@ -49,7 +46,6 @@ class DataPreparer:
             data.append(self._prepare_base(b))
             data[len(data):] = self._prepare_annotations(a)
 
-        # self._cache[c, position] = data
         return data
 
     def prepare_data(
@@ -62,19 +58,16 @@ class DataPreparer:
         annotation_y,
     ):
         data_x = self._prepare_sequence(
-            sequence_x, position_x, annotation_x, 0
+            sequence_x, position_x, annotation_x
         )
         data_y = self._prepare_sequence(
-            sequence_y, position_y, annotation_y, 1
+            sequence_y, position_y, annotation_y
         )
         return data_x + data_y
 
     @property
     def window_size(self):
         return self._window
-
-    def clear_cache(self):
-        self._cache = dict()
 
     def prepare_training_data(
         self,
@@ -83,7 +76,6 @@ class DataPreparer:
         sequence_y,
         annotations_y,
     ):
-        self.clear_cache()
         train_data = (list(), list())
         sequence_xs = Fasta.alnToSeq(sequence_x)
         sequence_ys = Fasta.alnToSeq(sequence_y)
@@ -154,15 +146,12 @@ class IndelDataPreparer(DataPreparer):
             position + (1 + self.window_size)//2 - 1
         )
 
-    def _prepare_space_sequence(self, sequence, position, annotation, c=0):
+    def _prepare_space_sequence(self, sequence, position, annotation):
         """
         Creates data window from sequence and position
 
         @rtype : list
         """
-        # if (c, position) in self._cache:
-        #     return self._cache[c, position]
-
         data = list()
         for i in self._get_space_window_range(position):
             if 0 <= i < len(sequence):
@@ -173,7 +162,6 @@ class IndelDataPreparer(DataPreparer):
             data.append(self._prepare_base(b))
             data[len(data):] = self._prepare_annotations(a)
 
-        # self._cache[c, position] = data
         return data
 
     def prepare_data(
@@ -190,8 +178,8 @@ class IndelDataPreparer(DataPreparer):
             reference = self.insert_sequence
 
         args = [
-            (sequence_x, position_x, annotation_x, 0),
-            (sequence_y, position_y, annotation_y, 1),
+            (sequence_x, position_x, annotation_x),
+            (sequence_y, position_y, annotation_y),
         ]
 
         data_r = self._prepare_sequence(*args[reference])
@@ -205,7 +193,6 @@ class IndelDataPreparer(DataPreparer):
         sequence_y,
         annotations_y,
     ):
-        self.clear_cache()
         train_data = (list(), list())
 
         if self.insert_sequence == 0:
@@ -224,18 +211,18 @@ class IndelDataPreparer(DataPreparer):
 
         pos_s, pos_r = 0, 0
 
-        matched_pos = set()
+        match_pos = set()
         for i in range(len(space)):
             br, bs = reference[i], space[i]
             if bs != '-':
                 pos_s += 1
                 if br != '-':
+                    match_pos.add((pos_r, pos_s-1))
                     pos_r += 1
                 continue
             if br == '-':
                 continue
 
-            matched_pos.add((pos_r, pos_s))
             d = self.prepare_data(
                 sequence_rs,
                 pos_r,
@@ -250,21 +237,8 @@ class IndelDataPreparer(DataPreparer):
                 train_data[1].append(1)
             pos_r += 1
 
-        seq_size = len(train_data[0])
-        for i in range(seq_size):
-            x = None
-            while x is None:
-                x = randint(
-                    self.window_size//2,
-                    len(sequence_rs) - 1 - self.window_size//2,
-                )
-            y = None
-            while y is None or (x, y) in matched_pos:
-                y = randint(
-                    self.window_size//2,
-                    len(sequence_ss) - 1 - self.window_size//2,
-                )
-
+        matches = sample(match_pos, len(train_data[0]))
+        for x, y in matches:
             d = self.prepare_data(
                 sequence_rs,
                 x,

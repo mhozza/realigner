@@ -6,4 +6,5 @@
 *.clf
 data/train_sequences/*
 data/sequences/*
+data/bio_seq/*
 *.ipynb
