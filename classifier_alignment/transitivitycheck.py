@@ -62,5 +62,22 @@ def score():
 
     return compare(*sequences)
 
+
+def compare_with_source(source_fname, realigned_fname, seq1, seq2):
+    d = DataLoader()
+    src = d.getSequences(source_fname, [seq1+'$', seq2+'$'])
+    realigned = d.getSequences(realigned_fname, [seq1+'$', seq2+'$'])
+
+    src_f = create_alignemnt_function(src)
+    realigned_f = create_alignemnt_function(realigned)
+
+    l = max(len(src[0]), len(realigned[0]))
+    s = 0
+    for i in range(min(len(src[0]), len(realigned[0]))):
+        if src_f(i) == realigned_f(i):
+            s += 1
+
+    return float(s)/l
+
 if __name__ == '__main__':
     print score()
