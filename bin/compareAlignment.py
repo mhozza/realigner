@@ -1,3 +1,4 @@
+# pylint: disable=C0103, C0111, W0511
 import json
 from alignment import Fasta
 import argparse
@@ -24,7 +25,7 @@ def expand_repeats(coords, alignment):
             for x in sets[0]:
                 for y in sets[1]:
                     out.append((x, -1, y))                    
-        i+= 1
+        i += 1
     return out
 
 
@@ -34,7 +35,7 @@ def remove_repeats(coords, alignment):
     while i < len(alignment.sequences[1]):
         if alignment.sequences[1][i] != 'R':
             out.append(coords[i])
-        i+= 1
+        i += 1
     return out
 
 
@@ -62,14 +63,29 @@ def main(correct_file, aln_file, output_file, interval=None):
     for task_id in task_ids:
         separator = ''
         output = {}
-        for fun, tp in [(identity, 'standard'), (expand_repeats, 'expanded_repeats'), (remove_repeats, 'removed_repeats')]:
+        for fun, tp in [
+            (identity, 'standard'),
+            (expand_repeats, 'expanded_repeats'),
+            (remove_repeats, 'removed_repeats')
+        ]:
             try:
                 for correct, alignment in zip(
-                    Fasta.load(correct_file.format(id=task_id - 1), separator, Alignment),
-                    Fasta.load(aln_file.format(id=task_id - 1), separator, Alignment)
+                    Fasta.load(correct_file.format(
+                        id=task_id - 1),
+                        separator,
+                        Alignment,
+                    ),
+                    Fasta.load(
+                        aln_file.format(id=task_id - 1),
+                        separator,
+                        Alignment,
+                    )
                 ):
                     correct_len = len(correct.getCoordPairs(False))
-                    total_len = correct_len * 2 - correct.sequences[0].count('-') - correct.sequences[2].count('-')
+                    total_len = (
+                        correct_len * 2 - correct.sequences[0].count('-') - 
+                        correct.sequences[2].count('-')
+                    )
                     ccc = fun(correct.getCoordPairs(False), correct)
                     if tp == 'removed_repeats':
                         correct_len = len(ccc)
@@ -109,7 +125,7 @@ def main(correct_file, aln_file, output_file, interval=None):
                     dists = [99999999] * len(correct.sequences[1])
                     dst = 9999999
                     for x, a, y in ccc:
-                        position[(x,y)] = a
+                        position[(x, y)] = a
                     for i in range(len(correct.sequences[1])):
                         if correct.sequences[1][i] == 'R':
                             dst = 0
@@ -141,13 +157,19 @@ def main(correct_file, aln_file, output_file, interval=None):
                         for x, a, y in coord:
                             if annotation[a] == 'R':
                                 if x >= 0:
-                                   ret.add((x, -1))
+                                    ret.add((x, -1))
                                 if y >= 0:
                                     ret.add((-1, y))
                         return ret
 
-                    crann = getRepeatAnnotation(correct.getCoordPairs(False), correct.sequences[1]) 
-                    arann = getRepeatAnnotation(alignment.getCoordPairs(False), alignment.sequences[1]) 
+                    crann = getRepeatAnnotation(
+                        correct.getCoordPairs(False),
+                        correct.sequences[1],
+                    ) 
+                    arann = getRepeatAnnotation(
+                        alignment.getCoordPairs(False), 
+                        alignment.sequences[1],
+                    ) 
 
                     def getRepeatBlocks(coord, annotation):
                         if len(coord[0]) != 3:
@@ -167,7 +189,10 @@ def main(correct_file, aln_file, output_file, interval=None):
                                         x.add(-1)
                                     if len(y) == 0:
                                         y.add(-1)
-                                    ret.add(((min(x), max(x) + 1), (min(y), max(y) + 1)))
+                                    ret.add((
+                                        (min(x), max(x) + 1),
+                                        (min(y), max(y) + 1),
+                                    ))
                                     x = set()
                                     y = set()
                         if len(x) + len(y) > 0:
@@ -175,21 +200,33 @@ def main(correct_file, aln_file, output_file, interval=None):
                                 x.add(-1)
                             if len(y) == 0:
                                 y.add(-1)
-                            ret.add(((min(x), max(x) + 1), (min(y), max(y) + 1)))
+                            ret.add((
+                                (min(x), max(x) + 1),
+                                (min(y), max(y) + 1),
+                            ))
                             x = set()
                             y = set()
                         return ret
 
-                    cbann = getRepeatBlocks(correct.getCoordPairs(False), correct.sequences[1])
-                    abann = getRepeatBlocks(alignment.getCoordPairs(False), alignment.sequences[1])
+                    cbann = getRepeatBlocks(
+                        correct.getCoordPairs(False),
+                        correct.sequences[1],
+                    )
+                    abann = getRepeatBlocks(
+                        alignment.getCoordPairs(False),
+                        alignment.sequences[1],
+                    )
                     
-                    def dst(x1, x2):
+                    def dist(x1, x2):
                         if x1 == -1:
                             return 0
                         return x2 - x1
 
                     def getPoints(s):
-                        return sum([dst(x1,x2) + dst(y1,y2) for ((x1, x2), (y1, y2)) in s])
+                        return sum([
+                            dist(x1, x2) + dist(y1, y2) 
+                            for ((x1, x2), (y1, y2)) in s
+                        ])
 
                     # Find long segments that are correctly aligned
                     cseg = [1 if x in c else 0 for x in ac]
@@ -247,7 +284,7 @@ if __name__ == '__main__':
     parser.add_argument('aln', type=str, help='Alignment to analyze')
     parser.add_argument('output_file', type=str, help='Output file')
     parser.add_argument('--interval', type=int, nargs=2, default=None,
-                        help='Interval of ids (overide SGE settings');
+                        help='Interval of ids (overide SGE settings')
     parsed_arg = parser.parse_args()
     main(parsed_arg.correct, parsed_arg.aln, parsed_arg.output_file,
          parsed_arg.interval)

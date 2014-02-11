@@ -1,9 +1,10 @@
+# pylint: disable=C0103, C0111, W0511
 # ako vstup dostane model, zoznam súborov a spraví M krok -- každý stav bdue mať
 #maximization status
 from tools import perf
 from tools.file_wrapper import Open
 import argparse
-from bin.Realign import get_model, getMathType
+from tools.ArgumentParser import get_model, get_math_type
 from collections import defaultdict
 import json
 from algorithm.LogNum import LogNum
@@ -40,7 +41,7 @@ def main():
     parser.add_argument('--mathType', '-m', type=str, default='float',
                         choices=['LogNum', 'float'], help="Numeric type to use")
     args = parser.parse_args()
-    args.mathType = getMathType(args.mathType)
+    args.mathType = get_math_type(args.mathType)
     model = get_model(args)
     
     expectations = {

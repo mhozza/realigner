@@ -1,6 +1,17 @@
 import collections
 import functools
 
+
+def idx_pe(what, dictionary):
+    if what not in dictionary:
+        raise ParseException('{} was not found')
+    return dictionary[what]
+
+def idx(what, dictionary, default=None):
+    if what not in dictionary:
+        return default
+    return dictionary[what]
+
 def listToStr(a, indent=0):
     if len(a) == 0: return '[]'
     indentStr = ' ' * indent

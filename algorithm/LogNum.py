@@ -1,3 +1,4 @@
+# pylint: disable=C0103, C0111, W0511
 import math
 from tools.ConfigFactory import ConfigObject
 from tools.Exceptions import ParseException
@@ -6,7 +7,7 @@ from tools.Exceptions import ParseException
 def autoconvDecorator(f):
     def newFunction(self, other):
         if not isinstance(other, LogNum):
-            other = self.factory(other)
+            other = LogNum(other)
         return f(self, other)
     return newFunction
 
@@ -16,7 +17,7 @@ class LogNum(ConfigObject):
     value = float("-inf")
     __slots__ = ('value',)
     
-    def __init__(self, value = float(0), log = True):
+    def __init__(self, value = LogNum(0), log = True):
         if isinstance(value, LogNum):
             self.value = value.value
         elif log:
@@ -40,9 +41,6 @@ class LogNum(ConfigObject):
             raise ParseException("Value ('val') not found in state")
         self.value = float(dictionary['val']) 
     
-    def factory(self, other):
-        return LogNum(other)
-
     @autoconvDecorator   
     def __add__(self, other):
         if self.value == NegativeInfinity:
@@ -51,9 +49,15 @@ class LogNum(ConfigObject):
             return LogNum(self)
         #return LogNum(math.exp(self.value) + math.exp(other.value))
         if self.value > other.value:
-            return LogNum(self.value + math.log(1 + math.exp(other.value - self.value)), False)
+            return LogNum(
+                self.value + math.log(1 + math.exp(other.value - self.value)),
+                False,
+            )
         else:
-            return LogNum(other.value + math.log(1 + math.exp(self.value - other.value)), False)
+            return LogNum(
+                other.value + math.log(1 + math.exp(self.value - other.value)),
+                False,
+            )
 
     @autoconvDecorator 
     def __radd__(self, other):

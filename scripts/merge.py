@@ -1,8 +1,7 @@
+# pylint: disable=C0103, C0111, W0511
 import argparse
-from tools import perf
 from tools.file_wrapper import Open
 import json
-import re
 from alignment import Fasta
 
 
@@ -14,11 +13,21 @@ def main(files_filename, output_filename, suffix, base_dir):
         files = json.load(Open(files_filename))
         total = len(files)
         done = 0
+        X_name = 'X'
+        Y_name = 'Y'
+        A_name = 'A'
         for filename in files:
-            if done %100 ==0:
+            if done % 100 == 0:
                 print '{}/{} {:.2}%'.format(done, total, 100.0 * done / total)
             if filename == "":
-                Fasta.saveAlignmentPiece([(X_name, X), (Y_name, Y), (A_name, A)], ff)
+                Fasta.saveAlignmentPiece(
+                    [
+                        (X_name, X),
+                        (Y_name, Y),
+                        (A_name, A),
+                    ],
+                    ff,
+                )
                 X = ""
                 Y = ""
                 A = ""

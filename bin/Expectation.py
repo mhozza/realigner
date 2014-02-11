@@ -53,7 +53,7 @@ def expectation_generator(args, model, alignment_filename, annotations):
 
 
 def compute_expectations(args, model, output_filename, alignment_filename):
-    annotations = compute_annotations(args, alignment_filename)
+    annotations = compute_annotations(args, alignment_filename, model)
     with Open(output_filename, 'w') as fp:
         json.dump(jsonize_to_list(list(expectation_generator(
             args,

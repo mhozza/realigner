@@ -1,3 +1,4 @@
+# pylint: disable=C0103, C0111, W0511
 from hmm.HMM import State
 from hmm import SpecialHMMs
 from collections import defaultdict
@@ -12,7 +13,7 @@ from hmm.PairHMM import GeneralizedPairState
 from repeats.RepeatGenerator import RepeatGenerator
 from adapters.TRFDriver import Repeat
 from tools import perf
-
+from tools.structtools import idx_pe, idx
 
 
 class RepeatProfileFactory:
@@ -42,7 +43,7 @@ class RepeatProfileFactory:
     def getHMM(self, consensus):
         if consensus in self.cache:
             return self.cache[consensus]
-        if '_E' not in self.transitionMatrix: # TODO: neskor chceme iny system detekcie
+        if '_E' not in self.transitionMatrix: # TODO: deteguj inac
             one = self.mathType(1.0)
             for k, v in self.transitionMatrix.iteritems():
                 self.transitionMatrix[k] = self.mathType(v)
@@ -121,26 +122,23 @@ class PairRepeatState(State):
         self.cons_set = self.repeatGeneratorX.cons | self.repeatGeneratorY.cons
         self.cons_list = list(self.cons_set)
 
-        
+     
     def load(self, dictionary):
+        extract = lambda what: idx_pe(what, dictionary)
         State.load(self, dictionary)
-        if 'backgroundprob' not in dictionary:
-            raise ParseException("Backround probability was not found in state")
         self.backgroundProbability = [tuple(x) 
-                                      for x in dictionary['backgroundprob']]
-        if 'time' not in dictionary:
-            raise ParseException('Time was not found in state')
-        self.time = dictionary['time']
-        if 'transitionmatrix' not in dictionary:
-            raise ParseException('Transition matrix not found in state')
-        self.transitionMatrix = dictionary['transitionmatrix']
+                                      for x in extract('backgroundprob')]
+        self.time = extract('time')
+        self.transitionMatrix = extract('transitionmatrix')
         if 'consensusdistribution' in dictionary:
             self.consensusDistribution = default_dist(normalize_dict(
                 dictionary['consensusdistribution'],
                 mathType=self.mathType
             ))
         else:
-            self.consensusDistribution = defaultdict(lambda *x: self.mathType(1.0))
+            self.consensusDistribution = defaultdict(
+                lambda *x: self.mathType(1.0)
+            )
         if 'repeatlengthdistribution' in dictionary:
             tp = type(dictionary['repeatlengthdistribution'])
             if tp in [dict, defaultdict]:
@@ -153,14 +151,9 @@ class PairRepeatState(State):
                 self.repeatLengthDistribution = \
                     dictionary['repeatlengthdistribution']
                 self.repProb = self.repeatLengthDistribution.p
-        if 'trackemissions' in dictionary:
-            self.trackEmissions = dictionary['trackemissions']
-        if 'version' in dictionary:
-            self.version = dictionary['version']
-        else:
-            self.version = 'v1'
-        if 'repprob' in dictionary:
-            self.repProb = self.mathType(dictionary['repprob'])
+        self.trackEmissions = idx('trackemissions', dictionary)
+        self.version = idx('version', dictionary, 'v1')
+        self.repProb = idx('repprob', dictionary, self.repProb)
         if self.version == 'v2':
             self.trackEmissions = defaultdict(lambda *_: self.mathType(1.0))
             self.trackEmissions['MM'] = self.mathType(1.0)
@@ -307,7 +300,7 @@ class PairRepeatState(State):
     def buildSampleEmission(self):
         dur = defaultdict(int)
         cons = defaultdict(int)
-        total = 0;
+        total = 0
         for rg in [self.repeatGeneratorX, self.repeatGeneratorY]:
             if rg != None:
                 for rep in rg.repeats:
@@ -410,7 +403,7 @@ class PairRepeatState(State):
             if name[:2] in d2:
                 return d2[name[:2]], int(name[2:])
             raise 'Unknown state name'
-        def emission_to_realemission(state, emission, char):
+        def emission_to_realemission(emission, char):
             return 1 if char == emission else 0
         # TODO: zmen na dicty
         transitions = defaultdict(self.mathType)
@@ -420,12 +413,17 @@ class PairRepeatState(State):
         shuffle(it)
         for (x, y, consensus), prob in it[:10000]:
             clen = len(consensus)
-            hmm = self.getModel(consensus)
+            hmm = self.getHMM(consensus)
             for sequence in [x, y]:
                 if len(sequence) == 0:
                     continue
-                trans, emiss, likelihood = hmm.getBaumWelchCount(sequence, 0, len(sequence))
-                # TODO: Netreba tie veci nahodou uz normalizovat tu? alebo vydelit expectations likelihoodom? 
+                trans, emiss, likelihood = hmm.getBaumWelchCount(
+                    sequence,
+                    0,
+                    len(sequence)
+                )
+                # TODO: Netreba tie veci nahodou uz normalizovat tu? alebo 
+                #       vydelit expectations likelihoodom? 
                 like += likelihood * prob
                 for fi in range(len(hmm.states)):
                     fname = hmm.states[fi].stateName
@@ -444,7 +442,7 @@ class PairRepeatState(State):
                         if len(em) == 0: 
                             continue
                         if fn == 'M':
-                            em = emission_to_realemission(fn, em, 
+                            em = emission_to_realemission(em, 
                                                           consensus[findex])
                         emissions[fn][em] += prob * p
         return transitions, emissions, like
@@ -479,12 +477,18 @@ class PairRepeatState(State):
             if type(like) == float:
                 if like >= lastLike:
                     return like - lastLike
-                print 'Warning: last likelihood was smaller then previous', like.value, lastLike.value
+                print(
+                    'Warning: last likelihood was smaller then previous', 
+                    like.value, lastLike.value,
+                )
                 return lastLike - like
             else:
                 if like >= lastLike:
                     return like.value - lastLike.value
-                print 'Warning: last likelihood was smaller then previous', like.value, lastLike.value
+                print(
+                    'Warning: last likelihood was smaller then previous',
+                    like.value, lastLike.value,
+                )
                 return lastLike.value - like.value
         while diff(like, lastLike) > 1e-6:
             print 'New Iteration'

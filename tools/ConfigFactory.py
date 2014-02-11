@@ -4,7 +4,7 @@ import re
 import json
 from tools.file_wrapper import Open
 
-class ConfigObject:
+class ConfigObject(object):
 
     
     def load(self, dictionary):

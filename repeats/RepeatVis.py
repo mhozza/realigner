@@ -1,7 +1,8 @@
+# pylint: disable=C0103, C0111, W0511
 from PIL import Image, ImageDraw
-import functools
 from collections import defaultdict
 import json
+import random
 
 def get_shortest_rotation(x):
     xx = x + x
@@ -33,7 +34,9 @@ class ColorGenerator:
 class RepeatVis():
     
     def __init__(self):
-        self.repeats = defaultdict(lambda *x: defaultdict(lambda *x: defaultdict(list)))
+        self.repeats = defaultdict(
+            lambda *x: defaultdict(lambda *x: defaultdict(list))
+        )
         self.maxlen = 0
 
     def add_repeats(self, filename):
@@ -80,8 +83,17 @@ class RepeatVis():
                     startW = int(b * w_scale)
                     endW = int(e * w_scale)
                     D.rectangle([startW, startH, endW, endH], fill=color)
-                    w, h = D.textsize(cons)
-                    D.text([startW + 5, startH + _bar_hei/2 - h/2], cons, fill=(255 - color[0], 255 - color[1], 255 - color[2], 255))
+                    _, h = D.textsize(cons)
+                    D.text(
+                        [startW + 5, startH + _bar_hei/2 - h/2],
+                        cons,
+                        fill = (
+                            255 - color[0],
+                            255 - color[1],
+                            255 - color[2],
+                            255
+                        ),
+                    )
                 index += 1
         height_write = base_height * (_bar_hei + _skip)
         for t in fls:

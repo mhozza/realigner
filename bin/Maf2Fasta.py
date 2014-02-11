@@ -68,7 +68,7 @@ if __name__ == '__main__':
     parser.add_argument('input', type=str, help="Input file")
     parser.add_argument('output', type=str, help="Output file")
     parser.add_argument('--output_type', default="normal", type=str)
-    parser.sequences('--sequences', nargs='*', default=[], help="Regexps for sequence selections")
+    parser.add_argument('--sequences', nargs='*', default=[], help="Regexps for sequence selections")
     parsed_arg = parser.parse_args()
     main(parsed_arg.input, parsed_arg.output, parsed_arg.sequences, parsed_arg.output_type)
     perf.printAll()
