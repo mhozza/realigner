@@ -131,7 +131,7 @@ def realign_file(args, model, output_filename, alignment_filename):
                 drawer.draw(args.draw, 2000, 2000)
                 perf.msg("Image was drawn in {time} seconds.")
             # Save output_file
-            Fasta.saveAlignmentPiece(aln, output_file_object)
+            realigner.save(aln, output_file_object)
 
 
 #TODO: if sampling, the alignment is not necessary

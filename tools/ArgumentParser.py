@@ -108,6 +108,7 @@ parse_arguments_capabilities_keywords = {
     'draw': ([], {'default': '', 'type': str, 'help': 'output file for image'}),
     'mask_repeats': ([], {'default': '', 'type': get_repeatmasker, 'help': 'Mask repeats'}),
     'add_masked_to_distribution': ([], {'action': 'store_true', 'help':'Add \'N\' to distributions'}),
+    'train': ([], {'default': '', 'type': str, 'help': 'what training phase', 'choices': ['none', 'expectation']}),
 }
 
 def parse_arguments(

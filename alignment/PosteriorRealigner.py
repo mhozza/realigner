@@ -117,6 +117,7 @@ class PosteriorRealigner(Realigner):
         """
         Constructor
         """
+        Realigner.__init__(self)
         self.posteriorTable = None
    
    

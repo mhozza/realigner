@@ -5,6 +5,7 @@ Created on Jan 17, 2013
 @author: Michal Nánási (michal.nanasi@gmail.com)
 '''
 from alignment.AlignmentIterator import AlignmentBeamGenerator
+from alignment import Fasta
 
 
 class Realigner(object):
@@ -64,3 +65,6 @@ class Realigner(object):
     def realign(self, x, dx, y, dy, ignore=set()):
         """Realign part of sequences."""
         return ['', '', '']
+
+    def save(self, aln, output_file_object):
+        Fasta.saveAlignmentPiece(aln, output_file_object)
