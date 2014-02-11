@@ -63,7 +63,7 @@ class GeneralizedPairState(GeneralizedState):
                 d[k][('N', y)].append(p)
             if dy == 1 and x != 'N':
                 d[k][(x, 'N')].append(p)
-            if dx == 1 and y == 1 and x != 'N' and y != 'N':
+            if dx == 1 and dy == 1 and x != 'N' and y != 'N':
                 d[k][('N', 'N')].append(p)
         for kk, v in d.iteritems():
             for k, l in v.iteritems(): 

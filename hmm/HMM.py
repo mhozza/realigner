@@ -74,7 +74,7 @@ class State(ConfigObject):
 
     def add_soft_masking_to_distribution(self):
         probs = [v for k, v in self.emissions.iteritems() if k != 'N']
-        self.emissoins['N'] = self.mathType(sum(probs) / len(probs))
+        self.emissions['N'] = self.mathType(sum(probs) / len(probs))
 
     def serializeMe(self):
         return self.serialize
@@ -153,6 +153,12 @@ class State(ConfigObject):
     
     def computeHints(self, realigner):
         return None
+
+    def augmentSequences(self, *L):
+        t = tuple([x[0][x[1]:x[1]+x[2]] for x in L])
+        if len(t) == 1:
+            return t[0]
+        return t
 
 class HMM(ConfigObject):
     
