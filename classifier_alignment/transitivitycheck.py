@@ -45,10 +45,10 @@ def compare(p1, p2, p3):
     return float(s)/len(bs)
 
 
-def score():
+def score(fname):
     sequence_names = ['sequence1', 'sequence2', 'sequence3']
     sequences = []
-    fname = 'data/sequences/simulated_alignment.{}_{}.realigned.fa'
+    # fname = 'data/sequences/simulated_alignment.{}_{}.realigned.fa'
 
     d = DataLoader()
     for x in range(len(sequence_names)-1):
@@ -78,6 +78,3 @@ def compare_with_source(source_fname, realigned_fname, seq1, seq2):
             s += 1
 
     return float(s)/l
-
-if __name__ == '__main__':
-    print score()
