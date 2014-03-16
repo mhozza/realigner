@@ -45,7 +45,7 @@ class MarkovChain:
 
 
 def get_sequence(sequence, mask):
-    return [sequence[i] for i in range(len(sequence)) if mask[i] != '-']
+    return [s for i, s in enumerate(sequence) if mask[i] != '-']
 
 
 def sequence_to_intervals(seq, name):
