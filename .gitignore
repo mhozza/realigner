@@ -7,4 +7,5 @@
 data/train_sequences/*
 data/sequences/*
 data/bio_seq/*
+data/*
 *.ipynb

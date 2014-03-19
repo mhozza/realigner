@@ -7,6 +7,8 @@ import argparse
 from alignment import Fasta
 from classifier_alignment import simulator
 
+seq_basename = 'sequence'
+
 
 def load_seq():
     seq1 = sys.stdin.readline()
@@ -66,14 +68,11 @@ def add_annotation(
         func(filename, seq, seq_name, *args)
 
 
-def main(base_fname='bio'):
-    data_dir = 'data/bio_seq'
+def main(sequences, base_fname='bio', data_dir='data/bio_seq'):
     seq_fname = os.path.join(data_dir, base_fname + '.fa')
     config_fname = os.path.join(data_dir, base_fname + '.js')
-    seq_basename = 'sequence'
     annotations = list()
     annotation_files = dict()
-    sequences = load_seq()
     names = create_fasta(seq_fname, seq_basename, sequences)
     add_annotation(
         zip(names, sequences),
@@ -86,8 +85,10 @@ def main(base_fname='bio'):
     )
     create_config(config_fname, annotations, names, annotation_files)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('name', metavar='name', type=str)
     args = parser.parse_args()
-    main(args.name)
+    sequences = load_seq()
+    main(sequences, args.name)

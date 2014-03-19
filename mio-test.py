@@ -3,6 +3,7 @@ __author__ = 'michal'
 
 import os
 import threading
+import argparse
 from classifier_alignment import transitivitycheck
 
 
@@ -15,13 +16,14 @@ def realign(src, dest, sX, sY, model):
     )
 
 
-def main():
+def main(base_filename='simulated_alignment', base_dir='data/sequences'):
     models = ['SimpleHMM.js', 'ClassificationHMM.js', 'OracleHMM.js']
-    src = 'data/sequences/simulated_alignment.fa'
-    sequences = ['sequence1', 'sequence2', 'sequence3']
+    src = os.path.join(base_dir, base_filename + '.fa')
+    # sequences = ['sequence1', 'sequence2', 'sequence3']
+    sequences = ['sequence1', 'sequence2']
 
     for model in models:
-        dst = 'data/sequences/simulated_alignment.{}_{}.' + model + '.fa'
+        dst = os.path.join(base_dir, base_filename + '.{}_{}.' + model + '.fa')
         threads = list()
 
         for x in range(len(sequences)-1):
@@ -41,10 +43,15 @@ def main():
             t.join()
 
         print model
-        print 'Transitivity: ' + str(transitivitycheck.score(dst))
+        if len(sequences) == 3:
+            print 'Transitivity: ' + str(transitivitycheck.score(dst))
         sX = sequences[0]
         sY = sequences[1]
         print 'Equality: ' + str(transitivitycheck.compare_with_source(src, dst.format(sX, sY), sX, sY))
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('name', metavar='name', type=str, default='simulated_alignment')
+    parser.add_argument('dir', metavar='dir', type=str, default='data/sequences')
+    args = parser.parse_args()
+    main(args.name, args.dir)
