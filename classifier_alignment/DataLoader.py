@@ -5,55 +5,9 @@ Created on May 10, 2013
 """
 from alignment import Fasta
 from alignment.Alignment import Alignment
-# from copy import deepcopy
-# from numpy import array
 from os import path, listdir
 from tools.Exceptions import ParseException
-
-# import itertools
 from classifier_alignment.AnnotationLoader import AnnotationLoader
-# import constants
-
-# class AnnotatedBase:
-#     def __init__(self):
-#         self.base = '-'
-#         self.annotations = {}
-#         self.position = 0
-
-#     def copy(self, ab):
-#         self.base = ab.base
-#         self.annotations = deepcopy(ab.annotations)
-#         self.position = ab.position
-
-#     def data(self):
-#         m = constants.bases
-#         res = [m[self.base]]
-#         for i in self.annotations.values():
-#             if i == '-':
-#                 res.append(None)
-#             else:
-#                 res.append(float(i))
-#         return res
-
-
-# class AnnotatedBaseCouple:
-#     def __init__(self, annotations=None):
-#         if annotations is None:
-#             self.annotations = []
-#         else:
-#             self.annotations = annotations
-
-#         self.X = AnnotatedBase()
-#         self.Y = AnnotatedBase()
-
-#     def data(self):
-#         return array(list(itertools.chain(*zip(self.X.data, self.Y.data))))
-
-#     def is_aligned(self):
-#         if self.X.base != '-' != self.Y.base:
-#             return 1
-#         else:
-#             return 0
 
 
 class DataLoader:

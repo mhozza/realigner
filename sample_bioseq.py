@@ -30,7 +30,7 @@ def load_file(fname):
 
 def sample_seq(n, seq_list, file_prefix):
     for i, s in enumerate(sample(seq_list, n)):
-        make_sequence.main(s, file_prefix + str(i))
+        make_sequence.main(s, file_prefix + str(i), 'data/model_train_seq')
 
 
 if __name__ == '__main__':

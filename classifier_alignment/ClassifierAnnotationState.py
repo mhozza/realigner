@@ -1,7 +1,9 @@
 import os
+from collections import defaultdict
 from scipy.stats import norm, gaussian_kde
 from classifier_alignment.ClassifierState import ClassifierState, ClassifierIndelState
 from classifier_alignment.DataLoader import DataLoader
+from tools.utils import merge
 
 precision = 10
 pseudocount = 0.001
@@ -32,9 +34,9 @@ class ClassifierAnnotationState(ClassifierState):
         }
 
         loc, scale, p = emissions[(seq_x[x] + seq_y[y])]
-        dc = float(round(precision*c)) / precision
+        dc = float(round(precision * c)) / precision
 
-        return p*(norm.cdf(dc, loc, scale) - norm.cdf(dc-1.0/precision, loc, scale))
+        return p * (norm.cdf(dc, loc, scale) - norm.cdf(dc - 1.0 / precision, loc, scale))
 
     def _emission(self, c, seq_x, x, seq_y, y):
         emissions = {
@@ -199,7 +201,55 @@ class ClassifierAnnotationState(ClassifierState):
             ('T', 'T', 8): 0.03226492254765,
             ('T', 'T', 9): 0.035545502111655046,
         }
-        return emissions[(seq_x[x], seq_y[y], round((precision-1)*c))]
+        return emissions[(seq_x[x], seq_y[y], round((precision - 1) * c))]
+
+
+    def _classification(self, seq_x, ann_x, seq_y, ann_y):
+        def state(i):
+            if seq_x[i] != '-' and seq_y[i] != '-':
+                return 0
+            return 1
+
+        if len(seq_x) != len(seq_y):
+            return
+        l = len(seq_x)
+
+        ret_match = self.clf.multi_prepare_predict(
+            (seq_x, pos, ann_x, seq_y, pos, ann_y)
+            for pos in filter(lambda x: state(x) == 0, xrange(l))
+        )
+
+        ret_insert = (
+            0 for _ in filter(lambda x: state(x) != 0, xrange(l))
+        )
+
+        ret = merge(ret_match, ret_insert, (state(x) for x in xrange(l)))
+        return ret
+
+
+    def compute_emissions(self, labels, seq_x, seq_y, ann_x, ann_y):
+        classification = self._classification(seq_x, ann_x, seq_y, ann_y)
+        data = defaultdict(list)
+        count = 0.0
+        for label, x, y, c in zip(labels, seq_x, seq_y, classification):
+            if label == 'M':
+                count += 1
+                data[(x, y)].append(c)
+        res = dict()
+
+        # todo: move gaussian one level up
+        for x in 'ACGT':
+            for y in 'ACGT':
+                p = len(data[(x, y)]) / count
+                if len(data[(x, y)]) > 1:
+                    g = gaussian_kde(data[(x, y)])
+                    for c in xrange(precision):
+                        res[(x, y, c)] = p * g.integrate_box(float(c) / precision, float(c + 1.0) / precision)
+                else:
+                    for c in xrange(precision):
+                        res[(x, y, c)] = p / precision
+
+        return res
 
 
 class ClassifierAnnotationIndelState(ClassifierIndelState):
@@ -219,59 +269,112 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
             b = seq_y[y]
 
         loc, scale, p = emissions[b]
-        dc = float(round(precision*c)) / precision
+        dc = float(round(precision * c)) / precision
 
-        return p*(norm.cdf(dc, loc, scale) - norm.cdf(dc-1.0/precision, loc, scale))
+        return p * (norm.cdf(dc, loc, scale) - norm.cdf(dc - 1.0 / precision, loc, scale))
 
-    def _emission(self, c, seq_x, x, seq_y, y):
-        emissions = {
-            ('A', 0): 0.005198361767166082,
-            ('A', 1): 0.011587239922138105,
-            ('A', 2): 0.01913112841857072,
-            ('A', 3): 0.020835305620836624,
-            ('A', 4): 0.020204082677764332,
-            ('A', 5): 0.024274544108774825,
-            ('A', 6): 0.0403090422024829,
-            ('A', 7): 0.041562759307358706,
-            ('A', 8): 0.03364673107541404,
-            ('A', 9): 0.01876618157314619,
-            ('C', 0): 0.000942882091696499,
-            ('C', 1): 0.00474113075341553,
-            ('C', 2): 0.007927327679877687,
-            ('C', 3): 0.016204850048854965,
-            ('C', 4): 0.03244055313849878,
-            ('C', 5): 0.04382072690055593,
-            ('C', 6): 0.03405333274895445,
-            ('C', 7): 0.04319155195037199,
-            ('C', 8): 0.03414422618258092,
-            ('C', 9): 0.015040715694301285,
-            ('G', 0): 0.00048082424037908104,
-            ('G', 1): 0.002339209063500435,
-            ('G', 2): 0.00917599355114768,
-            ('G', 3): 0.0223247430967839,
-            ('G', 4): 0.02460318701683969,
-            ('G', 5): 0.03597606200841751,
-            ('G', 6): 0.04473806644762656,
-            ('G', 7): 0.05487220407398877,
-            ('G', 8): 0.03924842518201544,
-            ('G', 9): 0.01532786937400819,
-            ('T', 0): 0.003848305339433091,
-            ('T', 1): 0.007702390302105445,
-            ('T', 2): 0.011059419560531808,
-            ('T', 3): 0.02282536420567599,
-            ('T', 4): 0.023698018769685938,
-            ('T', 5): 0.02991874731614661,
-            ('T', 6): 0.04149857874897969,
-            ('T', 7): 0.04389424017129152,
-            ('T', 8): 0.032935300578763205,
-            ('T', 9): 0.012924413529076651,
-        }
-        if self.state_label == 'X':
-            b = seq_x[x]
-        else:
-            b = seq_y[y]
 
-        return emissions[(b, round((precision-1)*c))]
+    def _classification(self, seq_x, ann_x, seq_y, ann_y):
+        def state(i):
+            if seq_x[i] != '-' and seq_y[i] != '-':
+                return 0
+            return 1
+
+        if len(seq_x) != len(seq_y):
+            return
+        l = len(seq_x)
+        ret_insert = self.clf.multi_prepare_predict(
+            (seq_x, pos, ann_x, seq_y, pos, ann_y)
+            for pos in filter(lambda x: state(x) != 0, xrange(l))
+        )
+        ret_match = (
+            0 for _ in filter(lambda x: state(x) == 0, xrange(l))
+        )
+        ret = merge(ret_match, ret_insert, (state(x) for x in xrange(l)))
+        return ret
+
+
+    def compute_emissions(self, labels, seq_x, seq_y, ann_x, ann_y):
+        classification = self._classification(seq_x, ann_x, seq_y, ann_y)
+        data = dict()
+        for x in 'ACGT':
+            data[x] = list()
+
+        count = 0.0
+        for state, x, y, c in zip(labels, seq_x, seq_y, classification):
+            # use one insert state for both X and Y - they are equivalent for now
+            if state == 'Y':
+                state = 'X'
+            count += 1
+            if state == 'X':
+                if x != '-':
+                    data[x].append(c)
+                if y != '-':
+                    data[y].append(c)
+
+        res = dict()
+        #todo: move gaussian one level up
+        for x in 'ACGT':
+            p = len(data[x]) / count
+            if len(data[x]) > 1:
+                g = gaussian_kde(data[x])
+                for c in xrange(precision):
+                    res[(x, c)] = p * g.integrate_box(float(c) / precision, float(c + 1.0) / precision)
+            else:
+                for c in xrange(precision):
+                    res[(x, c)] = p / precision
+        return res
+
+
+def _emission(self, c, seq_x, x, seq_y, y):
+    emissions = {
+        ('A', 0): 0.005198361767166082,
+        ('A', 1): 0.011587239922138105,
+        ('A', 2): 0.01913112841857072,
+        ('A', 3): 0.020835305620836624,
+        ('A', 4): 0.020204082677764332,
+        ('A', 5): 0.024274544108774825,
+        ('A', 6): 0.0403090422024829,
+        ('A', 7): 0.041562759307358706,
+        ('A', 8): 0.03364673107541404,
+        ('A', 9): 0.01876618157314619,
+        ('C', 0): 0.000942882091696499,
+        ('C', 1): 0.00474113075341553,
+        ('C', 2): 0.007927327679877687,
+        ('C', 3): 0.016204850048854965,
+        ('C', 4): 0.03244055313849878,
+        ('C', 5): 0.04382072690055593,
+        ('C', 6): 0.03405333274895445,
+        ('C', 7): 0.04319155195037199,
+        ('C', 8): 0.03414422618258092,
+        ('C', 9): 0.015040715694301285,
+        ('G', 0): 0.00048082424037908104,
+        ('G', 1): 0.002339209063500435,
+        ('G', 2): 0.00917599355114768,
+        ('G', 3): 0.0223247430967839,
+        ('G', 4): 0.02460318701683969,
+        ('G', 5): 0.03597606200841751,
+        ('G', 6): 0.04473806644762656,
+        ('G', 7): 0.05487220407398877,
+        ('G', 8): 0.03924842518201544,
+        ('G', 9): 0.01532786937400819,
+        ('T', 0): 0.003848305339433091,
+        ('T', 1): 0.007702390302105445,
+        ('T', 2): 0.011059419560531808,
+        ('T', 3): 0.02282536420567599,
+        ('T', 4): 0.023698018769685938,
+        ('T', 5): 0.02991874731614661,
+        ('T', 6): 0.04149857874897969,
+        ('T', 7): 0.04389424017129152,
+        ('T', 8): 0.032935300578763205,
+        ('T', 9): 0.012924413529076651,
+    }
+    if self.state_label == 'X':
+        b = seq_x[x]
+    else:
+        b = seq_y[y]
+
+    return emissions[(b, round((precision - 1) * c))]
 
 
 class SupervisedHmmClassifierAnnotationStateTraining():
@@ -291,7 +394,7 @@ class SupervisedHmmClassifierAnnotationStateTraining():
             if seq_x[i] == '-' and seq_y[i] == '-':
                 continue
             j = i + 1
-            while j < len(labels) and seq_x[i] == '-' and seq_y[i] == '-':
+            while j < len(labels) and seq_x[j] == '-' and seq_y[j] == '-':
                 j += 1
             if i < j < len(labels):
                 nextstate = labels[j]
@@ -300,10 +403,11 @@ class SupervisedHmmClassifierAnnotationStateTraining():
         for state in 'MXY':
             s = float(sum(counts[state].values()))
             for nextstate in 'MXY':
-                counts[state][nextstate] /= s
+                if s > 0:
+                    counts[state][nextstate] /= s
 
         return {
-            k+k2: v2 for k, v in counts.iteritems() for k2, v2 in v.iteritems()
+            k + k2: v2 for k, v in counts.iteritems() for k2, v2 in v.iteritems()
         }
 
     def emissions_norm(self, seq_x, seq_y, ann_x, ann_y):
@@ -340,7 +444,7 @@ class SupervisedHmmClassifierAnnotationStateTraining():
                     for y in 'ACGT':
                         loc, scale = norm.fit(data[state][(x, y)])
                         p = len(data[state][(x, y)]) / counts[state]
-                        res[x+y] = (loc, scale, p)
+                        res[x + y] = (loc, scale, p)
                 else:
                     loc, scale = norm.fit(data[state][x])
                     p = len(data[state][x]) / counts[state]
@@ -380,25 +484,33 @@ class SupervisedHmmClassifierAnnotationStateTraining():
             for x in 'ACGT':
                 if state == 'M':
                     for y in 'ACGT':
-                        g = gaussian_kde(data[state][(x, y)])
                         p = len(data[state][(x, y)]) / counts[state]
-                        for c in xrange(precision):
-                            res[(x, y, c)] = p*g.integrate_box(float(c)/precision, float(c+1.0)/precision)
+                        if len(data[state][(x, y)]) > 1:
+                            g = gaussian_kde(data[state][(x, y)])
+                            for c in xrange(precision):
+                                res[(x, y, c)] = p * g.integrate_box(float(c) / precision, float(c + 1.0) / precision)
+                        else:
+                            for c in xrange(precision):
+                                res[(x, y, c)] = p
                 else:
-                    g = gaussian_kde(data[state][x])
                     p = len(data[state][x]) / counts[state]
-                    for c in xrange(precision):
-                        res[(x, c)] = p*g.integrate_box(float(c)/precision, float(c+1.0)/precision)
+                    if len(data[state][x]) > 1:
+                        g = gaussian_kde(data[state][x])
+                        for c in xrange(precision):
+                            res[(x, c)] = p * g.integrate_box(float(c) / precision, float(c + 1.0) / precision)
+                    else:
+                        for c in xrange(precision):
+                            res[(x, c)] = p
 
         return res
 
     def starting(self):
-        return [1/3.0, 1/3.0, 1/3.0]
+        return [1 / 3.0, 1 / 3.0, 1 / 3.0]
 
     def get_probabilities(self, seq_x, ann_x, seq_y, ann_y):
-        return\
-            self.starting(),\
-            self.transitions(seq_x, seq_y),\
+        return \
+            self.starting(), \
+            self.transitions(seq_x, seq_y), \
             self.emissions(seq_x, seq_y, ann_x, ann_y)
 
     def labels(self, seq_x, seq_y):
@@ -456,11 +568,11 @@ class SupervisedHmmClassifierAnnotationStateTraining():
 
 def main():
     path_to_data = "data/"
-
+    # fname = 'model_train_seq/simulated_alignment.fa'
+    fname = 'model_train_seq/bio_test/bio8.fa'
+    fname = os.path.join(path_to_data, fname)
     dl = DataLoader()
-    _, s_x, a_x, s_y, a_y = dl.loadSequence(
-        os.path.join(path_to_data, 'model_train_seq/simulated_alignment.fa')
-    )
+    _, s_x, a_x, s_y, a_y = dl.loadSequence(fname)
     training = SupervisedHmmClassifierAnnotationStateTraining()
     probabilities = training.get_probabilities(s_x, a_x, s_y, a_y)
     print(probabilities)
@@ -468,3 +580,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
