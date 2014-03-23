@@ -33,7 +33,6 @@ class ModelTraining:
                 model_json[k] = self.model[k].toJSON()
             else:
                 model_json[k] = self.model[k]
-        print model_json
         with open(fname, 'w') as f:
             json.dump(model_json, f)
 
