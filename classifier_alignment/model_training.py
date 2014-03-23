@@ -2,6 +2,7 @@
 __author__ = 'michal'
 from classifier_alignment.DataLoader import DataLoader
 from classifier_alignment.ClassifierAnnotationState import ClassifierAnnotationState, ClassifierAnnotationIndelState
+from classifier_alignment.SimpleStates import SimpleMatchState, SimpleIndelState
 from tools.utils import dict_avg as avg
 
 
@@ -9,7 +10,7 @@ class ModelTraining:
     def __init__(self):
         self.position_independent = False
         # self.model_states = [('M', ClassifierAnnotationState()), ('X', ClassifierAnnotationIndelState())]
-        self.model_states = [('M', ClassifierAnnotationState()), ('X', ClassifierAnnotationIndelState())]
+        self.model_states = [('M', SimpleMatchState()), ('X', SimpleIndelState())]
 
     def load_model(self):
         pass
@@ -63,7 +64,8 @@ class ModelTraining:
             for onechar, state in self.model_states:
                 data[onechar] = state.compute_emissions(labels, seq_x, seq_y, a_x, a_y)
             return data
-        except AttributeError:
+        except AttributeError as e:
+            print 'Emissions not suppoorted by model!', e
             return None
 
     def start_states(self):

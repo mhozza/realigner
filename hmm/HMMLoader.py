@@ -14,6 +14,7 @@ from classifier_alignment.ClassifierState import ClassifierState, SimpleState,\
 from classifier_alignment.ClassifierAnnotationState import ClassifierAnnotationState,\
     ClassifierAnnotationIndelState
 from algorithm.LogNum import LogNum
+from classifier_alignment.SimpleStates import SimpleMatchState, SimpleIndelState
 
 
 def getInitializerObject(tp, mathType):
@@ -51,6 +52,8 @@ class HMMLoader(ConfigFactory):
             HighOrderRepeatState,
             RepeatLengthDistribution,
             SimpleState,
+            SimpleMatchState,
+            SimpleIndelState,
             LogNum,
         ]:
 

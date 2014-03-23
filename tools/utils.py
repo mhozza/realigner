@@ -14,6 +14,8 @@ def avg(l):
     return sum(l)/float(len(l))
 
 def dict_avg(ld):
+    if ld is None:
+        return None
     d = None
     for i in ld:
         if d == None:
