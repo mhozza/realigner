@@ -25,8 +25,8 @@ class PairClassifier:
     def __init__(
         self,
         preparer,
-        filename="data/randomforest.clf",
-        training_data_dir="data/train_sequences",
+        filename="data/clf/randomforest.clf",
+        training_data_dir="data/sequences/train_sequences",
         params={"n_estimators": 30, "n_jobs": 10, "max_depth": 20},
         autotrain=True,
         memoization=False,

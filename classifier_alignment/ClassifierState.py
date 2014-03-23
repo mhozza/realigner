@@ -11,11 +11,11 @@ class ClassifierState(GeneralizedPairState):
     def __init__(self, *args, **_):
         GeneralizedPairState.__init__(self, *args)
         self.dp = DataPreparer(window_size)
-        self.clf_fname = 'data/randomforest{}.clf'.format(window_size)
+        self.clf_fname = 'data/clf/randomforest{}.clf'.format(window_size)
         self.clf = PairClassifier(self.dp, filename=self.clf_fname)
         self.al = AnnotationLoader()
         self.annotations, self.ann_x, self.ann_y = self.al.get_annotations(
-            "data/sequences/simulated_alignment.js"
+            "data/sequences/simulated/simulated_alignment.js"
         )
         self.emission_table = None
 
