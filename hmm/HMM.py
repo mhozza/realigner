@@ -51,6 +51,7 @@ class State(ConfigObject):
     def toJSON(self):
         ret = ConfigObject.toJSON(self)
         ret["name"] = self.stateName
+        ret["onechar"] = self.onechar
         ret["emission"] = list()
         ret["startprob"] = self.startProbability
         ret["endprob"] = self.endProbability

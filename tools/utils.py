@@ -21,13 +21,15 @@ def dict_avg(ld):
         if d == None:
             d = i
         else:
-            for k, v in i.iteritems():
-                if type(v) is float:
-                    d[k] += v
-                else:
-                    d[k] = dict_avg(v)
-    for k, v in d.iteritems():
-        if type(v) is float:
-            d[k] = v/float(len(ld))
+            if i is not None:
+                for k, v in i.iteritems():
+                    if type(v) is float:
+                        d[k] += v
+                    else:
+                        d[k] = dict_avg(v)
+    if d is not None:
+        for k, v in d.iteritems():
+            if type(v) is float:
+                d[k] = v/float(len(ld))
     return d
 
