@@ -14,7 +14,7 @@ class DataLoader:
     def getSequences(self, fname, sequence_regexp=None):
         alignment_regexp = ''
         if sequence_regexp is None:
-            sequence_regexp = ["sequence1$", "sequence2$"]
+            sequence_regexp = ["^sequence1$", "^sequence2$"]
 
         aln = next(
             Fasta.load(fname, alignment_regexp, Alignment, sequence_regexp)
@@ -25,12 +25,16 @@ class DataLoader:
         seq2 = aln.sequences[1]
         return seq1, seq2
 
+    @staticmethod
+    def default_annotation_fname(fname):
+        return path.splitext(fname)[0] + '.js'
+
     def loadSequence(self, fname, configFname=None):
         """
         Loads sequence with from file 'fname'
         """
         if configFname is None:
-            configFname = path.splitext(fname)[0] + '.js'
+            configFname = DataLoader.default_annotation_fname(fname)
 
         seqX, seqY = self.getSequences(fname)
         al = AnnotationLoader()

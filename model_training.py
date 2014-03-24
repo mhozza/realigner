@@ -5,6 +5,7 @@ from tools.utils import dict_avg as avg
 from hmm.HMMLoader import HMMLoader
 import json
 import argparse
+from collections import defaultdict
 
 
 class ModelTraining:
@@ -50,12 +51,7 @@ class ModelTraining:
         return (state(i) for i in xrange(len(seq_x)))
 
     def transitions(self, labels):
-            counts = dict()
-            for state in 'MXY':
-                counts[state] = dict()
-                for nextstate in 'MXY':
-                    counts[state][nextstate] = 0.0
-
+            counts = defaultdict(lambda: defaultdict(float))
             for i, state in enumerate(labels):
                 if state == '-':
                     continue
@@ -67,13 +63,14 @@ class ModelTraining:
                     counts[state][nextstate] += 1
 
             for state in 'MXY':
-                s = float(sum(counts[state].values()))
+                s = sum(counts[state].values())
                 for nextstate in 'MXY':
                     if s > 0:
                         counts[state][nextstate] /= s
-
+                    else:
+                        counts[state][state] = 1.0
             return {
-                k+k2: v2 for k, v in counts.iteritems() for k2, v2 in v.iteritems()
+                '{}{}'.format(k, k2): v2 for k, v in counts.iteritems() for k2, v2 in v.iteritems()
             }
 
     def emissions(self, seq_x, seq_y, a_x, a_y, labels):
@@ -106,6 +103,7 @@ class ModelTraining:
             if e is not None:
                 emissions_m.append(e['M'])
                 emissions_x.append(e['X'])
+        #FixMe Toto je trochu blbost!!!
         return avg(transitions), {'M': avg(emissions_m), 'X': avg(emissions_x)}
 
     def set_model_emissions(self, emissions):

@@ -74,7 +74,10 @@ def get_model(args, filename, allow_mask=True):
             args.bind_constant_file[i],
             loader.loads(args.bind_constant_file[i + 1]),
         )
-    model = loader.load(filename)["model"]
+
+    model = loader.load(filename)
+    if type(model) is dict and 'model' in model:
+        model = model["model"]
     if args.add_masked_to_distribution and allow_mask:
         model.add_soft_masking_to_distribution()
     return model

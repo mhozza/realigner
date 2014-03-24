@@ -37,6 +37,10 @@ class JSLoader(ConfigFactory):
 
 
 class AnnotationLoader:
+    def __init__(self, loader=None):
+        if loader is None:
+            self.loader = JSLoader()
+
     @staticmethod
     def get_annotation_at(annotations, i):
         """
@@ -89,15 +93,16 @@ class AnnotationLoader:
             )
         return res
 
-    def get_annotations(self, fname):
-        loader = JSLoader()
-        annotation_config = loader.load(fname)
-        annotations = annotation_config.annotations
+    def get_annotations_from_model(self, model):
+        annotations = model.annotations
         annotations_x = self._get_sequence_annotations(
-            annotations, annotation_config.sequences["sequence1"]
+            annotations, model.sequences["sequence1"]
         )
         annotations_y = self._get_sequence_annotations(
-            annotations, annotation_config.sequences["sequence2"]
+            annotations, model.sequences["sequence2"]
         )
         return annotations, annotations_x, annotations_y
 
+    def get_annotations(self, fname):
+        model = self.loader.load(fname)
+        return self.get_annotations_from_model(model)

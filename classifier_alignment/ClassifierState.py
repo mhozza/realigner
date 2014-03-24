@@ -14,6 +14,7 @@ class ClassifierState(GeneralizedPairState):
         self.clf_fname = 'data/clf/randomforest{}.clf'.format(window_size)
         self.clf = PairClassifier(self.dp, filename=self.clf_fname)
         self.al = AnnotationLoader()
+        # Fixme
         self.annotations, self.ann_x, self.ann_y = self.al.get_annotations(
             "data/sequences/simulated/simulated_alignment.js"
         )
@@ -63,10 +64,3 @@ class ClassifierIndelState(ClassifierState):
         )
 
         return res
-
-
-class SimpleState(GeneralizedPairState):
-    def emission(self, *_, **__):
-        # 1/4 - base * 1/2 - gene
-        # return (1/8.0)**window_size
-        return 0.25

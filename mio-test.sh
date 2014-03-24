@@ -14,6 +14,7 @@ time $PYTHON bin/Realign.py \
 	--sequence_regexp $3 $4 \
 	--algorithm viterbi\
 	--model $5\
+	--annotation_model ${1%.fa}.js\
 	$1\
 	$2
 
