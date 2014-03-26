@@ -41,7 +41,7 @@ class ClassifierIndelState(ClassifierState):
     def __init__(self, *args, **kwargs):
         ClassifierState.__init__(self, *args, **kwargs)
         self.dp = IndelDataPreparer(0, window_size)
-        self.clf_fname = 'data/randomforest_indel{}.clf'.format(window_size)
+        self.clf_fname = 'data/clf/randomforest_indel{}.clf'.format(window_size)
         self.clf = PairClassifier(
             self.dp, filename=self.clf_fname
         )

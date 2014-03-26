@@ -205,7 +205,7 @@ def main(n, datadir='data/train_sequences/', fname='simulated_alignment'):
         json.dump(annotations.toJSON(), f)
 
 if __name__ == "__main__":
-    main(100000, 'data/model_train_seq')
-    # main(1000, 'data/sequences')
+    # main(100000, 'data/sequences/model_train_seq')
+    main(1000, 'data/sequences/simulated')
     # for i in range(5):
     #     main(10000, fname='simulated_alignment{}'.format(i))

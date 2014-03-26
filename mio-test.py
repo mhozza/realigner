@@ -17,7 +17,7 @@ def realign(src, dest, sX, sY, model):
 
 
 def main(base_filename='simulated_alignment', base_dir='data/sequences'):
-    models = ['SimpleHMM.js', 'ClassificationHMM.js', 'OracleHMM.js']
+    models = ['SimpleHMM2.js', 'ClassificationHMM.js', 'OracleHMM.js']
     src = os.path.join(base_dir, base_filename + '.fa')
     # sequences = ['sequence1', 'sequence2', 'sequence3']
     sequences = ['sequence1', 'sequence2']
@@ -52,6 +52,6 @@ def main(base_filename='simulated_alignment', base_dir='data/sequences'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('name', metavar='name', type=str, default='simulated_alignment', nargs='?')
-    parser.add_argument('dir', metavar='dir', type=str, default='data/sequences', nargs='?')
+    parser.add_argument('dir', metavar='dir', type=str, default='data/sequences/simulated', nargs='?')
     args = parser.parse_args()
     main(args.name, args.dir)
