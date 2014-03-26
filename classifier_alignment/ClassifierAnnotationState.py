@@ -118,7 +118,7 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
         return emissions, count
 
     def _emission(self, c, seq_x, x, seq_y, y):
-        if self.state_label == 'X':
+        if self.onechar == 'X':
             b = seq_x[x]
         else:
             b = seq_y[y]

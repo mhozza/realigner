@@ -31,7 +31,7 @@ def main(base_fname, base_dir):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('name', metavar='name', type=str, default='simulated_alignment')
-    parser.add_argument('dir', metavar='dir', type=str, default='data/sequences')
+    parser.add_argument('name', metavar='name', type=str, default='simulated_alignment', nargs='?')
+    parser.add_argument('dir', metavar='dir', type=str, default='data/sequences/simulated', nargs='?')
     args = parser.parse_args()
     main(args.name, args.dir)

@@ -98,6 +98,8 @@ class ModelTraining:
             return res
 
         def summarize_emissions(emissions):
+            if not emissions:
+                return {}
             res = dict()
             keys = emissions[0][0].keys()
             count = float(sum((e[1] for e in emissions)))

@@ -45,19 +45,15 @@ class ClassifierIndelState(ClassifierState):
         self.clf = PairClassifier(
             self.dp, filename=self.clf_fname
         )
-        self.state_label = 'X'
 
     def load(self, dictionary):
         res = ClassifierState.load(self, dictionary)
-        if dictionary['name'] == 'InsertX':
-            self.state_label = 'X'
+        if self.onechar == 'X':
             seq = 0
-        elif dictionary['name'] == 'InsertY':
-            self.state_label = 'Y'
+        elif self.onechar == 'Y':
             seq = 1
         else:
-            raise ParseException('Invalid state name')
-
+            raise ParseException('Invalid state onechar')
         self.dp = IndelDataPreparer(seq, window_size)
         self.clf = PairClassifier(
             self.dp, self.clf_fname

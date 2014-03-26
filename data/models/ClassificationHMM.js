@@ -1,100 +1,11 @@
 {
   "contants": [
-    {
-      "__name__": "@trans?",
-      "MM": 0.98,
-      "MX": 0.01,
-      "MY": 0.01,
-      "XM": 0.1,
-      "YM": 0.1,
-      "XX": 0.9,
-      "XY": 0.00,
-      "YY": 0.9,
-      "YX": 0.00
-    }
+    null
   ],
   "model": {
-    "__name__": "GeneralizedPairHMM",
-    "transitions": [
-      {
-        "from": "Match",
-        "to": "Match",
-        "prob": {
-          "__name__": "trans",
-          "key": "MM"
-        }
-      },
-      {
-        "from": "Match",
-        "to": "InsertX",
-        "prob": {
-          "__name__": "trans",
-          "key": "MX"
-        }
-      },
-      {
-        "from": "Match",
-        "to": "InsertY",
-        "prob": {
-          "__name__": "trans",
-          "key": "MY"
-        }
-      },
-      {
-        "from": "InsertX",
-        "to": "Match",
-        "prob": {
-          "__name__": "trans",
-          "key": "XM"
-        }
-      },
-      {
-        "from": "InsertX",
-        "to": "InsertX",
-        "prob": {
-          "__name__": "trans",
-          "key": "XX"
-        }
-      },
-      {
-        "from": "InsertX",
-        "to": "InsertY",
-        "prob": {
-          "__name__": "trans",
-          "key": "XY"
-        }
-      },
-      {
-        "from": "InsertY",
-        "to": "Match",
-        "prob": {
-          "__name__": "trans",
-          "key": "YM"
-        }
-      },
-      {
-        "from": "InsertY",
-        "to": "InsertX",
-        "prob": {
-          "__name__": "trans",
-          "key": "YX"
-        }
-      },
-      {
-        "from": "InsertY",
-        "to": "InsertY",
-        "prob": {
-          "__name__": "trans",
-          "key": "YY"
-        }
-      }
-    ],
     "states": [
       {
-        "__name__": "ClassifierState",
         "name": "Match",
-        "startprob": 0.33,
-        "endprob": 1.0,
         "durations": [
           [
             [
@@ -104,14 +15,14 @@
             1.0
           ]
         ],
-        "emission": {},
-        "onechar": "M"
-      },
-      {
-        "__name__": "ClassifierIndelState",
-        "name": "InsertX",
         "startprob": 0.33,
         "endprob": 1.0,
+        "emission": [],
+        "onechar": "M",
+        "__name__": "ClassifierState"
+      },
+      {
+        "name": "InsertX",
         "durations": [
           [
             [
@@ -121,14 +32,14 @@
             1.0
           ]
         ],
-        "emission": {},
-        "onechar": "X"
-      },
-      {
-        "__name__": "ClassifierIndelState",
-        "name": "InsertY",
         "startprob": 0.33,
         "endprob": 1.0,
+        "emission": [],
+        "onechar": "X",
+        "__name__": "ClassifierIndelState"
+      },
+      {
+        "name": "InsertY",
         "durations": [
           [
             [
@@ -138,8 +49,59 @@
             1.0
           ]
         ],
-        "emission": {},
-        "onechar": "Y"
+        "startprob": 0.33,
+        "endprob": 1.0,
+        "emission": [],
+        "onechar": "Y",
+        "__name__": "ClassifierIndelState"
+      }
+    ],
+    "__name__": "GeneralizedPairHMM",
+    "transitions": [
+      {
+        "to": "Match",
+        "from": "Match",
+        "prob": 0.9804911190915268
+      },
+      {
+        "to": "InsertX",
+        "from": "Match",
+        "prob": 0.010191206444724838
+      },
+      {
+        "to": "InsertY",
+        "from": "Match",
+        "prob": 0.009317674463748423
+      },
+      {
+        "to": "Match",
+        "from": "InsertX",
+        "prob": 0.09730729226857737
+      },
+      {
+        "to": "InsertX",
+        "from": "InsertX",
+        "prob": 0.8991101352132208
+      },
+      {
+        "to": "InsertY",
+        "from": "InsertX",
+        "prob": 0.0035825725182017797
+      },
+      {
+        "to": "Match",
+        "from": "InsertY",
+        "prob": 0.0942189421894219
+      },
+      {
+        "to": "InsertX",
+        "from": "InsertY",
+        "prob": 0.004059040590405904
+      },
+      {
+        "to": "InsertY",
+        "from": "InsertY",
+        "prob": 0.9017220172201722
       }
     ]
   }
