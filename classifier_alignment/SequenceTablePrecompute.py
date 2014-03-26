@@ -6,10 +6,9 @@ from classifier_alignment.DataPreparer import DataPreparer
 
 
 class SequenceTablePrecompute():
-    def __init__(self, positon_generator, seq_x, seq_y, ann_x, ann_y):
+    def __init__(self, clf, positon_generator, seq_x, seq_y, ann_x, ann_y):
         self.position_generator = positon_generator
-        self.preparer = DataPreparer(5)
-        self.classifier = PairClassifier(self.preparer)
+        self.classifier = clf
         self.table = dict()
         self.seq_x = seq_x
         self.seq_y = seq_y

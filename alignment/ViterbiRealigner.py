@@ -26,7 +26,7 @@ class ViterbiRealigner(Realigner):
                         "data/sequences/simulated/simulated_alignment.js"
                     )
                     emission_table = SequenceTablePrecompute(
-                        self.positionGenerator, self.X, self.Y, ann_x, ann_y
+                        state.clf, self.positionGenerator, self.X, self.Y, ann_x, ann_y
                     )
                     emission_table.compute()
                     state.set_emission_table(emission_table)
