@@ -62,16 +62,13 @@ class ModelTraining:
                     nextstate = labels[j]
                     counts[state][nextstate] += 1
 
+            sums = dict()
             for state in 'MXY':
                 s = sum(counts[state].values())
-                for nextstate in 'MXY':
-                    if s > 0:
-                        counts[state][nextstate] /= s
-                    else:
-                        counts[state][state] = 1.0
+                sums[state] = s
             return {
                 '{}{}'.format(k, k2): v2 for k, v in counts.iteritems() for k2, v2 in v.iteritems()
-            }
+            }, sums
 
     def emissions(self, seq_x, seq_y, a_x, a_y, labels):
         data = dict()
@@ -92,6 +89,22 @@ class ModelTraining:
         return self.transitions(labels), self.emissions(s_x, s_y, a_x, a_y, labels)
 
     def train(self, dirname):
+        def summarize_transitions(transitions):
+            res = dict()
+            for state in 'MXY':
+                s = float(sum((t[1][state] for t in transitions)))
+                for state2 in 'MXY':
+                    res[state+state2] = sum((t[0][state+state2] for t in transitions))/s
+            return res
+
+        def summarize_emissions(emissions):
+            res = dict()
+            keys = emissions[0][0].keys()
+            count = float(sum((e[1] for e in emissions)))
+            for k in keys:
+                res[k] = sum((e[1] * e[0][k] for e in emissions)) / count
+            return res
+
         dl = DataLoader()
         sequences = dl.loadDirectory(dirname)
         transitions = list()
@@ -103,8 +116,11 @@ class ModelTraining:
             if e is not None:
                 emissions_m.append(e['M'])
                 emissions_x.append(e['X'])
-        #FixMe Toto je trochu blbost!!!
-        return avg(transitions), {'M': avg(emissions_m), 'X': avg(emissions_x)}
+
+        return summarize_transitions(transitions), {
+            'M': summarize_emissions(emissions_m), 'X': summarize_emissions(emissions_x)
+        }
+
 
     def set_model_emissions(self, emissions):
         for state in self.model['model'].states:

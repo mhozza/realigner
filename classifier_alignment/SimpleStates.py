@@ -14,7 +14,7 @@ class SimpleMatchState(GeneralizedPairState):
         for x in 'ACGT':
             for y in 'ACGT':
                 data[(x, y)] /= count
-        return data
+        return data, count
 
 
 class SimpleIndelState(GeneralizedPairState):
@@ -30,5 +30,5 @@ class SimpleIndelState(GeneralizedPairState):
                     data[y] += 1.0
         for x in 'ACGT':
             data[x] /= count
-        return data
+        return data, count
 

@@ -46,21 +46,21 @@ class ClassifierAnnotationState(ClassifierState):
             if label == 'M':
                 count += 1
                 data[(x, y)].append(c)
-        res = dict()
 
-        # todo: move gaussian one level up
+        emissions = dict()
+        # todo: move gaussian one level up?
         for x in 'ACGT':
             for y in 'ACGT':
                 p = len(data[(x, y)]) / count
                 if len(data[(x, y)]) > 1:
                     g = gaussian_kde(data[(x, y)])
                     for c in xrange(precision):
-                        res[(x, y, c)] = p * g.integrate_box(float(c) / precision, float(c + 1.0) / precision)
+                        emissions[(x, y, c)] = p * g.integrate_box(float(c) / precision, float(c + 1.0) / precision)
                 else:
                     for c in xrange(precision):
-                        res[(x, y, c)] = p / precision
+                        emissions[(x, y, c)] = p / precision
 
-        return res
+        return emissions, count
 
 
 class ClassifierAnnotationIndelState(ClassifierIndelState):
@@ -104,18 +104,18 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
                 if y != '-':
                     data[y].append(c)
 
-        res = dict()
-        #todo: move gaussian one level up
+        emissions = dict()
+        #todo: move gaussian one level up?
         for x in 'ACGT':
             p = len(data[x]) / count
             if len(data[x]) > 1:
                 g = gaussian_kde(data[x])
                 for c in xrange(precision):
-                    res[(x, c)] = p * g.integrate_box(float(c) / precision, float(c + 1.0) / precision)
+                    emissions[(x, c)] = p * g.integrate_box(float(c) / precision, float(c + 1.0) / precision)
             else:
                 for c in xrange(precision):
-                    res[(x, c)] = p / precision
-        return res
+                    emissions[(x, c)] = p / precision
+        return emissions, count
 
     def _emission(self, c, seq_x, x, seq_y, y):
         if self.state_label == 'X':
