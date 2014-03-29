@@ -165,11 +165,6 @@ class ProbabilityProcessor:
 
 
 class GeneralizedPairHMM(HMM):
-    
-    def setAnnotations(self):
-        return
-   
-    
     # Returns forward table. We can specify memory pattern, position generator
     # and initial row. Compatible with memory preserving tricks  
     # TODO: ohranicenia nefunguju ak chcem robit podsekvencie, treba to vyriesit
