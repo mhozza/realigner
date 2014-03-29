@@ -90,11 +90,17 @@ class ModelTraining:
 
     def train(self, dirname):
         def summarize_transitions(transitions):
+            def get_prob(t, key):
+                if key in t[0]:
+                    return t[0][key]
+                else:
+                    return 0
+
             res = dict()
             for state in 'MXY':
                 s = float(sum((t[1][state] for t in transitions)))
                 for state2 in 'MXY':
-                    res[state+state2] = sum((t[0][state+state2] for t in transitions))/s
+                    res[state+state2] = sum((get_prob(t, state+state2) for t in transitions))/s
             return res
 
         def summarize_emissions(emissions):
