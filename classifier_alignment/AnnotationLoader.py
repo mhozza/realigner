@@ -1,6 +1,6 @@
 __author__ = 'michal'
-from tools.intervalmap import intervalmap
 import track
+from tools.intervalmap import intervalmap
 from tools.ConfigFactory import ConfigFactory
 from classifier_alignment.AnnotationConfig import Annotations
 
@@ -94,6 +94,9 @@ class AnnotationLoader:
         return res
 
     def get_annotations_from_model(self, model):
+        if model is None:
+            raise RuntimeError('No annotation model!')
+
         annotations = model.annotations
         annotations_x = self._get_sequence_annotations(
             annotations, model.sequences["sequence1"]

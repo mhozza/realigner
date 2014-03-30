@@ -12,6 +12,10 @@ from hmm.HMMLoader import HMMLoader
 from alignment.Masker import dummy_masker, replace_masker, \
                              get_nonoverlaping_repeats
 
+from classifier_alignment.AnnotationConfig import Annotations
+from classifier_alignment.ClassifierState import ClassifierState
+from classifier_alignment.AnnotationLoader import AnnotationLoader
+
 def get_math_type(s):
     if s == 'LogNum':
         return LogNum
@@ -19,8 +23,8 @@ def get_math_type(s):
         return float
     else:
         raise('Unknown type')
-    
-    
+
+
 def toList(s):
     return [s]
 
@@ -29,7 +33,7 @@ def get_realigner(s):
     if s == 'posterior':
         return PosteriorRealigner
     if s == 'block_posterior':
-        return BlockPosteriorRealigner        
+        return BlockPosteriorRealigner
     elif s == 'viterbi':
         return ViterbiRealigner
     else:
@@ -89,13 +93,13 @@ parse_arguments_capabilities_ordered = [
     ('alignment', ([], {'type': str, 'help': 'Input alignment'})),
     ('output_file', ([], {'type': str, 'help': 'Output file'})),
 ]
-parse_arguments_capabilities_keywords = {    
+parse_arguments_capabilities_keywords = {
     'mathType': (['-m'],{'type': str, 'default': 'float', 'choices': ['LogNum', 'float'], 'help': 'Numeric type to use'}),
     'model': ([], {'type': str, 'default': 'data/models/repeatHMM.js', 'help': 'Model file'}),
     'annotation_model': ([], {'type': str, 'default': '', 'help': 'Model file'}),
     'trf': ([], {'type': toList, 'default': trf_paths, 'help': 'Location of tandem repeat finder binary'}),
     'algorithm': ([], {'type': str, 'default': 'block_posterior', 'choices': ['posterior', 'block_posterior', 'viterbi'], 'help': 'Which realignment algorithm to use'}),
-    'bind_file': ([], {'nargs': '*', 'help': 'Replace filenames in the input_file model.', 'default': []}), 
+    'bind_file': ([], {'nargs': '*', 'help': 'Replace filenames in the input_file model.', 'default': []}),
     'bind_constant': ([], {'nargs': '*', 'help': 'Replace constants in the input_fmodelile model.', 'default': []}),
     'bind_constant_file': ([], {'nargs': '*', 'help': 'Replace constants in the input_file model.', 'default': []}),
     'alignment_regexp': ([], {'default': '', 'help': 'Regular expression used to separate alignment in input file'}),
@@ -115,7 +119,7 @@ parse_arguments_capabilities_keywords = {
 
 def parse_arguments(
     ordered=None,
-    keywords=None, 
+    keywords=None,
     description='Realign sequence using informations from tandem repeat finder',
 ):
     if ordered==None:
@@ -135,15 +139,15 @@ def parse_arguments(
         parser.add_argument(*k, **dct)
     parsed_arg = parser.parse_args()
     parsed_arg.mathType = get_math_type(parsed_arg.mathType)
-    
+
     if 'trf_cons' in parsed_arg.tracks:
         parsed_arg.cons_count = 0
-    
+
     # ====== Validate input parameters =========================================
     if len(parsed_arg.bind_file) % 2 != 0:
         sys.stderr.write('ERROR: If binding files, the number of arguments has'
                          + 'to be divisible by 2\n')
-        return None 
+        return None
     if len(parsed_arg.bind_constant_file) % 2 != 0:
         sys.stderr.write('ERROR: If binding constants (as files), the number of'
                          + ' arguments has to be divisible by 2\n')
@@ -152,7 +156,7 @@ def parse_arguments(
         sys.stderr.write('ERROR: If binding constants, the number of'
                          + ' arguments has to be divisible by 2\n')
         return None
-    
+
     # ====== Load model ========================================================
     parsed_arg.model = get_model(parsed_arg, parsed_arg.model)
     if parsed_arg.annotation_model:
@@ -161,6 +165,13 @@ def parse_arguments(
             parsed_arg.annotation_model,
             allow_mask=False,
         )
+        if isinstance(parsed_arg.annotation_model, Annotations):
+            for state in parsed_arg.model.states:
+                if isinstance(state, ClassifierState):
+                    state.set_annotations(
+                        AnnotationLoader().get_annotations_from_model(parsed_arg.annotation_model)
+                    )
+
     io_files = {'input': {}, 'output': {}}
     if 'intermediate_input_files' in keywords:
         io_files['input'] = parsed_arg.intermediate_output_files
@@ -174,4 +185,4 @@ def parse_arguments(
         parsed_arg.posterior_processors
     )
     return parsed_arg
-    
+

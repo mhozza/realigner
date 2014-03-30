@@ -8,3 +8,5 @@ bases = {
     'N': 4,
     '-': -1,  # gap value
 }
+
+window_size = 5

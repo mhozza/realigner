@@ -21,12 +21,8 @@ class ViterbiRealigner(Realigner):
         if 'viterbi' not in self.io_files['input']:
             for state in self.model.states:
                 if isinstance(state, ClassifierState):
-                    #Fixme toto je skarede a zle!!!
-                    _, ann_x, ann_y = AnnotationLoader().get_annotations(
-                        "data/sequences/simulated/simulated_alignment.js"
-                    )
                     emission_table = SequenceTablePrecompute(
-                        state.clf, self.positionGenerator, self.X, self.Y, ann_x, ann_y
+                        state.clf, self.positionGenerator, self.X, self.Y, state.ann_x, state.ann_y
                     )
                     emission_table.compute()
                     state.set_emission_table(emission_table)

@@ -3,22 +3,20 @@ from classifier_alignment.AnnotationLoader import AnnotationLoader
 from classifier_alignment.DataPreparer import DataPreparer, IndelDataPreparer
 from hmm.PairHMM import GeneralizedPairState
 from tools.Exceptions import ParseException
-
-window_size = 5
+import constants
 
 
 class ClassifierState(GeneralizedPairState):
     def __init__(self, *args, **_):
         GeneralizedPairState.__init__(self, *args)
-        self.dp = DataPreparer(window_size)
-        self.clf_fname = 'data/clf/randomforest{}.clf'.format(window_size)
+        self.dp = DataPreparer(constants.window_size)
+        self.clf_fname = 'data/clf/randomforest{}.clf'.format(constants.window_size)
         self.clf = PairClassifier(self.dp, filename=self.clf_fname)
-        self.al = AnnotationLoader()
-        # Fixme
-        self.annotations, self.ann_x, self.ann_y = self.al.get_annotations(
-            "data/sequences/simulated/simulated_alignment.js"
-        )
+        self.annotations, self.ann_x, self.ann_y = None, None, None
         self.emission_table = None
+
+    def set_annotations(self, annotations):
+        self.annotations, self.ann_x, self.ann_y = annotations
 
     def _emission(self, c, _, __, ___, ____):
         return c
@@ -40,8 +38,8 @@ class ClassifierState(GeneralizedPairState):
 class ClassifierIndelState(ClassifierState):
     def __init__(self, *args, **kwargs):
         ClassifierState.__init__(self, *args, **kwargs)
-        self.dp = IndelDataPreparer(0, window_size)
-        self.clf_fname = 'data/clf/randomforest_indel{}.clf'.format(window_size)
+        self.dp = IndelDataPreparer(0, constants.window_size)
+        self.clf_fname = 'data/clf/randomforest_indel{}.clf'.format(constants.window_size)
         self.clf = PairClassifier(
             self.dp, filename=self.clf_fname
         )
@@ -54,7 +52,7 @@ class ClassifierIndelState(ClassifierState):
             seq = 1
         else:
             raise ParseException('Invalid state onechar')
-        self.dp = IndelDataPreparer(seq, window_size)
+        self.dp = IndelDataPreparer(seq, constants.window_size)
         self.clf = PairClassifier(
             self.dp, self.clf_fname
         )
