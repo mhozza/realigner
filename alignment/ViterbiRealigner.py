@@ -1,6 +1,7 @@
 import json
 # from repeats.RepeatGenerator import RepeatGenerator
 # from collections import defaultdict
+from alignment.AlignmentIterator import AlignmentPositionGenerator
 from alignment.Realigner import Realigner
 from algorithm.LogNum import LogNum
 from tools.file_wrapper import Open
@@ -58,6 +59,18 @@ class ViterbiRealigner(Realigner):
         arguments = 0
 
         self.computeViterbiTable()
+        self.drawer.add_borders_line(
+            100,
+            (0, 255, 255, 255),
+            1,
+            self.positionGenerator
+        )
+        self.drawer.add_alignment_line(
+            100,
+            (0, 255, 0, 255),
+            1,
+            list(AlignmentPositionGenerator(self.alignment))
+        )
         return data[arguments:]
 
     @perf.runningTimeDecorator

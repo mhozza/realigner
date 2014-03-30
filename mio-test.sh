@@ -1,8 +1,6 @@
 #!/bin/bash
-
-export PYTHONPATH=./ #\:/usr/lib/python2.7/dist-packages
+export PYTHONPATH=./:$PYTHONPATH
 PYTHON=/usr/bin/python
-# Select sequences from alignment and split it into files, save as fasta
 export SGE_TASK_FIRST=1
 export SGE_TASK_ID=1
 export SGE_TASK_LAST=10
@@ -15,9 +13,6 @@ time $PYTHON bin/Realign.py \
 	--algorithm viterbi\
 	--model $5\
 	--annotation_model ${1%.fa}.js\
+	--draw $2.png\
 	$1\
 	$2
-
-	# --draw $2.png\
-	# working_dir_tmp/sampled_alignments/{id}.fa \
-	# working_dir_tmp/sampled_alignments/{id}.realigned.fa \
