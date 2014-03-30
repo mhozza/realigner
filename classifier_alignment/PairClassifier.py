@@ -27,12 +27,11 @@ class PairClassifier:
         preparer,
         filename="data/clf/randomforest.clf",
         training_data_dir="data/sequences/train_sequences",
-        params={"n_estimators": 30, "n_jobs": 10, "max_depth": 20},
+        params={"n_estimators": 50, "n_jobs": 10, "max_depth": 40},
         autotrain=True,
         memoization=False,
     ):
         """
-
         @rtype : PairClassifier
         """
         self._preparer = None
@@ -63,14 +62,12 @@ class PairClassifier:
                 self.save(self.default_filename)
 
     def load(self, fname):
-        f = open(fname, 'r')
-        self.classifier = pickle.load(f)
-        f.close()
+        with open(fname, 'r') as f:
+            self.classifier = pickle.load(f)
 
     def save(self, fname):
-        f = open(fname, 'w')
-        pickle.dump(self.classifier, f)
-        f.close()
+        with open(fname, 'w') as f:
+            pickle.dump(self.classifier, f)
 
     def remove_default_file(self):
         os.remove(self.default_filename)
