@@ -134,6 +134,12 @@ class DataPreparer:
 
         return train_data
 
+    def get_base(self, data):
+        block_size = len(data)/(2*self.window_size)
+        base_x = data[(self.window_size//2) * block_size]
+        base_y = data[(self.window_size + (self.window_size//2)) * block_size]
+        return constants.bases_reverse[base_x], constants.bases_reverse[base_y]
+
 
 class IndelDataPreparer(DataPreparer):
     def __init__(self, insert_sequence, window=1):
@@ -253,3 +259,8 @@ class IndelDataPreparer(DataPreparer):
             train_data[1].append(0)
 
         return train_data
+
+    def get_base(self, data):
+        block_size = (len(data))/(2*self.window_size-1)
+        base = data[(self.window_size//2) * block_size]
+        return constants.bases_reverse[base]

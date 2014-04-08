@@ -1,17 +1,20 @@
 from classifier_alignment.PairClassifier import PairClassifier
-from classifier_alignment.AnnotationLoader import AnnotationLoader
 from classifier_alignment.DataPreparer import DataPreparer, IndelDataPreparer
 from hmm.PairHMM import GeneralizedPairState
 from tools.Exceptions import ParseException
 import constants
-
+from FakeClassifier import FakeMatchClassifier, FakeIndelClassifier
 
 class ClassifierState(GeneralizedPairState):
+    def _get_classifier(self):
+        # return PairClassifier(self.dp, filename=self.clf_fname)
+        return FakeMatchClassifier(self.dp)
+
     def __init__(self, *args, **_):
         GeneralizedPairState.__init__(self, *args)
         self.dp = DataPreparer(constants.window_size)
         self.clf_fname = 'data/clf/randomforest{}.clf'.format(constants.window_size)
-        self.clf = PairClassifier(self.dp, filename=self.clf_fname)
+        self.clf = self._get_classifier()
         self.annotations, self.ann_x, self.ann_y = None, None, None
         self.emission_table = None
 
@@ -25,7 +28,7 @@ class ClassifierState(GeneralizedPairState):
         if self.emission_table is None:
             c = self.clf.prepare_predict(
                 seq_x, x, self.ann_x, seq_y, y, self.ann_y
-            )
+            )[0]
         else:
             c = self.emission_table.get(x, y)
 
@@ -36,13 +39,15 @@ class ClassifierState(GeneralizedPairState):
 
 
 class ClassifierIndelState(ClassifierState):
+    def _get_classifier(self):
+        # return PairClassifier(self.dp, filename=self.clf_fname)
+        return FakeIndelClassifier(self.dp)
+
     def __init__(self, *args, **kwargs):
         ClassifierState.__init__(self, *args, **kwargs)
         self.dp = IndelDataPreparer(0, constants.window_size)
         self.clf_fname = 'data/clf/randomforest_indel{}.clf'.format(constants.window_size)
-        self.clf = PairClassifier(
-            self.dp, filename=self.clf_fname
-        )
+        self.clf = self._get_classifier()
 
     def load(self, dictionary):
         res = ClassifierState.load(self, dictionary)
@@ -53,8 +58,9 @@ class ClassifierIndelState(ClassifierState):
         else:
             raise ParseException('Invalid state onechar')
         self.dp = IndelDataPreparer(seq, constants.window_size)
-        self.clf = PairClassifier(
-            self.dp, self.clf_fname
-        )
-
+        self.clf = self._get_classifier()
         return res
+
+# def register_states(loader):
+#     for state in [ClassifierState, ClassifierIndelState]:
+#         loader.

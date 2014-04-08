@@ -10,8 +10,9 @@ class SimpleMatchState(GeneralizedPairState):
         count = 0.0
         for label, x, y in zip(labels, seq_x, seq_y):
             if label == 'M':
-                count += 1.0
+                count += 2.0
                 data[(x, y)] += 1.0
+                data[(y, x)] += 1.0
         for x in 'ACGT':
             for y in 'ACGT':
                 data[(x, y)] /= count
@@ -33,12 +34,12 @@ class SimpleIndelState(GeneralizedPairState):
         data = defaultdict(float)
         count = 0.0
         for label, x, y in zip(labels, seq_x, seq_y):
-            if label != 'M':
+            if label == 'X':
                 count += 1.0
-                if x != '-':
-                    data[x] += 1.0
-                if y != '-':
-                    data[y] += 1.0
+                data[x] += 1.0
+            if label == 'Y':
+                count += 1.0
+                data[y] += 1.0
         for x in 'ACGT':
             data[x] /= count
         return data, count

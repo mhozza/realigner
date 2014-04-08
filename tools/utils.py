@@ -1,13 +1,9 @@
 __author__ = 'michal'
 
-def merge(first, second, which):
-    first_iter = iter(first)
-    second_iter = iter(second)
+def merge(which, *args):
+    iters = [iter(arg) for arg in args]
     def get_next(w):
-        if w == 0:
-            return next(first_iter)
-        else:
-            return next(second_iter)
+        return next(iters[w])
     return (get_next(w) for w in which)
 
 def avg(l):
