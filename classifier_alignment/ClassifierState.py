@@ -4,11 +4,13 @@ from hmm.PairHMM import GeneralizedPairState
 from tools.Exceptions import ParseException
 import constants
 from FakeClassifier import FakeMatchClassifier, FakeIndelClassifier
+from hmm.HMMLoader import getInitializerObject
+
 
 class ClassifierState(GeneralizedPairState):
     def _get_classifier(self):
-        # return PairClassifier(self.dp, filename=self.clf_fname)
-        return FakeMatchClassifier(self.dp)
+        return PairClassifier(self.dp, filename=self.clf_fname)
+        # return FakeMatchClassifier(self.dp)
 
     def __init__(self, *args, **_):
         GeneralizedPairState.__init__(self, *args)
@@ -39,9 +41,8 @@ class ClassifierState(GeneralizedPairState):
 
 
 class ClassifierIndelState(ClassifierState):
-    def _get_classifier(self):
-        # return PairClassifier(self.dp, filename=self.clf_fname)
-        return FakeIndelClassifier(self.dp)
+    # def _get_classifier(self):
+    #     return FakeIndelClassifier(self.dp)
 
     def __init__(self, *args, **kwargs):
         ClassifierState.__init__(self, *args, **kwargs)
@@ -61,6 +62,7 @@ class ClassifierIndelState(ClassifierState):
         self.clf = self._get_classifier()
         return res
 
-# def register_states(loader):
-#     for state in [ClassifierState, ClassifierIndelState]:
-#         loader.
+
+def register(loader):
+    for obj in [ClassifierState, ClassifierIndelState]:
+        loader.addFunction(obj.__name__, getInitializerObject(obj, loader.mathType))

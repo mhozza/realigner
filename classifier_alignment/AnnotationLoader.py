@@ -1,45 +1,17 @@
 __author__ = 'michal'
+
+from hmm.HMMLoader import HMMLoader
 import track
 from tools.intervalmap import intervalmap
-from tools.ConfigFactory import ConfigFactory
-from classifier_alignment.AnnotationConfig import Annotations
-
-
-def getInitializerObject(tp, mathType):
-    def __getInitializer(dictionary):
-        t = tp(mathType)
-        t.load(dictionary)
-        return t
-    return __getInitializer
-
-
-def getInitializerFunction(function, mathType):
-    def __getInitializer(dictionary):
-        return function(dictionary, mathType)
-    return __getInitializer
-
-
-class JSLoader(ConfigFactory):
-
-    def __init__(self, mathType=float):
-        ConfigFactory.__init__(self)
-        self.mathType = mathType
-        for obj in [
-            Annotations
-        ]:
-
-            self.addFunction(obj.__name__, getInitializerObject(obj, mathType))
-
-        for (name, constant) in [
-            # STUB
-        ]:
-            self.addConstant(name, constant)
+from classifier_alignment.AnnotationConfig import Annotations, register as register_annotations
 
 
 class AnnotationLoader:
     def __init__(self, loader=None):
         if loader is None:
-            self.loader = JSLoader()
+            self.loader = HMMLoader()
+            register_annotations(self.loader)
+
 
     @staticmethod
     def get_annotation_at(annotations, i):

@@ -9,13 +9,8 @@ from repeats.RepeatLengthDistribution import RepeatLengthDistribution
 from repeats.HighOrderRepeatState import HighOrderRepeatState
 from hmm.HighOrderState import HighOrderState
 import json
-from classifier_alignment.ClassifierState import ClassifierState, \
-    ClassifierIndelState
-from classifier_alignment.ClassifierAnnotationState import ClassifierAnnotationState,\
-    ClassifierAnnotationIndelState
 from algorithm.LogNum import LogNum
 from classifier_alignment.SimpleStates import SimpleMatchState, SimpleIndelState
-from classifier_alignment.AnnotationConfig import Annotations
 
 
 def getInitializerObject(tp, mathType):
@@ -45,17 +40,12 @@ class HMMLoader(ConfigFactory):
             GeneralizedPairHMM,
             GeneralizedPairState,
             PairRepeatState,
-            ClassifierState,
-            ClassifierIndelState,
-            ClassifierAnnotationState,
-            ClassifierAnnotationIndelState,
             HighOrderState,
             HighOrderRepeatState,
             RepeatLengthDistribution,
             SimpleMatchState,
             SimpleIndelState,
             LogNum,
-            Annotations,
         ]:
 
             self.addFunction(obj.__name__, getInitializerObject(obj, mathType))

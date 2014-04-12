@@ -3,6 +3,7 @@ Created on May 5, 2013
 
 @author: michal
 '''
+from hmm.HMMLoader import getInitializerObject
 from tools.ConfigFactory import ConfigObject
 from tools.Exceptions import ParseException
 
@@ -49,3 +50,9 @@ class Annotations(ConfigObject):
 
     def setAnnotations(self, annotations):
         self.annotations = annotations
+
+
+def register(loader):
+    loader.addFunction(Annotations.__name__, getInitializerObject(Annotations, loader.mathType))
+
+

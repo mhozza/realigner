@@ -19,13 +19,15 @@ class SequenceTablePrecompute():
     def compute(self):
         if self.print_status:
             sys.stderr.write('Computing emission table...\n')
+
         data = [
             (self.seq_x, x, self.ann_x, self.seq_y, y, self.ann_y)
             for x, y in self.position_generator
         ]
+
         out = self.classifier.multi_prepare_predict(data)
-        for i, d in enumerate(self.position_generator):
-            self.table[d] = out[i]
+        self.table = {d: out[i] for i, d in enumerate(self.position_generator)}
+
         if self.print_status:
             sys.stderr.write('Emission table computed.\n')
 

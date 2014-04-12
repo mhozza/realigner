@@ -5,35 +5,8 @@ from sklearn.utils import array2d
 from sklearn.tree._tree import DTYPE
 from classifier_alignment.DataPreparer import DataPreparer, IndelDataPreparer
 from classifier_alignment.SimpleStates import SimpleMatchState, SimpleIndelState
-import constants
-from hmm.PairHMM import GeneralizedPairHMM
-from tools.ConfigFactory import ConfigFactory
+from hmm.HMMLoader import HMMLoader
 from tools.Exceptions import InvalidValueException
-
-
-class JSLoader(ConfigFactory):
-    def __init__(self, mathType=float):
-        def getInitializerObject(tp, mathType):
-            def __getInitializer(dictionary):
-                t = tp(mathType)
-                t.load(dictionary)
-                return t
-            return __getInitializer
-
-        ConfigFactory.__init__(self)
-        self.mathType = mathType
-        for obj in [
-            GeneralizedPairHMM,
-            SimpleMatchState,
-            SimpleIndelState,
-        ]:
-
-            self.addFunction(obj.__name__, getInitializerObject(obj, mathType))
-
-        for (name, constant) in [
-            # STUB
-        ]:
-            self.addConstant(name, constant)
 
 
 class FakeMatchClassifier:
@@ -45,7 +18,7 @@ class FakeMatchClassifier:
     ):
         self._preparer = None
         self.preparer = preparer
-        for state in JSLoader().load(model)['model'].states:
+        for state in HMMLoader().load(model)['model'].states:
             if isinstance(state, state_class):
                 self.emissions = state.emissions
                 break
@@ -97,7 +70,6 @@ class FakeMatchClassifier:
     def predict(self, X):
         if getattr(X, "dtype", None) != DTYPE or X.ndim != 2:
             X = array2d(X, dtype=DTYPE)
-        # print [self.preparer.get_base(x) for x in X]
         return [self.emissions[self.preparer.get_base(x)] for x in X]
 
 

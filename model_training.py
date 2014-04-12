@@ -1,12 +1,12 @@
 #!/usr/bin/python
 __author__ = 'michal'
 from classifier_alignment.DataLoader import DataLoader
-from tools.utils import dict_avg as avg
 from hmm.HMMLoader import HMMLoader
 import json
 import argparse
 from collections import defaultdict
-
+from classifier_alignment.ClassifierState import register as register_classifier_states
+from classifier_alignment.ClassifierAnnotationState import register as register_annotation_states
 
 class ModelTraining:
     def __init__(self):
@@ -18,6 +18,9 @@ class ModelTraining:
 
     def load_model(self, fname):
         loader = HMMLoader(float)
+        register_classifier_states(loader)
+        register_annotation_states(loader)
+
         self.fname = fname
         self.model = loader.load(fname)
         self.states_dict = dict()
@@ -77,8 +80,8 @@ class ModelTraining:
                 state = self.model['model'].states[self.states_dict[onechar]]
                 data[onechar] = state.compute_emissions(labels, seq_x, seq_y, a_x, a_y)
             return data
-        except AttributeError as e:
-            # print 'Emissions not suppoorted by model!', e
+        except AttributeError:
+            # print 'compute_emissions not suppoorted by model!'
             return None
 
     def make_position_independent(self):

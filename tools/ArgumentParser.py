@@ -12,8 +12,9 @@ from hmm.HMMLoader import HMMLoader
 from alignment.Masker import dummy_masker, replace_masker, \
                              get_nonoverlaping_repeats
 
-from classifier_alignment.AnnotationConfig import Annotations
-from classifier_alignment.ClassifierState import ClassifierState
+from classifier_alignment.AnnotationConfig import Annotations, register as register_annotations
+from classifier_alignment.ClassifierState import ClassifierState, register as register_classifier_states
+from classifier_alignment.ClassifierAnnotationState import register as register_annotation_states
 from classifier_alignment.AnnotationLoader import AnnotationLoader
 
 def get_math_type(s):
@@ -66,6 +67,10 @@ def get_posterior_processor(s):
 
 def get_model(args, filename, allow_mask=True):
     loader = HMMLoader(args.mathType) # TODO: rename HMMLoader to ModelLoader
+    register_classifier_states(loader)
+    register_annotation_states(loader)
+    register_annotations(loader)
+
     for i in range(0, len(args.bind_file), 2):
         loader.addFile(args.bind_file[i], args.bind_file[i + 1])
     for i in range(0, len(args.bind_constant_file), 2):

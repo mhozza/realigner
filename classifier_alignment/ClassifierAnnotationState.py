@@ -1,11 +1,14 @@
 from collections import defaultdict
 from scipy.stats import norm, gaussian_kde
+from alignment import Fasta
 from classifier_alignment.ClassifierState import ClassifierState, ClassifierIndelState
+from hmm.HMMLoader import getInitializerObject
 from tools.utils import merge
 import numpy
 from numpy.linalg.linalg import LinAlgError
 
 precision = 10
+use_gaussian = False
 #pseudocount = 0.001 # Fixme toto by sa mohlo zacat pouzivat
 
 
@@ -16,18 +19,51 @@ class ClassifierAnnotationState(ClassifierState):
     def _emission(self, c, seq_x, x, seq_y, y):
         return self.emissions[(seq_x[x], seq_y[y], round((precision - 1) * float(c)))]
 
-    def _classification(self, seq_x, ann_x, seq_y, ann_y):
+    def _classification(self, sequence_x, ann_x, sequence_y, ann_y):
         def state(i):
-            if seq_x[i] != '-' and seq_y[i] != '-':
+                if sequence_x[i] == '-' and sequence_y[i] =='-':
+                    return 1
+                if sequence_x[i] == '-':
+                    return 1
+                if sequence_y[i] == '-':
+                    return 1
                 return 0
-            return 1
 
-        if len(seq_x) != len(seq_y):
-            return
-        l = len(seq_x)
+        def get_pos():
+            def state(i):
+                if sequence_x[i] == '-' and sequence_y[i] =='-':
+                    return -1
+                if sequence_x[i] == '-':
+                    return 2
+                if sequence_y[i] == '-':
+                    return 1
+                return 0
+
+            pos_x, pos_y = 0, 0
+            pos = list()
+            for i in xrange(l):
+                pos.append((pos_x, pos_y))
+                s = state(i)
+                if s == 0:
+                    pos_x += 1
+                    pos_y += 1
+                if s == 1:
+                    pos_x += 1
+                if s == 2:
+                    pos_y += 1
+
+            return pos
+
+        assert len(sequence_y) == len(sequence_x)
+        l = len(sequence_x)
+
+        sequence_xs = Fasta.alnToSeq(sequence_x)
+        sequence_ys = Fasta.alnToSeq(sequence_y)
+
+        positions = get_pos()
 
         ret_match = self.clf.multi_prepare_predict(
-            (seq_x, pos, ann_x, seq_y, pos, ann_y)
+            (sequence_xs, positions[pos][0], ann_x, sequence_ys, positions[pos][1], ann_y)
             for pos in filter(lambda x: state(x) == 0, xrange(l))
         )
 
@@ -39,6 +75,33 @@ class ClassifierAnnotationState(ClassifierState):
         return ret
 
     def compute_emissions(self, labels, seq_x, seq_y, ann_x, ann_y):
+        def hist_preprocessor(p, data):
+            hist, _ = numpy.histogram(data, precision, density=True, range=(0,1))
+
+            def preprocessor(c):
+                return p * hist[c] / precision
+
+            return preprocessor
+
+        def gaussian_preprocessor(p, data):
+            try:
+                g = gaussian_kde(data)
+            except LinAlgError:
+                return hist_preprocessor(p, data)
+
+            def preprocessor(c):
+                return p * g.integrate_box(
+                    float(c) / precision, float(c + 1.0) / precision
+                )
+
+            return preprocessor
+
+        def constant_preprocessor(p):
+            def preprocessor(_):
+                return p / precision
+
+            return preprocessor
+
         classification = self._classification(seq_x, ann_x, seq_y, ann_y)
         data = defaultdict(list)
         count = 0.0
@@ -49,27 +112,21 @@ class ClassifierAnnotationState(ClassifierState):
                 data[(y, x)].append(c)
 
         emissions = dict()
-        # todo: move gaussian one level up?
         for x in 'ACGT':
             for y in 'ACGT':
                 p = len(data[(x, y)]) / count
+
                 if len(data[(x, y)]) > 1:
-                    try:
-                        g = gaussian_kde(data[(x, y)])
-                        for c in xrange(precision):
-                            # print c, float(c) / precision, float(c + 1.0) / precision
-                            emissions[(x, y, c)] = p * g.integrate_box(
-                                float(c) / precision, float(c + 1.0) / precision
-                            )
-                    except LinAlgError:
-                        hist, _ = numpy.histogram(
-                            data[(x, y)], precision, density=True, range=(0,1)
-                        )
-                        for c in xrange(precision):
-                            emissions[(x, y, c)] = p * hist[c]/precision
+                    if use_gaussian:
+                        preprocessor = gaussian_preprocessor(p, data[(x, y)])
+                    else:
+                        preprocessor = hist_preprocessor(p, data[(x, y)])
                 else:
-                    for c in xrange(precision):
-                        emissions[(x, y, c)] = p / precision
+                    preprocessor = constant_preprocessor(p)
+
+                for c in xrange(precision):
+                    emissions[(x, y, c)] = preprocessor(c)
+
         return emissions, count
 
 
@@ -77,40 +134,94 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
     def __init__(self, *args, **kwargs):
         ClassifierIndelState.__init__(self, *args, **kwargs)
 
-    def _classification(self, seq_x, ann_x, seq_y, ann_y):
+    def _classification(self, sequence_x, ann_x, sequence_y, ann_y):
         def state(i):
-            if seq_x[i] == '-' and seq_y !='-':
+            if sequence_x[i] == '-' and sequence_y[i] =='-':
+                return 0
+            if sequence_x[i] == '-':
                 return 2
-            if seq_y[i] == '-' and seq_x !='-':
+            if sequence_y[i] == '-':
                 return 1
             return 0
 
-        if len(seq_x) != len(seq_y):
-            return
-        l = len(seq_x)
+        def get_pos():
+            def state(i):
+                if sequence_x[i] == '-' and sequence_y[i] =='-':
+                    return -1
+                if sequence_x[i] == '-':
+                    return 2
+                if sequence_y[i] == '-':
+                    return 1
+                return 0
+            pos_x, pos_y = 0, 0
+            pos = list()
+            for i in xrange(len(sequence_x)):
+                pos.append((pos_x, pos_y))
+                s = state(i)
+                if s == 0:
+                    pos_x += 1
+                    pos_y += 1
+                if s == 1:
+                    pos_x += 1
+                if s == 2:
+                    pos_y += 1
+
+            return pos
+
+        assert len(sequence_y) == len(sequence_x)
+        l = len(sequence_x)
+
+        sequence_xs = Fasta.alnToSeq(sequence_x)
+        sequence_ys = Fasta.alnToSeq(sequence_y)
+
+        positions = get_pos()
 
         ret_match = (
             0 for _ in filter(lambda x: state(x) == 0, xrange(l))
         )
 
         ret_insertX = self.clf.multi_prepare_predict(
-            (seq_x, pos, ann_x, seq_y, pos, ann_y)
+            (sequence_xs, positions[pos][0], ann_x, sequence_ys, positions[pos][1], ann_y)
             for pos in filter(lambda x: state(x) == 1, xrange(l))
         )
 
         ret_insertY = self.clf.multi_prepare_predict(
-            (seq_y, pos, ann_y, seq_x, pos, ann_x)
+            (sequence_ys, positions[pos][1], ann_y, sequence_xs, positions[pos][0], ann_x)
             for pos in filter(lambda x: state(x) == 2, xrange(l))
         )
-
-        # for (i, v), p in zip(enumerate(ret_insertX), filter(lambda x: state(x) == 1, xrange(l))):
-        #     print i, v, state(p), seq_x[p], seq_y[p], p
-        # print ret_insertY
 
         ret = merge((state(x) for x in xrange(l)), ret_match, ret_insertX, ret_insertY)
         return ret
 
+
     def compute_emissions(self, labels, seq_x, seq_y, ann_x, ann_y):
+        def hist_preprocessor(p, data):
+            hist, _ = numpy.histogram(data, bins=precision, range=(0.0, 1.0), density=True)
+
+            def preprocessor(c):
+                return p * hist[c] / precision
+
+            return preprocessor
+
+        def gaussian_preprocessor(p, data):
+            try:
+                g = gaussian_kde(data)
+            except LinAlgError:
+                return hist_preprocessor(p, data)
+
+            def preprocessor(c):
+                return p * g.integrate_box(
+                    float(c) / precision, float(c + 1.0) / precision
+                )
+
+            return preprocessor
+
+        def constant_preprocessor(p):
+            def preprocessor(_):
+                return p / precision
+
+            return preprocessor
+
         classification = self._classification(seq_x, ann_x, seq_y, ann_y)
         data = defaultdict(list)
         count = 0.0
@@ -123,29 +234,21 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
                 data[y].append(c)
 
         emissions = dict()
-        #todo: move gaussian one level up?
         for x in 'ACGT':
             p = len(data[x]) / count
-            # print len(data[x]), count, p
+            # print data[x]
             if len(data[x]) > 1:
-                # try:
-                #     g = gaussian_kde(data[x])
-                #     for c in xrange(precision):
-                #         emissions[(x, c)] = p * g.integrate_box(
-                #             float(c) / precision, float(c + 1.0) / precision
-                #         )
-                #         print c, emissions[(x, c)]
-                # except LinAlgError:
-                hist, _ = numpy.histogram(
-                    data[x], bins=precision, range=(0.0, 1.0), density=True
-                )
-                # print hist
-                for c in xrange(precision):
-                    # print c, p * hist[c] / precision
-                    emissions[(x, c)] = p * hist[c] / precision
+                if use_gaussian:
+                    preprocessor = gaussian_preprocessor(p, data[x])
+                else:
+                    preprocessor = hist_preprocessor(p, data[x])
             else:
-                for c in xrange(precision):
-                    emissions[(x, c)] = p / precision
+                preprocessor = constant_preprocessor(p)
+
+            for c in xrange(precision):
+                emissions[(x, c)] = preprocessor(c)
+                # print x, c, emissions[(x, c)]
+
         return emissions, count
 
     def _emission(self, c, seq_x, x, seq_y, y):
@@ -156,3 +259,6 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
         return self.emissions[(b, round((precision - 1) * float(c)))]
 
 
+def register(loader):
+    for obj in [ClassifierAnnotationState, ClassifierAnnotationIndelState]:
+        loader.addFunction(obj.__name__, getInitializerObject(obj, loader.mathType))
