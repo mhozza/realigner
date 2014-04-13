@@ -7,6 +7,11 @@ from tools.Exceptions import ParseException
 import constants
 
 
+def check_base(b):
+    if b not in constants.bases or b == '-':
+        raise ParseException('Invalid base')
+
+
 class DataPreparer:
     def __init__(self, window=1):
         self._window = window
@@ -35,11 +40,11 @@ class DataPreparer:
 
         @rtype : list
         """
-
         data = list()
         for i in self._get_window_range(position):
             if 0 <= i < len(sequence):
                 b = sequence[i]
+                check_base(b)
             else:
                 b = '-'
             a = AnnotationLoader.get_annotation_at(annotation, position)
@@ -57,6 +62,8 @@ class DataPreparer:
         position_y,
         annotation_y,
     ):
+        """Takes sequences without spaces and prepares feature data for classifier
+        """
         data_x = self._prepare_sequence(
             sequence_x, position_x, annotation_x
         )
@@ -76,6 +83,8 @@ class DataPreparer:
         sequence_y,
         annotations_y,
     ):
+        """Takes sequences with spaces and prepares training data for classifier
+        """
         train_data = (list(), list())
         sequence_xs = Fasta.alnToSeq(sequence_x)
         sequence_ys = Fasta.alnToSeq(sequence_y)
@@ -162,6 +171,7 @@ class IndelDataPreparer(DataPreparer):
         for i in self._get_space_window_range(position):
             if 0 <= i < len(sequence):
                 b = sequence[i]
+                check_base(b)
             else:
                 b = '-'
             a = AnnotationLoader.get_annotation_at(annotation, position)
@@ -221,10 +231,10 @@ class IndelDataPreparer(DataPreparer):
         for i in range(len(space)):
             br, bs = reference[i], space[i]
             if bs != '-':
-                pos_s += 1
                 if br != '-':
-                    match_pos.add((pos_r, pos_s-1))
+                    match_pos.add((pos_r, pos_s))
                     pos_r += 1
+                pos_s += 1
                 continue
             if br == '-':
                 continue
