@@ -3,8 +3,9 @@ from classifier_alignment.DataPreparer import DataPreparer, IndelDataPreparer
 from hmm.PairHMM import GeneralizedPairState
 from tools.Exceptions import ParseException
 import constants
-from FakeClassifier import FakeMatchClassifier, FakeIndelClassifier
+# from FakeClassifier import FakeMatchClassifier, FakeIndelClassifier
 from hmm.HMMLoader import getInitializerObject
+from classifier_alignment.ComparingDataPreparer import ComparingDataPreparer, ComparingIndelDataPreparer
 
 
 class ClassifierState(GeneralizedPairState):
@@ -14,8 +15,9 @@ class ClassifierState(GeneralizedPairState):
 
     def __init__(self, *args, **_):
         GeneralizedPairState.__init__(self, *args)
-        self.dp = DataPreparer(constants.window_size)
-        self.clf_fname = 'data/clf/randomforest{}.clf'.format(constants.window_size)
+        # self.dp = DataPreparer(constants.window_size)
+        self.dp = ComparingDataPreparer(constants.window_size)
+        self.clf_fname = 'data/clf/randomforest_cmp{}.clf'.format(constants.window_size)
         self.clf = self._get_classifier()
         self.annotations, self.ann_x, self.ann_y = None, None, None
         self.emission_table = None
@@ -44,10 +46,14 @@ class ClassifierIndelState(ClassifierState):
     # def _get_classifier(self):
     #     return FakeIndelClassifier(self.dp)
 
+    def _get_preparer(self, seq_num):
+        # return IndelDataPreparer(seq_num, constants.window_size)
+        return ComparingIndelDataPreparer(seq_num, constants.window_size)
+
     def __init__(self, *args, **kwargs):
         ClassifierState.__init__(self, *args, **kwargs)
-        self.dp = IndelDataPreparer(0, constants.window_size)
-        self.clf_fname = 'data/clf/randomforest_indel{}.clf'.format(constants.window_size)
+        self.dp = self._get_preparer(0)
+        self.clf_fname = 'data/clf/randomforest_indel_cmp{}.clf'.format(constants.window_size)
         self.clf = self._get_classifier()
 
     def load(self, dictionary):
@@ -58,7 +64,7 @@ class ClassifierIndelState(ClassifierState):
             seq = 1
         else:
             raise ParseException('Invalid state onechar')
-        self.dp = IndelDataPreparer(seq, constants.window_size)
+        self.dp = self.dp = self._get_preparer(seq)
         self.clf = self._get_classifier()
         return res
 
