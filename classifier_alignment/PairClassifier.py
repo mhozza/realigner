@@ -1,4 +1,5 @@
 #/usr/bin/python
+# coding=utf-8
 """
 Created on Mar 28, 2013
 
@@ -10,13 +11,11 @@ import pickle
 from os import path
 from numpy.core.function_base import linspace
 from scipy.stats.kde import gaussian_kde
-
 from sklearn.ensemble import RandomForestRegressor
 import matplotlib.pyplot as plt
 from classifier_alignment.DataLoader import DataLoader
 from classifier_alignment.DataPreparer import DataPreparer, IndelDataPreparer
 from tools.Exceptions import InvalidValueException
-
 
 class PairClassifier:
     def _get_classifier(self):
@@ -27,7 +26,7 @@ class PairClassifier:
         preparer,
         filename="data/clf/randomforest.clf",
         training_data_dir="data/sequences/train_sequences",
-        params={"n_estimators": 50, "n_jobs": 10, "max_depth": 40},
+        params=None,
         autotrain=True,
         memoization=False,
     ):
@@ -38,7 +37,10 @@ class PairClassifier:
         self.preparer = preparer
         self.default_filename = filename
         self.training_data_dir = training_data_dir
-        self.params = params
+        if params is None:
+            self.params = {"n_estimators": 50, "n_jobs": 10, "max_depth": 40, "compute_importances":True}
+        else:
+            self.params = params
         self.mem = dict()
         self.memoization = memoization
 
@@ -130,23 +132,26 @@ def plot(hist0, hist1, gaus0, gaus1):
     line_width = 3.0
 
     plt.figure()
-    plt.subplot(1, 2, 1)
-    plt.hist(
-        [
-            hist1,
-            hist0,
-        ],
-        10,
-        normed=False,
-        histtype='bar',
-        stacked=False,
-        label=["1", "0"]
-    )
-    plt.legend(loc=0)
-    plt.subplot(1, 2, 2)
-    plt.hold(True)
-    plt.plot(xvals, gaus1(xvals), label="1", linewidth=line_width)
-    plt.plot(xvals, gaus0(xvals), label="0", linewidth=line_width)
+    # plt.subplot(1, 2, 1)
+    # plt.hist(
+    #     [
+    #         hist1,
+    #         hist0,
+    #     ],
+    #     10,
+    #     normed=False,
+    #     histtype='bar',
+    #     stacked=False,
+    #     label=["1", "0"]
+    # )
+    # plt.legend(loc=0)
+    # plt.subplot(1, 2, 2)
+    # plt.hold(True)
+    plt.plot(xvals, gaus1(xvals), label=u"pozitívne", linewidth=line_width)
+    plt.plot(xvals, gaus0(xvals), label=u"negatívne", linewidth=line_width)
+    plt.xlabel(u'Výstup klasifikátora')
+    plt.ylabel(u'Hustota')
+    plt.legend(loc=9)
 
 
 def plot1(hist, gaus):
@@ -192,22 +197,22 @@ def main():
 
     c = PairClassifier(
         preparer=dp,
-        filename=path.join(path_to_data, "randomforest.clf"),
-        training_data_dir=path.join(path_to_data, "train_sequences"),
+        filename=path.join(path_to_data, "clf/randomforest.clf"),
+        training_data_dir=path.join(path_to_data, "sequences/train_sequences"),
         autotrain=True,
     )
 
     ic = PairClassifier(
         preparer=idp,
-        filename=path.join(path_to_data, "randomforest_indel.clf"),
-        training_data_dir=path.join(path_to_data, "train_sequences"),
+        filename=path.join(path_to_data, "clf/randomforest_indel.clf"),
+        training_data_dir=path.join(path_to_data, "sequences/train_sequences"),
         autotrain=True,
     )
 
     dl = DataLoader()
 
     _, s_x, a_x, s_y, a_y = dl.loadSequence(
-        path.join(path_to_data, 'train_sequences/simulated_alignment.fa'),
+        path.join(path_to_data, 'sequences/train_sequences/simulated_alignment0.fa'),
     )
     x, y = dp.prepare_training_data(s_x, a_x, s_y, a_y)
     ix, iy = idp.prepare_training_data(s_x, a_x, s_y, a_y)
@@ -216,16 +221,16 @@ def main():
     # ic.fit(ix, iy)
 
     _, s_x, a_x, s_y, a_y = dl.loadSequence(
-        path.join(path_to_data, 'sequences/simulated_alignment.fa')
+        path.join(path_to_data, 'sequences/simulated/simulated_alignment.fa')
     )
     px, py = dp.prepare_training_data(s_x, a_x, s_y, a_y)
     ipx, ipy = idp.prepare_training_data(s_x, a_x, s_y, a_y)
 
-    plot(*compute_01graph_data(c, x, y))
-    plot(*compute_01graph_data(ic, ix, iy))
+    # plot(*compute_01graph_data(c, x, y))
+    # plot(*compute_01graph_data(ic, ix, iy))
 
     plot(*compute_01graph_data(c, px, py))
-    plot(*compute_01graph_data(ic, ipx, ipy))
+    # plot(*compute_01graph_data(ic, ipx, ipy))
 
     plt.show()
 
