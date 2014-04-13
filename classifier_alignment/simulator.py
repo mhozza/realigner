@@ -7,8 +7,8 @@ import os
 import random
 import sys
 import track
-
-P_START_GENE = 0.001
+# Todo: zmena P_START_GENE
+P_START_GENE = 0.01
 P_STOP_GENE = 0.01
 P_START_DELETE = 0.01
 P_STOP_DELETE = 0.1
@@ -73,7 +73,11 @@ def create_dna_mutation_coin(s):
     return BiasedCoin(p[s])
 
 
-def main(n, datadir='data/train_sequences/', fname='simulated_alignment'):
+def simulate(
+    n,
+    datadir='data/sequences/train_sequences/',
+    fname='simulated_alignment',
+):
     s1name = "sequence1"
     s2name = "sequence2"
     s3name = "sequence3"
@@ -205,7 +209,9 @@ def main(n, datadir='data/train_sequences/', fname='simulated_alignment'):
         json.dump(annotations.toJSON(), f)
 
 if __name__ == "__main__":
-    # main(100000, 'data/sequences/model_train_seq')
-    main(1000, 'data/sequences/simulated')
-    # for i in range(5):
-    #     main(10000, fname='simulated_alignment{}'.format(i))
+    # simulate(10000, 'data/sequences/model_train_seq/simulated')
+    # simulate(1000, 'data/sequences/simulated')
+    # for i in range(20):
+    #     simulate(10000, fname='simulated_alignment{}'.format(i))
+    simulate(20, 'data/test_data/sequences/', fname='alignment')
+
