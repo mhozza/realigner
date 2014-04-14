@@ -1,16 +1,20 @@
+import re
+
 __author__ = 'michal'
 
 from hmm.HMMLoader import HMMLoader
 import track
 from tools.intervalmap import intervalmap
 from classifier_alignment.AnnotationConfig import Annotations, register as register_annotations
-
+import constants
 
 class AnnotationLoader:
-    def __init__(self, loader=None):
+    def __init__(self, sequence_regexp, loader=None):
         if loader is None:
             self.loader = HMMLoader()
             register_annotations(self.loader)
+        self.x_regexp = sequence_regexp[0]
+        self.y_regexp = sequence_regexp[1]
 
 
     @staticmethod
@@ -65,19 +69,33 @@ class AnnotationLoader:
             )
         return res
 
+    def _get_seq_name(self, names, regexp):
+        r = re.compile(regexp)
+        matches = [name for name in names if r.match(name)]
+        if len(matches) != 1:
+            raise RuntimeError('Cannot get name for regexp', regexp, '. Found', len(matches), 'matches.')
+        return matches[0]
+
     def get_annotations_from_model(self, model):
         if model is None:
             raise RuntimeError('No annotation model!')
-
+        names = model.sequences.keys()
+        x_name = self._get_seq_name(names, self.x_regexp)
+        y_name = self._get_seq_name(names, self.y_regexp)
         annotations = model.annotations
+        print 'Using annotations for x:', x_name
         annotations_x = self._get_sequence_annotations(
-            annotations, model.sequences["sequence1"]
+            annotations, model.sequences[x_name]
         )
+        print 'Using annotations for y:', y_name
         annotations_y = self._get_sequence_annotations(
-            annotations, model.sequences["sequence2"]
+            annotations, model.sequences[y_name]
         )
         return annotations, annotations_x, annotations_y
 
     def get_annotations(self, fname):
-        model = self.loader.load(fname)
-        return self.get_annotations_from_model(model)
+        if constants.annotations_enabled:
+            model = self.loader.load(fname)
+            return self.get_annotations_from_model(model)
+        else:
+            return [], None, None

@@ -12,3 +12,4 @@ bases = {
 bases_reverse = {v:k for k, v in bases.iteritems()}
 
 window_size = 5
+annotations_enabled = True

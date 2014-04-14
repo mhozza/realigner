@@ -15,7 +15,7 @@ class DataLoader:
         alignment_regexp = ''
         if sequence_regexp is None:
             sequence_regexp = ["^sequence1$", "^sequence2$"]
-
+        self.sequence_regexp = sequence_regexp
         aln = next(
             Fasta.load(fname, alignment_regexp, Alignment, sequence_regexp)
         )
@@ -37,7 +37,7 @@ class DataLoader:
             configFname = DataLoader.default_annotation_fname(fname)
 
         seqX, seqY = self.getSequences(fname)
-        al = AnnotationLoader()
+        al = AnnotationLoader(self.sequence_regexp)
         annotations, annotationsX, annotationsY = al.get_annotations(
             configFname
         )
