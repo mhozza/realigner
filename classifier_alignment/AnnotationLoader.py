@@ -77,6 +77,8 @@ class AnnotationLoader:
         return matches[0]
 
     def get_annotations_from_model(self, model):
+        if not constants.annotations_enabled:
+            return None, None, None
         if model is None:
             raise RuntimeError('No annotation model!')
         names = model.sequences.keys()
@@ -94,8 +96,5 @@ class AnnotationLoader:
         return annotations, annotations_x, annotations_y
 
     def get_annotations(self, fname):
-        if constants.annotations_enabled:
-            model = self.loader.load(fname)
-            return self.get_annotations_from_model(model)
-        else:
-            return [], None, None
+        model = self.loader.load(fname)
+        return self.get_annotations_from_model(model)

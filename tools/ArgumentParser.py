@@ -174,7 +174,7 @@ def parse_arguments(
             for state in parsed_arg.model.states:
                 if isinstance(state, ClassifierState):
                     state.set_annotations(
-                        AnnotationLoader().get_annotations_from_model(parsed_arg.annotation_model)
+                        AnnotationLoader(parsed_arg.sequence_regexp).get_annotations_from_model(parsed_arg.annotation_model)
                     )
 
     io_files = {'input': {}, 'output': {}}
