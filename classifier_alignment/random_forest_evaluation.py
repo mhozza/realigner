@@ -1,17 +1,23 @@
 #!/usr/bin/python
 __author__ = 'michal'
 import pickle
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 
 def laod(fname):
-    with open(fname, 'r') as f:
-        return pickle.load(f)
+    try:
+        with open(fname, 'r') as f:
+            return pickle.load(f)
+    except IOError:
+        print fname, 'does not exist'
 
 
 def visualize_importances(forest):
+    if forest is None:
+        return
     importances = forest.feature_importances_
     if importances is not None:
         print importances[:len(importances)//2]
@@ -42,6 +48,8 @@ def show_importance_table(forest):
     Show how to modify the coordinate formatter to report the image "z"
     value of the nearest pixel given x and y
     """
+    if forest is None:
+        return
     try:
         importances = forest.feature_importances_
         if len(importances) < 20:
@@ -68,13 +76,11 @@ def show_importance_table(forest):
 
 
 def main():
-    f = laod('data/clf/randomforest_cmp5.clf')
-    visualize_importances(f)
-    show_importance_table(f)
-    f = laod('data/clf/randomforest_indel_cmp5.clf')
-    visualize_importances(f)
-    show_importance_table(f)
-
+    files = ['randomforest5.clf', 'randomforest_indel5.clf', 'randomforest_cmp5.clf', 'randomforest_indel_cmp5.clf']
+    for file in files:
+        f = laod(os.path.join('data/clf/', file))
+        visualize_importances(f)
+        show_importance_table(f)
 
 if __name__ == '__main__':
     main()
