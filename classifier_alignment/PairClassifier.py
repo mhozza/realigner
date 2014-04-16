@@ -11,15 +11,16 @@ import pickle
 from os import path
 from numpy.core.function_base import linspace
 from scipy.stats.kde import gaussian_kde
-from sklearn.ensemble import RandomForestRegressor
 import matplotlib.pyplot as plt
 from classifier_alignment.DataLoader import DataLoader
 from classifier_alignment.DataPreparer import DataPreparer, IndelDataPreparer
 from tools.Exceptions import InvalidValueException
+import constants
+
 
 class PairClassifier:
     def _get_classifier(self):
-        return RandomForestRegressor(**self.params)
+        return constants.classifiers[constants.classifier_index][0](**self.params)
 
     def __init__(
         self,
@@ -38,7 +39,7 @@ class PairClassifier:
         self.default_filename = filename
         self.training_data_dir = training_data_dir
         if params is None:
-            self.params = {"n_estimators": 50, "n_jobs": 10, "max_depth": 40, "compute_importances":True}
+            self.params = constants.classifiers[constants.classifier_index][2]
         else:
             self.params = params
         self.mem = dict()
@@ -63,9 +64,14 @@ class PairClassifier:
                 self.fit(data, target)
                 self.save(self.default_filename)
 
+    @staticmethod
+    def get_name():
+        return constants.classifiers[constants.classifier_index][1]
+
     def load(self, fname):
         with open(fname, 'r') as f:
             self.classifier = pickle.load(f)
+            # print 'Clf loaded form file.'
 
     def save(self, fname):
         with open(fname, 'w') as f:
@@ -202,12 +208,12 @@ def main():
         autotrain=True,
     )
 
-    ic = PairClassifier(
-        preparer=idp,
-        filename=path.join(path_to_data, "clf/randomforest_indel.clf"),
-        training_data_dir=path.join(path_to_data, "sequences/train_sequences"),
-        autotrain=True,
-    )
+    # ic = PairClassifier(
+    #     preparer=idp,
+    #     filename=path.join(path_to_data, "clf/randomforest_indel.clf"),
+    #     training_data_dir=path.join(path_to_data, "sequences/train_sequences"),
+    #     autotrain=True,
+    # )
 
     dl = DataLoader()
 

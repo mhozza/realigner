@@ -85,11 +85,11 @@ class AnnotationLoader:
         x_name = self._get_seq_name(names, self.x_regexp)
         y_name = self._get_seq_name(names, self.y_regexp)
         annotations = model.annotations
-        print 'Using annotations for x:', x_name
+        # print 'Using annotations for x:', x_name
         annotations_x = self._get_sequence_annotations(
             annotations, model.sequences[x_name]
         )
-        print 'Using annotations for y:', y_name
+        # print 'Using annotations for y:', y_name
         annotations_y = self._get_sequence_annotations(
             annotations, model.sequences[y_name]
         )

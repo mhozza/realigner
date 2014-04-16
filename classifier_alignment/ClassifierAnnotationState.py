@@ -1,5 +1,5 @@
 from collections import defaultdict
-from scipy.stats import norm, gaussian_kde
+from scipy.stats import gaussian_kde
 from alignment import Fasta
 from classifier_alignment.ClassifierState import ClassifierState, ClassifierIndelState
 from hmm.HMMLoader import getInitializerObject
@@ -8,7 +8,7 @@ import numpy
 from numpy.linalg.linalg import LinAlgError
 
 precision = 10
-use_gaussian = False
+use_gaussian = True
 #pseudocount = 0.001 # Fixme toto by sa mohlo zacat pouzivat
 
 
@@ -21,7 +21,7 @@ class ClassifierAnnotationState(ClassifierState):
 
     def _classification(self, sequence_x, ann_x, sequence_y, ann_y):
         def state(i):
-                if sequence_x[i] == '-' and sequence_y[i] =='-':
+                if sequence_x[i] == '-' and sequence_y[i] == '-':
                     return 1
                 if sequence_x[i] == '-':
                     return 1
@@ -31,7 +31,7 @@ class ClassifierAnnotationState(ClassifierState):
 
         def get_pos():
             def state(i):
-                if sequence_x[i] == '-' and sequence_y[i] =='-':
+                if sequence_x[i] == '-' and sequence_y[i] == '-':
                     return -1
                 if sequence_x[i] == '-':
                     return 2
@@ -76,7 +76,7 @@ class ClassifierAnnotationState(ClassifierState):
 
     def compute_emissions(self, labels, seq_x, seq_y, ann_x, ann_y):
         def hist_preprocessor(p, data):
-            hist, _ = numpy.histogram(data, precision, density=True, range=(0,1))
+            hist, _ = numpy.histogram(data, precision, density=True, range=(0, 1))
 
             def preprocessor(c):
                 return p * hist[c] / precision
@@ -136,7 +136,7 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
 
     def _classification(self, sequence_x, ann_x, sequence_y, ann_y):
         def state(i):
-            if sequence_x[i] == '-' and sequence_y[i] =='-':
+            if sequence_x[i] == '-' and sequence_y[i] == '-':
                 return 0
             if sequence_x[i] == '-':
                 return 2
@@ -146,7 +146,7 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
 
         def get_pos():
             def state(i):
-                if sequence_x[i] == '-' and sequence_y[i] =='-':
+                if sequence_x[i] == '-' and sequence_y[i] == '-':
                     return -1
                 if sequence_x[i] == '-':
                     return 2
@@ -192,7 +192,6 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
 
         ret = merge((state(x) for x in xrange(l)), ret_match, ret_insertX, ret_insertY)
         return ret
-
 
     def compute_emissions(self, labels, seq_x, seq_y, ann_x, ann_y):
         def hist_preprocessor(p, data):
