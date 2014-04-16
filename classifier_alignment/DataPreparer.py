@@ -5,6 +5,8 @@ from random import randint, sample
 from classifier_alignment.AnnotationLoader import AnnotationLoader
 from tools.Exceptions import ParseException
 import constants
+import random
+import numpy
 
 
 def check_base(b):
@@ -76,23 +78,18 @@ class DataPreparer:
     def window_size(self):
         return self._window
 
-    def prepare_training_data(
+    def prepare_positive_data(
         self,
         sequence_x,
+        sequence_xs,
         annotations_x,
         sequence_y,
+        sequence_ys,
         annotations_y,
     ):
-        """Takes sequences with spaces and prepares training data for classifier
-        """
         train_data = (list(), list())
-        sequence_xs = Fasta.alnToSeq(sequence_x)
-        sequence_ys = Fasta.alnToSeq(sequence_y)
-
         pos_x, pos_y = 0, 0
-
         matched_pos = set()
-        assert len(sequence_y) == len(sequence_x)
 
         for i in range(len(sequence_x)):
             bx, by = sequence_x[i], sequence_y[i]
@@ -114,8 +111,21 @@ class DataPreparer:
                 pos_x += 1
             if by != '-':
                 pos_y += 1
-
         seq_size = len(train_data[0])
+        return train_data, matched_pos, seq_size
+
+    def prepare_negative_data_random(
+        self,
+        sequence_x,
+        sequence_xs,
+        annotations_x,
+        sequence_y,
+        sequence_ys,
+        annotations_y,
+        matched_pos,
+        seq_size
+    ):
+        train_data = (list(), list())
         for i in range(seq_size):
             x = None
             while x is None:
@@ -140,8 +150,79 @@ class DataPreparer:
             )
             train_data[0].append(d)
             train_data[1].append(0)
-
         return train_data
+
+    def prepare_negative_data(
+        self,
+        sequence_x,
+        sequence_xs,
+        annotations_x,
+        sequence_y,
+        sequence_ys,
+        annotations_y,
+        matched_pos,
+        seq_size
+    ):
+        train_data = (list(), list())
+
+        shift_size = (1+int(numpy.random.exponential(.75)) for _ in matched_pos)
+        direction = (2*random.randint(0, 1)-1 for _ in matched_pos)
+        shift = (d*s for s, d in zip(shift_size, direction))
+
+        for (x, y), s in zip(matched_pos, shift):
+            y += s
+            if y < 0:
+                y *= -1
+            if y > seq_size:
+                y = 2*seq_size-y
+
+            d = self.prepare_data(
+                sequence_xs,
+                x,
+                annotations_x,
+                sequence_ys,
+                y,
+                annotations_y,
+            )
+            train_data[0].append(d)
+            train_data[1].append(0)
+        return train_data
+
+    def prepare_training_data(
+        self,
+        sequence_x,
+        annotations_x,
+        sequence_y,
+        annotations_y,
+    ):
+        """Takes sequences with spaces and prepares training data for classifier
+        """
+        assert len(sequence_y) == len(sequence_x)
+
+        sequence_xs = Fasta.alnToSeq(sequence_x)
+        sequence_ys = Fasta.alnToSeq(sequence_y)
+
+        train_data1, matched_pos, seq_size = self.prepare_positive_data(
+            sequence_x,
+            sequence_xs,
+            annotations_x,
+            sequence_y,
+            sequence_ys,
+            annotations_y,
+        )
+
+        train_data0 = self.prepare_negative_data(
+            sequence_x,
+            sequence_xs,
+            annotations_x,
+            sequence_y,
+            sequence_ys,
+            annotations_y,
+            matched_pos,
+            seq_size,
+        )
+
+        return train_data1[0] + train_data0[0], train_data1[1] + train_data0[1]
 
     def get_base(self, data):
         block_size = len(data)/(2*self.window_size)
