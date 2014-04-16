@@ -10,17 +10,18 @@ import sys
 import pickle
 from os import path
 from numpy.core.function_base import linspace
+from numpy import array
 from scipy.stats.kde import gaussian_kde
 import matplotlib.pyplot as plt
 from classifier_alignment.DataLoader import DataLoader
 from classifier_alignment.DataPreparer import DataPreparer, IndelDataPreparer
 from tools.Exceptions import InvalidValueException
-import constants
+import config
 
 
 class PairClassifier:
     def _get_classifier(self):
-        return constants.classifiers[constants.classifier_index][0](**self.params)
+        return config.classifiers[config.classifier_index][0](**self.params)
 
     def __init__(
         self,
@@ -39,7 +40,7 @@ class PairClassifier:
         self.default_filename = filename
         self.training_data_dir = training_data_dir
         if params is None:
-            self.params = constants.classifiers[constants.classifier_index][2]
+            self.params = config.classifiers[config.classifier_index][2]
         else:
             self.params = params
         self.mem = dict()
@@ -53,20 +54,21 @@ class PairClassifier:
             if autotrain:
                 sys.stderr.write('Training clasifier\n')
                 dl = DataLoader()
-                data, target = (list(), list())
+                data, target, weights = list(), list(), list()
                 sequences = dl.loadDirectory(self.training_data_dir)
                 for _, s_x, a_x, s_y, a_y in sequences:
-                    d, t = self.preparer.prepare_training_data(
+                    d, t, w = self.preparer.prepare_training_data(
                         s_x, a_x, s_y, a_y
                     )
                     data += d
                     target += t
-                self.fit(data, target)
+                    weights += w
+                self.fit(data, target, array(weights))
                 self.save(self.default_filename)
 
     @staticmethod
     def get_name():
-        return constants.classifiers[constants.classifier_index][1]
+        return config.classifiers[config.classifier_index][1]
 
     def load(self, fname):
         with open(fname, 'r') as f:
@@ -103,8 +105,8 @@ class PairClassifier:
             del self.classifier
         self.classifier = self._get_classifier()
 
-    def fit(self, data, target):
-        self.classifier.fit(data, target)
+    def fit(self, data, target, sample_weight=None):
+        self.classifier.fit(data, target, sample_weight)
 
     def prepare_predict(self, *args):
         return self.predict(self.preparer.prepare_data(*args))

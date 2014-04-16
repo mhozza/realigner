@@ -5,9 +5,11 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import constants
+import config
 
 
-def laod(fname):
+def load(fname):
     try:
         with open(fname, 'r') as f:
             return pickle.load(f)
@@ -76,11 +78,19 @@ def show_importance_table(forest):
 
 
 def main():
-    files = ['randomforest5.clf', 'randomforest_indel5.clf', 'randomforest_cmp5.clf', 'randomforest_indel_cmp5.clf']
-    for file in files:
-        f = laod(os.path.join('data/clf/', file))
-        visualize_importances(f)
-        show_importance_table(f)
+    fname_template = '{}{}{}{}.clf'
+
+    files = [
+        fname_template.format(clf_name, prep_name, constants.window_size, suffix)
+        for _, clf_name, __ in config.classifiers
+        for _, __, prep_name in config.preparers
+        for suffix in ('', '_indel')
+    ]
+
+    for f in files:
+        clf = load(os.path.join('data/clf/', f))
+        visualize_importances(clf)
+        show_importance_table(clf)
 
 if __name__ == '__main__':
     main()

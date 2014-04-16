@@ -1,11 +1,10 @@
 from classifier_alignment.PairClassifier import PairClassifier
-from classifier_alignment.DataPreparer import DataPreparer, IndelDataPreparer
+# from FakeClassifier import FakeMatchClassifier, FakeIndelClassifier
 from hmm.PairHMM import GeneralizedPairState
 from tools.Exceptions import ParseException
 import constants
-# from FakeClassifier import FakeMatchClassifier, FakeIndelClassifier
+import config
 from hmm.HMMLoader import getInitializerObject
-from classifier_alignment.ComparingDataPreparer import ComparingDataPreparer, ComparingIndelDataPreparer
 
 
 class ClassifierState(GeneralizedPairState):
@@ -15,10 +14,12 @@ class ClassifierState(GeneralizedPairState):
 
     def __init__(self, *args, **_):
         GeneralizedPairState.__init__(self, *args)
-        self.dp = DataPreparer(constants.window_size)
-        # self.dp = ComparingDataPreparer(constants.window_size)
-        self.clf_fname = 'data/clf/{}{}.clf'.format(PairClassifier.get_name(), constants.window_size)
-        # self.clf_fname = 'data/clf/{}_cmp{}.clf'.format(PairClassifier.get_name(), constants.window_size)
+        self.dp = config.preparers[config.preparer_index][0](constants.window_size)
+        self.clf_fname = 'data/clf/{}{}{}.clf'.format(
+            PairClassifier.get_name(),
+            config.preparers[config.preparer_index][2],
+            constants.window_size,
+        )
         self.clf = self._get_classifier()
         self.annotations, self.ann_x, self.ann_y = None, None, None
         self.emission_table = None
@@ -48,14 +49,16 @@ class ClassifierIndelState(ClassifierState):
     #     return FakeIndelClassifier(self.dp)
 
     def _get_preparer(self, seq_num):
-        return IndelDataPreparer(seq_num, constants.window_size)
-        # return ComparingIndelDataPreparer(seq_num, constants.window_size)
+        return config.preparers[config.preparer_index][1](seq_num, constants.window_size)
 
     def __init__(self, *args, **kwargs):
         ClassifierState.__init__(self, *args, **kwargs)
         self.dp = self._get_preparer(0)
-        self.clf_fname = 'data/clf/{}_indel{}.clf'.format(PairClassifier.get_name(), constants.window_size)
-        # self.clf_fname = 'data/clf/{}_indel_cmp{}.clf'.format(PairClassifier.get_name(), constants.window_size)
+        self.clf_fname = 'data/clf/{}{}{}_indel.clf'.format(
+            PairClassifier.get_name(),
+            config.preparers[config.preparer_index][2],
+            constants.window_size,
+        )
         self.clf = self._get_classifier()
 
     def load(self, dictionary):

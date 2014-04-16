@@ -1,17 +1,10 @@
 __author__ = 'michal'
 
-from alignment import Fasta
-from random import randint, sample
-from classifier_alignment.AnnotationLoader import AnnotationLoader
-from tools.Exceptions import ParseException
 import constants
 from DataPreparer import DataPreparer, IndelDataPreparer
 
 
 class ComparingDataPreparer(DataPreparer):
-    def __init__(self, window=1):
-        DataPreparer.__init__(self, window)
-
     def combine(self, data_x, data_y):
         return [x == y for x, y in zip(data_x, data_y)]
 
@@ -43,12 +36,10 @@ class ComparingDataPreparer(DataPreparer):
 
 
 class ComparingIndelDataPreparer(IndelDataPreparer):
-    def __init__(self, insert_sequence, window=1):
-        IndelDataPreparer.__init__(self, insert_sequence, window)
-
     def combine(self, data_r, data_s):
         block_size = (len(data_r))/(self.window_size)
-        data_r2 = data_r[:(self.window_size//2) * block_size] + data_r[(1 + self.window_size//2) * block_size:]
+        data_r2 = data_r[:(self.window_size//2) * block_size] \
+            + data_r[(1 + self.window_size//2) * block_size:]
         return [x == y for x, y in zip(data_r2, data_s)]
 
     def prepare_data(

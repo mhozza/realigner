@@ -14,13 +14,20 @@ def check_base(b):
         raise ParseException('Invalid base')
 
 
+def compute_weight(important):
+    ret = float(1 + important*(constants.boost - 1))
+    if ret < 1:
+        print ret
+    return ret
+
+
 class DataPreparer:
     def __init__(self, window=1):
         self._window = window
         self.m = constants.bases
 
     def _get_window_range(self, position):
-        return range(
+        return xrange(
             position - self.window_size//2,
             position + (1 + self.window_size)//2
         )
@@ -87,9 +94,11 @@ class DataPreparer:
         sequence_ys,
         annotations_y,
     ):
-        train_data = (list(), list())
+        # todo: focus on inserts
+        train_data = (list(), list(), list())
         pos_x, pos_y = 0, 0
         matched_pos = set()
+        important = set()
 
         for i in range(len(sequence_x)):
             bx, by = sequence_x[i], sequence_y[i]
@@ -106,13 +115,23 @@ class DataPreparer:
                 if d is not None:
                     train_data[0].append(d)
                     train_data[1].append(1)
+            else:
+                important.add((pos_x, pos_y))
 
             if bx != '-':
                 pos_x += 1
             if by != '-':
                 pos_y += 1
+
+        weights_set = set(
+            j for i, p in enumerate(matched_pos)
+            for j in self._get_window_range(i) if p in important
+        )
+        for i in xrange(len(train_data[0])):
+            train_data[2].append(compute_weight(i in weights_set))
+
         seq_size = len(train_data[0])
-        return train_data, matched_pos, seq_size
+        return train_data, matched_pos, seq_size, weights_set
 
     def prepare_negative_data_random(
         self,
@@ -123,9 +142,10 @@ class DataPreparer:
         sequence_ys,
         annotations_y,
         matched_pos,
-        seq_size
+        seq_size,
+        weights_set,
     ):
-        train_data = (list(), list())
+        train_data = (list(), list(), list())
         for i in range(seq_size):
             x = None
             while x is None:
@@ -150,6 +170,7 @@ class DataPreparer:
             )
             train_data[0].append(d)
             train_data[1].append(0)
+            train_data[2].append(compute_weight((len(train_data[0]) - 1) in weights_set))
         return train_data
 
     def prepare_negative_data(
@@ -161,9 +182,10 @@ class DataPreparer:
         sequence_ys,
         annotations_y,
         matched_pos,
-        seq_size
+        seq_size,
+        weights_set,
     ):
-        train_data = (list(), list())
+        train_data = (list(), list(), list())
 
         shift_size = (1+int(numpy.random.exponential(.75)) for _ in matched_pos)
         direction = (2*random.randint(0, 1)-1 for _ in matched_pos)
@@ -186,6 +208,7 @@ class DataPreparer:
             )
             train_data[0].append(d)
             train_data[1].append(0)
+            train_data[2].append(compute_weight((len(train_data[0]) - 1) in weights_set))
         return train_data
 
     def prepare_training_data(
@@ -202,7 +225,7 @@ class DataPreparer:
         sequence_xs = Fasta.alnToSeq(sequence_x)
         sequence_ys = Fasta.alnToSeq(sequence_y)
 
-        train_data1, matched_pos, seq_size = self.prepare_positive_data(
+        train_data1, matched_pos, seq_size, weights_set = self.prepare_positive_data(
             sequence_x,
             sequence_xs,
             annotations_x,
@@ -220,9 +243,12 @@ class DataPreparer:
             annotations_y,
             matched_pos,
             seq_size,
+            weights_set,
         )
 
-        return train_data1[0] + train_data0[0], train_data1[1] + train_data0[1]
+        return train_data1[0] + train_data0[0],\
+            train_data1[1] + train_data0[1],\
+            train_data1[2] + train_data0[2]
 
     def get_base(self, data):
         block_size = len(data)/(2*self.window_size)
@@ -290,7 +316,7 @@ class IndelDataPreparer(DataPreparer):
         sequence_y,
         annotations_y,
     ):
-        train_data = (list(), list())
+        train_data = (list(), list(), list())
 
         if self.insert_sequence == 0:
             reference = sequence_x
@@ -332,6 +358,7 @@ class IndelDataPreparer(DataPreparer):
             if d is not None:
                 train_data[0].append(d)
                 train_data[1].append(1)
+                train_data[2].append(1.0)
             pos_r += 1
 
         matches = sample(match_pos, len(train_data[0]))
@@ -348,6 +375,7 @@ class IndelDataPreparer(DataPreparer):
 
             train_data[0].append(d)
             train_data[1].append(0)
+            train_data[2].append(1.0)
 
         return train_data
 
