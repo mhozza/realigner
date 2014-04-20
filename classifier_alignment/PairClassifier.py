@@ -14,9 +14,12 @@ from numpy import array
 from scipy.stats.kde import gaussian_kde
 import matplotlib.pyplot as plt
 from classifier_alignment.DataLoader import DataLoader
-from classifier_alignment.DataPreparer import DataPreparer, IndelDataPreparer
+from classifier_alignment.DataPreparer import DataPreparer
 from tools.Exceptions import InvalidValueException
 import config
+import constants
+
+_global_classifier = None
 
 
 class PairClassifier:
@@ -31,7 +34,10 @@ class PairClassifier:
         params=None,
         autotrain=True,
         memoization=False,
+        inverted=False,
+        use_global_classifier=False,
     ):
+        global _global_classifier
         """
         @rtype : PairClassifier
         """
@@ -45,26 +51,32 @@ class PairClassifier:
             self.params = params
         self.mem = dict()
         self.memoization = memoization
+        self.inverted = inverted
 
-        if autotrain and path.exists(self.default_filename):
-            if path.isfile(self.default_filename):
-                self.load(self.default_filename)
+        if _global_classifier is None or not use_global_classifier:
+            if autotrain and path.exists(self.default_filename):
+                if path.isfile(self.default_filename):
+                    self.load(self.default_filename)
+            else:
+                self.classifier = self._get_classifier()
+                if autotrain:
+                    sys.stderr.write('Training clasifier\n')
+                    dl = DataLoader()
+                    data, target, weights = list(), list(), list()
+                    sequences = dl.loadDirectory(self.training_data_dir)
+                    for _, s_x, a_x, s_y, a_y in sequences:
+                        d, t, w = self.preparer.prepare_training_data(
+                            s_x, a_x, s_y, a_y
+                        )
+                        data += d
+                        target += t
+                        weights += w
+                    self.fit(data, target, array(weights))
+                    self.save(self.default_filename)
+            if use_global_classifier:
+                _global_classifier = self.classifier
         else:
-            self.classifier = self._get_classifier()
-            if autotrain:
-                sys.stderr.write('Training clasifier\n')
-                dl = DataLoader()
-                data, target, weights = list(), list(), list()
-                sequences = dl.loadDirectory(self.training_data_dir)
-                for _, s_x, a_x, s_y, a_y in sequences:
-                    d, t, w = self.preparer.prepare_training_data(
-                        s_x, a_x, s_y, a_y
-                    )
-                    data += d
-                    target += t
-                    weights += w
-                self.fit(data, target, array(weights))
-                self.save(self.default_filename)
+            self.classifier = _global_classifier
 
     @staticmethod
     def get_name():
@@ -107,6 +119,10 @@ class PairClassifier:
 
     def fit(self, data, target, sample_weight=None):
         self.classifier.fit(data, target, sample_weight)
+        print (self.classifier.score(data, target))
+
+    def score(self, data, target):
+        return self.classifier.score(data, target)
 
     def prepare_predict(self, *args):
         return self.predict(self.preparer.prepare_data(*args))
@@ -128,7 +144,10 @@ class PairClassifier:
             if d in self.mem:
                 return self.mem[d]
 
-        res = self.classifier.predict(data)
+        # res = self.classifier.predict(data)
+        res = self.classifier.predict_proba(data)[:, 1]
+        if self.inverted:
+            res = [1 - i for i in res]
 
         if memoization:
             self.mem[d] = res
@@ -136,34 +155,39 @@ class PairClassifier:
 
 
 def plot(hist0, hist1, gaus0, gaus1):
-    xvals = linspace(0.0, 1.0, 500)
+    xvals = linspace(0.0, 1.0, 200)
     line_width = 3.0
-
     plt.figure()
-    # plt.subplot(1, 2, 1)
-    # plt.hist(
-    #     [
-    #         hist1,
-    #         hist0,
-    #     ],
-    #     10,
-    #     normed=False,
-    #     histtype='bar',
-    #     stacked=False,
-    #     label=["1", "0"]
-    # )
-    # plt.legend(loc=0)
-    # plt.subplot(1, 2, 2)
-    # plt.hold(True)
-    plt.plot(xvals, gaus1(xvals), label=u"pozitívne", linewidth=line_width)
-    plt.plot(xvals, gaus0(xvals), label=u"negatívne", linewidth=line_width)
-    plt.xlabel(u'Výstup klasifikátora')
-    plt.ylabel(u'Hustota')
-    plt.legend(loc=9)
+    if hist0 is not None and hist1 is not None:
+        if gaus0 is not None and gaus1 is not None:
+            plt.subplot(1, 2, 1)
+        plt.hist(
+            [
+                hist1,
+                hist0,
+            ],
+            10,
+            normed=False,
+            histtype='bar',
+            stacked=False,
+            label=[u"pozitívne", u"negatívne"]
+        )
+        plt.xlabel(u'Výstup klasifikátora')
+        plt.ylabel(u'Počet')
+        plt.legend(loc=0)
+    if gaus0 is not None and gaus1 is not None:
+        if hist0 is not None and hist1 is not None:
+            plt.subplot(1, 2, 2)
+        plt.hold(True)
+        plt.plot(xvals, gaus1(xvals), label=u"pozitívne", linewidth=line_width)
+        plt.plot(xvals, gaus0(xvals), label=u"negatívne", linewidth=line_width)
+        plt.xlabel(u'Výstup klasifikátora')
+        plt.ylabel(u'Hustota')
+        plt.legend(loc=9)
 
 
 def plot1(hist, gaus):
-    xvals = linspace(0.0, 1.0, 500)
+    xvals = linspace(0.0, 1.0, 200)
     line_width = 3.0
 
     plt.figure()
@@ -192,55 +216,78 @@ def compute_graph_data(clf, data):
 def compute_01graph_data(clf, data, target):
     hist0 = clf.predict([data[i] for i in range(len(data)) if not target[i]])
     hist1 = clf.predict([data[i] for i in range(len(data)) if target[i]])
-    gaus0 = gaussian_kde(hist0)
-    gaus1 = gaussian_kde(hist1)
+    # gaus0 = gaussian_kde(hist0)
+    # gaus1 = gaussian_kde(hist1)
+    gaus0, gaus1 = None, None
     return hist0, hist1, gaus0, gaus1
 
 
-def main():
-    path_to_data = "data/"
-    window_size = 5
-    dp = DataPreparer(window_size)
-    idp = IndelDataPreparer(0, window_size)
+def plot_clf(dp, x, y, fname=None):
+    if fname is None:
+        autotrain = False
+    else:
+        autotrain = True
 
     c = PairClassifier(
         preparer=dp,
-        filename=path.join(path_to_data, "clf/randomforest.clf"),
-        training_data_dir=path.join(path_to_data, "sequences/train_sequences"),
-        autotrain=True,
+        filename=fname,
+        autotrain=autotrain,
     )
+    if fname is None:
+        c.fit(x, y)
+    plot(*compute_01graph_data(c, x, y))
+    print c.score(x, y)
+    return c
 
-    # ic = PairClassifier(
-    #     preparer=idp,
-    #     filename=path.join(path_to_data, "clf/randomforest_indel.clf"),
-    #     training_data_dir=path.join(path_to_data, "sequences/train_sequences"),
-    #     autotrain=True,
+pic_suffix = '.eps'
+
+
+def main(preparer_index):
+    path_to_data = "data/"
+    dp = config.preparers[preparer_index][0](constants.window_size)
+    clf_fname = 'data/clf/{}{}{}.clf'.format(
+        PairClassifier.get_name(),
+        config.preparers[preparer_index][2],
+        constants.window_size,
+    )
+    idp = config.preparers[preparer_index][1](0, constants.window_size)
+    iclf_fname = 'data/clf/{}{}{}{}.clf'.format(
+        PairClassifier.get_name(),
+        config.preparers[preparer_index][2],
+        constants.window_size,
+        '_indel',
+    )
+    dl = DataLoader()
+    # _, s_x, a_x, s_y, a_y = dl.loadSequence(
+    #     path.join(path_to_data, 'sequences/train_sequences/simulated_alignment0.fa'),
     # )
 
-    dl = DataLoader()
-
-    _, s_x, a_x, s_y, a_y = dl.loadSequence(
-        path.join(path_to_data, 'sequences/train_sequences/simulated_alignment0.fa'),
-    )
-    x, y = dp.prepare_training_data(s_x, a_x, s_y, a_y)
-    ix, iy = idp.prepare_training_data(s_x, a_x, s_y, a_y)
+    # x, y, _ = dp.prepare_training_data(s_x, a_x, s_y, a_y)
+    # ix, iy, _ = idp.prepare_training_data(s_x, a_x, s_y, a_y)
 
     # c.fit(x, y)
     # ic.fit(ix, iy)
 
     _, s_x, a_x, s_y, a_y = dl.loadSequence(
-        path.join(path_to_data, 'sequences/simulated/simulated_alignment.fa')
+        path.join(path_to_data, 'sequences/model_train_seq/simulated/simulated_alignment.fa')
     )
-    px, py = dp.prepare_training_data(s_x, a_x, s_y, a_y)
-    ipx, ipy = idp.prepare_training_data(s_x, a_x, s_y, a_y)
+    px, py, _ = dp.prepare_training_data(s_x, a_x, s_y, a_y)
+    ipx, ipy, _ = idp.prepare_training_data(s_x, a_x, s_y, a_y)
 
     # plot(*compute_01graph_data(c, x, y))
     # plot(*compute_01graph_data(ic, ix, iy))
 
-    plot(*compute_01graph_data(c, px, py))
+    # plot(*compute_01graph_data(c, px, py))
     # plot(*compute_01graph_data(ic, ipx, ipy))
-
+    plot_clf(dp, px, py, clf_fname)
+    plt.savefig(
+        path.splitext(clf_fname)[0] + "_test" + pic_suffix, transparent=True, bbox_inches='tight'
+    )
+    plot_clf(idp, ipx, ipy, iclf_fname)
+    plt.savefig(
+        path.splitext(iclf_fname)[0] + "_test" + pic_suffix, transparent=True, bbox_inches='tight'
+    )
     plt.show()
 
 if __name__ == "__main__":
-    main()
+    main(config.preparer_index)

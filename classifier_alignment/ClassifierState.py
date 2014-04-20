@@ -9,7 +9,11 @@ from hmm.HMMLoader import getInitializerObject
 
 class ClassifierState(GeneralizedPairState):
     def _get_classifier(self):
-        return PairClassifier(self.dp, filename=self.clf_fname)
+        return PairClassifier(
+            self.dp,
+            filename=self.clf_fname,
+            use_global_classifier=config.same_classifier
+        )
         # return FakeMatchClassifier(self.dp)
 
     def __init__(self, *args, **_):
@@ -45,19 +49,33 @@ class ClassifierState(GeneralizedPairState):
 
 
 class ClassifierIndelState(ClassifierState):
-    # def _get_classifier(self):
-    #     return FakeIndelClassifier(self.dp)
+    def _get_classifier(self):
+        return PairClassifier(
+            self.dp,
+            filename=self.clf_fname,
+            inverted=config.same_classifier,
+            use_global_classifier=config.same_classifier
+        )
+        # return FakeIndelClassifier(self.dp)
 
     def _get_preparer(self, seq_num):
-        return config.preparers[config.preparer_index][1](seq_num, constants.window_size)
+        if config.same_classifier:
+            return config.preparers[config.preparer_index][0](constants.window_size)
+        else:
+            return config.preparers[config.preparer_index][1](seq_num, constants.window_size)
 
     def __init__(self, *args, **kwargs):
         ClassifierState.__init__(self, *args, **kwargs)
         self.dp = self._get_preparer(0)
-        self.clf_fname = 'data/clf/{}{}{}_indel.clf'.format(
+        if config.same_classifier:
+            suffix = ''
+        else:
+            suffix = '_indel'
+        self.clf_fname = 'data/clf/{}{}{}{}.clf'.format(
             PairClassifier.get_name(),
             config.preparers[config.preparer_index][2],
             constants.window_size,
+            suffix,
         )
         self.clf = self._get_classifier()
 
