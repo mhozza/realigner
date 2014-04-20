@@ -6,10 +6,31 @@ from hmm.HMMLoader import getInitializerObject
 from tools.utils import merge
 import numpy
 from numpy.linalg.linalg import LinAlgError
+from classifier_alignment import plot_utils
 
 precision = 10
 use_gaussian = True
 #pseudocount = 0.001 # Fixme toto by sa mohlo zacat pouzivat
+
+
+def hist_preprocessor(p, data):
+    hist, _ = numpy.histogram(data, precision, density=True, range=(0, 1))
+    return lambda c: p * hist[c] / precision
+
+
+def gaussian_preprocessor(p, data):
+    try:
+        g = gaussian_kde(data)
+    except LinAlgError:
+        return hist_preprocessor(p, data)
+
+    return lambda c: p * g.integrate_box(
+        float(c) / precision, float(c + 1.0) / precision
+    )
+
+
+def constant_preprocessor(p):
+    return lambda _: p / precision
 
 
 class ClassifierAnnotationState(ClassifierState):
@@ -74,42 +95,20 @@ class ClassifierAnnotationState(ClassifierState):
         ret = merge((state(x) for x in xrange(l)), ret_match, ret_insert)
         return ret
 
+    #deprecated:
     def compute_emissions(self, labels, seq_x, seq_y, ann_x, ann_y):
-        def hist_preprocessor(p, data):
-            hist, _ = numpy.histogram(data, precision, density=True, range=(0, 1))
+        return self.compute_emissions_multi([(labels, seq_x, seq_y, ann_x, ann_y)])
 
-            def preprocessor(c):
-                return p * hist[c] / precision
-
-            return preprocessor
-
-        def gaussian_preprocessor(p, data):
-            try:
-                g = gaussian_kde(data)
-            except LinAlgError:
-                return hist_preprocessor(p, data)
-
-            def preprocessor(c):
-                return p * g.integrate_box(
-                    float(c) / precision, float(c + 1.0) / precision
-                )
-
-            return preprocessor
-
-        def constant_preprocessor(p):
-            def preprocessor(_):
-                return p / precision
-
-            return preprocessor
-
-        classification = self._classification(seq_x, ann_x, seq_y, ann_y)
+    def compute_emissions_multi(self, sequences):
         data = defaultdict(list)
         count = 0.0
-        for label, x, y, c in zip(labels, seq_x, seq_y, classification):
-            if label == 'M':
-                count += 2.0
-                data[(x, y)].append(c)
-                data[(y, x)].append(c)
+        for labels, seq_x, seq_y, ann_x, ann_y in sequences:
+            classification = self._classification(seq_x, ann_x, seq_y, ann_y)
+            for label, x, y, c in zip(labels, seq_x, seq_y, classification):
+                if label == 'M':
+                    count += 2.0
+                    data[(x, y)].append(c)
+                    data[(y, x)].append(c)
 
         emissions = dict()
         for x in 'ACGT':
@@ -117,6 +116,7 @@ class ClassifierAnnotationState(ClassifierState):
                 p = len(data[(x, y)]) / count
 
                 if len(data[(x, y)]) > 1:
+                    plot_utils.plot3(*compute_graph_data3(data[x, y]))
                     if use_gaussian:
                         preprocessor = gaussian_preprocessor(p, data[(x, y)])
                     else:
@@ -153,6 +153,7 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
                 if sequence_y[i] == '-':
                     return 1
                 return 0
+
             pos_x, pos_y = 0, 0
             pos = list()
             for i in xrange(len(sequence_x)):
@@ -193,50 +194,29 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
         ret = merge((state(x) for x in xrange(l)), ret_match, ret_insertX, ret_insertY)
         return ret
 
+    #deprecated:
     def compute_emissions(self, labels, seq_x, seq_y, ann_x, ann_y):
-        def hist_preprocessor(p, data):
-            hist, _ = numpy.histogram(data, bins=precision, range=(0.0, 1.0), density=True)
+        return self.compute_emissions_multi([(labels, seq_x, seq_y, ann_x, ann_y)])
 
-            def preprocessor(c):
-                return p * hist[c] / precision
-
-            return preprocessor
-
-        def gaussian_preprocessor(p, data):
-            try:
-                g = gaussian_kde(data)
-            except LinAlgError:
-                return hist_preprocessor(p, data)
-
-            def preprocessor(c):
-                return p * g.integrate_box(
-                    float(c) / precision, float(c + 1.0) / precision
-                )
-
-            return preprocessor
-
-        def constant_preprocessor(p):
-            def preprocessor(_):
-                return p / precision
-
-            return preprocessor
-
-        classification = self._classification(seq_x, ann_x, seq_y, ann_y)
+    def compute_emissions_multi(self, sequences):
         data = defaultdict(list)
         count = 0.0
-        for state, x, y, c in zip(labels, seq_x, seq_y, classification):
-            if state == 'X':
-                count += 1
-                data[x].append(c)
-            if state == 'Y':
-                count += 1
-                data[y].append(c)
+
+        for labels, seq_x, seq_y, ann_x, ann_y in sequences:
+            classification = self._classification(seq_x, ann_x, seq_y, ann_y)
+            for state, x, y, c in zip(labels, seq_x, seq_y, classification):
+                if state == 'X':
+                    count += 1
+                    data[x].append(c)
+                if state == 'Y':
+                    count += 1
+                    data[y].append(c)
 
         emissions = dict()
         for x in 'ACGT':
             p = len(data[x]) / count
-            # print data[x]
             if len(data[x]) > 1:
+                plot_utils.plot3(*compute_graph_data3(data[x]))
                 if use_gaussian:
                     preprocessor = gaussian_preprocessor(p, data[x])
                 else:
@@ -261,3 +241,21 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
 def register(loader):
     for obj in [ClassifierAnnotationState, ClassifierAnnotationIndelState]:
         loader.addFunction(obj.__name__, getInitializerObject(obj, loader.mathType))
+
+
+def compute_graph_data(data):
+    print len(data)
+    hist, _ = numpy.histogram(data, bins=precision, range=(0.0, 1.0), density=True)
+    print hist
+    g = gaussian_kde(data)
+    return hist, g
+
+
+def compute_graph_data3(data):
+    print len(data)
+    hist, _ = numpy.histogram(data, bins=precision, range=(0.0, 1.0), density=True)
+    print hist
+    g = gaussian_kde(data)
+    gp = gaussian_preprocessor(1, data)
+    h2 = [gp(c) for c in xrange(precision)]
+    return hist, g, h2

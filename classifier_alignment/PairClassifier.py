@@ -9,12 +9,12 @@ import os
 import sys
 import pickle
 from os import path
-from numpy.core.function_base import linspace
 from numpy import array
 from scipy.stats.kde import gaussian_kde
 import matplotlib.pyplot as plt
 from classifier_alignment.DataLoader import DataLoader
 from classifier_alignment.DataPreparer import DataPreparer
+from classifier_alignment import plot_utils
 from tools.Exceptions import InvalidValueException
 import config
 import constants
@@ -153,58 +153,7 @@ class PairClassifier:
             self.mem[d] = res
         return res
 
-
-def plot(hist0, hist1, gaus0, gaus1):
-    xvals = linspace(0.0, 1.0, 200)
-    line_width = 3.0
-    plt.figure()
-    if hist0 is not None and hist1 is not None:
-        if gaus0 is not None and gaus1 is not None:
-            plt.subplot(1, 2, 1)
-        plt.hist(
-            [
-                hist1,
-                hist0,
-            ],
-            10,
-            normed=False,
-            histtype='bar',
-            stacked=False,
-            label=[u"pozitívne", u"negatívne"]
-        )
-        plt.xlabel(u'Výstup klasifikátora')
-        plt.ylabel(u'Počet')
-        plt.legend(loc=0)
-    if gaus0 is not None and gaus1 is not None:
-        if hist0 is not None and hist1 is not None:
-            plt.subplot(1, 2, 2)
-        plt.hold(True)
-        plt.plot(xvals, gaus1(xvals), label=u"pozitívne", linewidth=line_width)
-        plt.plot(xvals, gaus0(xvals), label=u"negatívne", linewidth=line_width)
-        plt.xlabel(u'Výstup klasifikátora')
-        plt.ylabel(u'Hustota')
-        plt.legend(loc=9)
-
-
-def plot1(hist, gaus):
-    xvals = linspace(0.0, 1.0, 200)
-    line_width = 3.0
-
-    plt.figure()
-    plt.subplot(1, 2, 1)
-    plt.hist(
-        [
-            hist
-        ],
-        10,
-        normed=False,
-        histtype='bar',
-        stacked=False,
-    )
-    plt.legend(loc=0)
-    plt.subplot(1, 2, 2)
-    plt.hold(True)
-    plt.plot(xvals, gaus(xvals), label="anotated 1", linewidth=line_width)
+pic_suffix = '.eps'
 
 
 def compute_graph_data(clf, data):
@@ -235,11 +184,9 @@ def plot_clf(dp, x, y, fname=None):
     )
     if fname is None:
         c.fit(x, y)
-    plot(*compute_01graph_data(c, x, y))
+    plot_utils.plot(*compute_01graph_data(c, x, y))
     print c.score(x, y)
     return c
-
-pic_suffix = '.eps'
 
 
 def main(preparer_index):
