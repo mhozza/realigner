@@ -1,6 +1,6 @@
 #!/bin/bash
 export PYTHONPATH=./:$PYTHONPATH
-PYTHON=/usr/bin/python
+PYTHON=`which python`
 export SGE_TASK_FIRST=1
 export SGE_TASK_ID=1
 export SGE_TASK_LAST=10
