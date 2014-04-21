@@ -253,11 +253,11 @@ def compute_graph_data(data):
 
 
 def compute_graph_data3(data):
-    print len(data)
-    with open('data{}.dat'.format(len(data)), 'w') as f:
-        f.write(str(data))
+    # print len(data)
+    # with open('data{}.dat'.format(len(data)), 'w') as f:
+    #     f.write(str(data))
     hist, _ = numpy.histogram(data, bins=precision, range=(0.0, 1.0), density=True)
-    print hist
+    # print hist
     g = gaussian_kde(data)
     gp = gaussian_preprocessor(1, data)
     h2 = [gp(c) for c in xrange(precision)]
