@@ -19,11 +19,13 @@ def realign(src, dest, sX, sY, model):
 
 
 def main(base_filename='simulated_alignment', base_dir='data/sequences'):
-    models = ['SimpleHMM2.js', 'ClassificationHMM.js', 'OracleHMM.js']
+    # models = ['SimpleHMM2.js', 'ClassificationHMM.js', 'OracleHMM.js']
     # models = ['SimpleHMM2.js']
     # models = ['ClassificationHMM.js', 'OracleHMM.js']
     # models = ['SimpleHMM2Bio.js', 'ClassificationHMMBio.js', 'OracleHMMBio.js']
     # models = ['SimpleHMM2Test.js', 'ClassificationHMMTest.js', 'OracleHMMTest.js']
+    models = ['SimpleHMM2Test.js']
+    # models = ['OracleHMMTest.js']
     # models = ['ClassificationHMMBio.js']#, 'OracleHMMBio.js']
     src = os.path.join(base_dir, base_filename)
     sequences = ['sequence1', 'sequence2', 'sequence3']

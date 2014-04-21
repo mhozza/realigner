@@ -13,11 +13,19 @@ P_START_GENE = 0.001
 P_STOP_GENE = 0.005
 P_START_DELETE = 0.01
 P_STOP_DELETE = 0.1
-P_NOT_MUTATE_GENE = 0.9
+P_NOT_MUTATE_GENE = 1.0
 
 P_MUTATE_DNA_11 = 0.99
 P_MUTATE_DNA_1 = 0.7
 P_MUTATE_DNA_00 = 0.01
+
+
+def create_dna_mutation_coin(s):
+    """
+    set up DNA mutation coin
+    """
+    p = [P_MUTATE_DNA_00, P_MUTATE_DNA_1, P_MUTATE_DNA_11]
+    return BiasedCoin(p[s])
 
 
 def main(n, datadir='data/train_sequences/', fname='simulated_alignment'):
@@ -152,12 +160,12 @@ def main(n, datadir='data/train_sequences/', fname='simulated_alignment'):
         json.dump(annotations.toJSON(), f)
 
 if __name__ == "__main__":
-    main(10000, 'data/sequences/model_train_seq/test_simulated')
-    main(1000, 'data/sequences/test_simulated')
+    main(10000, 'data/sequences/model_train_seq/test')
+    main(1000, 'data/sequences/test')
     for i in range(5):
-        simulate(1000, 'data/sequences/test_simulated', fname='simulated_alignment{}'.format(i))
+        simulate(1000, 'data/sequences/test', fname='simulated_alignment{}'.format(i))
     for i in range(20):
         main(
-            10000, 'data/sequences/train_sequences_test_simulated',
+            10000, 'data/sequences/train_test',
             fname='simulated_alignment{}'.format(i)
         )

@@ -117,7 +117,7 @@ class ClassifierAnnotationState(ClassifierState):
                 p = len(data[(x, y)]) / count
 
                 if len(data[(x, y)]) > 1:
-                    plot_utils.plot3(*compute_graph_data3(data[x, y]))
+                    # plot_utils.plot3(*compute_graph_data3(data[x, y]))
                     if use_gaussian:
                         preprocessor = gaussian_preprocessor(p, data[(x, y)])
                     else:
@@ -217,7 +217,7 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
         for x in 'ACGT':
             p = len(data[x]) / count
             if len(data[x]) > 1:
-                plot_utils.plot3(*compute_graph_data3(data[x]))
+                # plot_utils.plot3(*compute_graph_data3(data[x]))
                 if use_gaussian:
                     preprocessor = gaussian_preprocessor(p, data[x])
                 else:

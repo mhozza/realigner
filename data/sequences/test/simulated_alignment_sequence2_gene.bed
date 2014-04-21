@@ -1,11 +1,5 @@
 track type="bed" converted_by="track.serialize"
-chr1	98	104	gene
-chr1	105	140	gene
-chr1	141	145	gene
-chr1	147	160	gene
-chr1	161	168	gene
-chr1	169	177	gene
-chr1	178	184	gene
-chr1	185	188	gene
-chr1	189	207	gene
-chr1	208	218	gene
+chr1	97	192	gene
+chr1	220	318	gene
+chr1	380	599	gene
+chr1	751	919	gene
