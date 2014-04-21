@@ -2,6 +2,7 @@
 __author__ = 'michal'
 
 import os
+import sys
 from os import path, listdir
 import threading
 import argparse
@@ -18,9 +19,9 @@ def realign(src, dest, sX, sY, model):
 
 
 def main(base_filename='simulated_alignment', base_dir='data/sequences'):
-    # models = ['SimpleHMM2.js', 'ClassificationHMM.js', 'OracleHMM.js']
+    models = ['SimpleHMM2.js', 'ClassificationHMM.js', 'OracleHMM.js']
     # models = ['SimpleHMM2.js']
-    models = ['ClassificationHMM.js', 'OracleHMM.js']
+    # models = ['ClassificationHMM.js', 'OracleHMM.js']
     # models = ['SimpleHMM2Bio.js', 'ClassificationHMMBio.js', 'OracleHMMBio.js']
     # models = ['SimpleHMM2Test.js', 'ClassificationHMMTest.js', 'OracleHMMTest.js']
     # models = ['ClassificationHMMBio.js']#, 'OracleHMMBio.js']
@@ -29,7 +30,9 @@ def main(base_filename='simulated_alignment', base_dir='data/sequences'):
     # sequences = ['sequence1', 'sequence2']
 
     for model in models:
-        dst = os.path.join(base_dir, 'realigned/' + path.splitext(base_filename )[0] + '.{}_{}.' + model + '.fa')
+        dst = os.path.join(
+            base_dir, 'realigned/' + path.splitext(base_filename)[0] + '.{}_{}.' + model + '.fa'
+        )
         threads = list()
 
         for x in range(len(sequences)-1):
@@ -53,12 +56,17 @@ def main(base_filename='simulated_alignment', base_dir='data/sequences'):
             print 'Transitivity: ' + str(transitivitycheck.score(dst))
         sX = sequences[0]
         sY = sequences[1]
-        print 'Equality: ' + str(transitivitycheck.compare_with_source(src, dst.format(sX, sY), sX, sY))
+        print 'Equality: ' + str(
+            transitivitycheck.compare_with_source(src, dst.format(sX, sY), sX, sY)
+        )
+        sys.stdout.flush()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('name', metavar='name', type=str, default='simulated_alignment', nargs='?')
-    parser.add_argument('dir', metavar='dir', type=str, default='data/sequences/simulated', nargs='?')
+    parser.add_argument(
+        'dir', metavar='dir', type=str, default='data/sequences/simulated', nargs='?'
+    )
     parser.add_argument('--multi', action="store_true")
     args = parser.parse_args()
     if args.multi:
