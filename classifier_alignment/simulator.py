@@ -211,7 +211,9 @@ def simulate(
 if __name__ == "__main__":
     # simulate(10000, 'data/sequences/model_train_seq/simulated')
     # simulate(1000, 'data/sequences/simulated')
+    for i in range(5):
+         simulate(1000, 'data/sequences/simulated', fname='simulated_alignment{}'.format(i))
     # for i in range(20):
     #     simulate(10000, fname='simulated_alignment{}'.format(i))
-    simulate(20, 'data/test_data/sequences/', fname='alignment')
+    # simulate(20, 'data/test_data/sequences/', fname='alignment')
 
