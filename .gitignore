@@ -1,9 +1,7 @@
 *.pyc
 /working_dir_tmp
-/data/sequences
 /tmp
 .idea/*
 *.clf
-data/sequences/*
 data/clf/*
 *.ipynb
