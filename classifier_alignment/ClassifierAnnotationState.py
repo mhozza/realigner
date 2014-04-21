@@ -21,10 +21,11 @@ def hist_preprocessor(p, data):
 def gaussian_preprocessor(p, data):
     try:
         g = gaussian_kde(data)
+        c_norm = g.integrate_box(0, 1)
     except LinAlgError:
         return hist_preprocessor(p, data)
 
-    return lambda c: p * g.integrate_box(
+    return lambda c: p/c_norm * g.integrate_box(
         float(c) / precision, float(c + 1.0) / precision
     )
 
@@ -253,6 +254,8 @@ def compute_graph_data(data):
 
 def compute_graph_data3(data):
     print len(data)
+    with open('data{}.dat'.format(len(data)), 'w') as f:
+        f.write(str(data))
     hist, _ = numpy.histogram(data, bins=precision, range=(0.0, 1.0), density=True)
     print hist
     g = gaussian_kde(data)
