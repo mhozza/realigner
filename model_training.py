@@ -77,7 +77,9 @@ class ModelTraining:
             s = sum(counts[state].values())
             sums[state] = s
         return {
-            '{}{}'.format(k, k2): v2 for k, v in counts.iteritems() for k2, v2 in v.iteritems()
+            '{}{}'.format(k, k2): float(v2)/sums[k]
+            for k, v in counts.iteritems()
+            for k2, v2 in v.iteritems()
         }
 
     def emissions(self, labels, seq_x, seq_y, a_x, a_y):
@@ -110,47 +112,6 @@ class ModelTraining:
         transitions = self.transitions_multi(labels)
         emissions = self.emissions_multi(labeled_sequences)
         return transitions, emissions
-
-    # def train(self, dirname):
-    #     def summarize_transitions(transitions):
-    #         def get_prob(t, key):
-    #             if key in t[0]:
-    #                 return t[0][key]
-    #             else:
-    #                 return 0
-
-    #         res = dict()
-    #         for state in 'MXY':
-    #             s = float(sum((t[1][state] for t in transitions)))
-    #             for state2 in 'MXY':
-    #                 res[state+state2] = sum((get_prob(t, state+state2) for t in transitions))/s
-    #         return res
-
-    #     def summarize_emissions(emissions):
-    #         if not emissions:
-    #             return {}
-    #         res = dict()
-    #         keys = emissions[0][0].keys()
-    #         count = float(sum((e[1] for e in emissions)))
-    #         for k in keys:
-    #             res[k] = sum((e[1] * e[0][k] for e in emissions)) / count
-    #         return res
-
-    #     dl = DataLoader()
-    #     sequences = dl.loadDirectory(dirname)
-    #     transitions = list()
-    #     emissions_m = list()
-    #     emissions_x = list()
-    #     for _, s_x, a_x, s_y, a_y in sequences:
-    #         t, e = self.train_single(s_x, s_y, a_x, a_y)
-    #         transitions.append(t)
-    #         if e is not None:
-    #             emissions_m.append(e['M'])
-    #             emissions_x.append(e['X'])
-
-    #     return summarize_transitions(transitions), {
-    #         'M': summarize_emissions(emissions_m), 'X': summarize_emissions(emissions_x)
-    #     }
 
     def train(self, dirname):
         dl = DataLoader()
