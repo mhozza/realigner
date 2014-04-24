@@ -24,7 +24,8 @@ def main(base_filename='simulated_alignment', base_dir='data/sequences'):
     # models = ['ClassificationHMM.js', 'OracleHMM.js']
     # models = ['SimpleHMM2Bio.js', 'ClassificationHMMBio.js', 'OracleHMMBio.js']
     # models = ['SimpleHMM2Test.js', 'ClassificationHMMTest.js', 'OracleHMMTest.js']
-    models = ['SimpleHMM2Test.js']
+    # models = ['SimpleHMM2Test.js']
+    models = ['OracleCHMM.js']
     # models = ['OracleHMMTest.js']
     # models = ['ClassificationHMMBio.js']#, 'OracleHMMBio.js']
     src = os.path.join(base_dir, base_filename)

@@ -6,7 +6,7 @@ from hmm.HMMLoader import getInitializerObject
 from tools.utils import merge
 import numpy
 from numpy.linalg.linalg import LinAlgError
-from classifier_alignment import plot_utils
+# from classifier_alignment import plot_utils
 
 precision = 10
 use_gaussian = True
@@ -97,8 +97,8 @@ class ClassifierAnnotationState(ClassifierState):
         return ret
 
     #deprecated:
-    def compute_emissions(self, labels, seq_x, seq_y, ann_x, ann_y):
-        return self.compute_emissions_multi([(labels, seq_x, seq_y, ann_x, ann_y)])
+    # def compute_emissions(self, labels, seq_x, seq_y, ann_x, ann_y):
+    #     return self.compute_emissions_multi([(labels, seq_x, seq_y, ann_x, ann_y)])
 
     def compute_emissions_multi(self, sequences):
         data = defaultdict(list)
@@ -128,7 +128,7 @@ class ClassifierAnnotationState(ClassifierState):
                 for c in xrange(precision):
                     emissions[(x, y, c)] = preprocessor(c)
 
-        return emissions, count
+        return emissions
 
 
 class ClassifierAnnotationIndelState(ClassifierIndelState):
@@ -196,8 +196,8 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
         return ret
 
     #deprecated:
-    def compute_emissions(self, labels, seq_x, seq_y, ann_x, ann_y):
-        return self.compute_emissions_multi([(labels, seq_x, seq_y, ann_x, ann_y)])
+    # def compute_emissions(self, labels, seq_x, seq_y, ann_x, ann_y):
+    #     return self.compute_emissions_multi([(labels, seq_x, seq_y, ann_x, ann_y)])
 
     def compute_emissions_multi(self, sequences):
         data = defaultdict(list)
@@ -229,7 +229,7 @@ class ClassifierAnnotationIndelState(ClassifierIndelState):
                 emissions[(x, c)] = preprocessor(c)
                 # print x, c, emissions[(x, c)]
 
-        return emissions, count
+        return emissions
 
     def _emission(self, c, seq_x, x, seq_y, y):
         if self.onechar == 'X':

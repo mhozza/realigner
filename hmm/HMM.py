@@ -7,8 +7,8 @@ from tools.tuplemetrics import tadd, tlesssome
 import sys
 from copy import deepcopy
 
+
 class State(ConfigObject):
-        
     def load(self, dictionary):
         ConfigObject.load(self, dictionary)
         if "emission" not in dictionary:
@@ -30,24 +30,24 @@ class State(ConfigObject):
             if len(self.stateName) > 0:
                 self.onechar = self.stateName[0]
             else:
-                self.onechar = "?" 
+                self.onechar = "?"
         self.startProbability = self.mathType(dictionary["startprob"])
         self.endProbability = self.mathType(dictionary["endprob"])
         self.emissions = dict()
         for [key, prob] in dictionary["emission"]:
             if key.__class__.__name__ == "list":
                 key = tuple(key)
-            self.emissions[key] = self.mathType(prob)
-    
-    
+            try:
+                self.emissions[key] = self.mathType(prob)
+            except ValueError:
+                self.emissions[key] = prob
+
     def buildSampleEmission(self):
         self._sampleEmission = rand_generator(self.emissions)
-        
-        
+
     def sampleEmission(self):
         return self._sampleEmission()
-    
-                    
+
     def toJSON(self):
         ret = ConfigObject.toJSON(self)
         ret["name"] = self.stateName
@@ -58,8 +58,7 @@ class State(ConfigObject):
         for (key, prob) in self.emissions.iteritems():
             ret["emission"].append((key, prob))
         return ret
-        
-    
+
     def __init__(self, mathType = float):
         self.serialize = True
         self.mathType = mathType
@@ -80,7 +79,6 @@ class State(ConfigObject):
     def serializeMe(self):
         return self.serialize
 
-
     def durationGenerator(self):
         yield((1, self.mathType(1.0)))
 
@@ -93,23 +91,18 @@ class State(ConfigObject):
             raise "Bad index"
         return self.emissions[X[x]]
 
-    
     def setStateID(self, stateID):
         self.stateID = stateID
 
-        
     def getStateID(self):
         return self.stateID
 
-    
     def addTransition(self, stateID, prob):
         self.transitions.append((stateID, self.mathType(prob)))
 
-    
     def addReverseTransition(self, stateID, prob):
         self.reverseTransitions.append((stateID, self.mathType(prob)))
 
-    
     def clearTransitions(self):
         self.transitions = list()
         self.reverseTransitions = list()
@@ -118,40 +111,40 @@ class State(ConfigObject):
         if len(self.transitions) == 0:
             return
         total = sum([p for _, p in self.transitions])
-        self.transitions = [(state, prob/total) 
-                            for state, prob in self.transitions]  
-        self.reverseTransitions = [(state, prob/total) 
-                                   for state, prob in self.reverseTransitions]  
+        self.transitions = [(state, prob/total)
+                            for state, prob in self.transitions]
+        self.reverseTransitions = [(state, prob/total)
+                                   for state, prob in self.reverseTransitions]
 
- 
+
     def followingIDs(self):
         return self.transitions
 
-    
+
     def previousIDs(self):
         return self.reverseTransitions
 
-        
+
     def remapIDs(self, ids):
         self.stateID = ids[self.stateID]
         self.transitions = map(lambda x:(ids[x[0]], x[1]), self.transitions)
-        self.reverseTransitions = map(lambda x:(ids[x[0]], x[1]), 
+        self.reverseTransitions = map(lambda x:(ids[x[0]], x[1]),
                                       self.reverseTransitions)
 
-        
+
     def getStartProbability(self):
         return self.startProbability
 
-    
+
     def getEndProbability(self):
         return self.endProbability
-    
+
     def getChar(self):
         return self.onechar
 
     def expand(self, _=None):
         return None
-    
+
     def computeHints(self, realigner):
         return None
 
@@ -162,8 +155,8 @@ class State(ConfigObject):
         return t
 
 class HMM(ConfigObject):
-    
-    
+
+
     def __init__(self, mathType = float):
         self.mathType = mathType
         self.transitions = defaultdict(dict)
@@ -174,12 +167,12 @@ class HMM(ConfigObject):
         self.transitionsSampler = None
         self.initStateSampler = None
         self.io_files = {'input': {}, 'output': {}}
-    
-    
+
+
     def sampleTransition(self, state):
         return self.transitionsSampler[state]()
-    
-    
+
+
     def buildSampleTransitions(self):
         self.transitionsSampler = dict()
         for (key, value) in self.transitions.iteritems():
@@ -187,27 +180,27 @@ class HMM(ConfigObject):
         for stateID in range(len(self.states)):
             self.states[stateID].buildSampleEmission()
         self.initStateSampler = rand_generator(
-            [(float(self.states[i].getStartProbability()), i) 
+            [(float(self.states[i].getStartProbability()), i)
              for i in range(len(self.states))]
         )
-    
-        
+
+
     def load(self, dictionary):
         ConfigObject.load(self, dictionary)
         self.loadStates(dictionary)
         self.loadTransitions(dictionary)
-            
-    
+
+
     def loadStates(self, dictionary):
         if "states" not in dictionary:
             raise ParseException("states are missing in HMM object")
         for state in dictionary["states"]:
             self.addState(state)
-        
-        
+
+
     def loadTransitions(self, dictionary):
         if "transitions" not in dictionary:
-            raise ParseException("transitions are missing in HMM object")  
+            raise ParseException("transitions are missing in HMM object")
         for transition in dictionary["transitions"]:
             if "from" not in transition or \
                "to" not in transition or \
@@ -216,24 +209,24 @@ class HMM(ConfigObject):
             f = self.statenameToID[transition["from"]]
             t = self.statenameToID[transition["to"]]
             p = self.mathType(transition["prob"])
-            self.addTransition(f, t, p)      
-    
-    
+            self.addTransition(f, t, p)
+
+
     def toJSON(self):
         ret = ConfigObject.toJSON(self)
         ret = self.statesToJSON(ret)
         ret = self.transitionsToJSON(ret)
         return ret
-    
-    
+
+
     def statesToJSON(self, dictionary):
         ret = list()
         for state in self.states:
             ret.append(state.toJSON())
         dictionary["states"] = ret
         return dictionary
-    
-    
+
+
     def transitionsToJSON(self, dictionary):
         ret = list()
         for (src, toDict) in self.transitions.iteritems():
@@ -247,26 +240,26 @@ class HMM(ConfigObject):
                 ret.append({"from": _src, "to": _to, "prob": prob})
         dictionary["transitions"] = ret
         return dictionary
-      
-      
+
+
     def addState(self, state):
         state.setStateID(len(self.states))
         self.statenameToID[state.stateName] = state.getStateID()
         self.states.append(state)
         return len(self.states) - 1
-    
-    
+
+
     def addTransition(self, stateFrom, stateTo, probability):
         probability = self.mathType(probability)
         self.transitions[stateFrom][stateTo] = probability
         self.states[stateFrom].addTransition(stateTo, probability)
         self.states[stateTo].addReverseTransition(stateFrom, probability)
-        
+
     def clearTransitions(self):
         self.transitions = defaultdict(dict)
         for state in self.states:
             state.clearTransitions()
-    
+
     def add_soft_masking_to_distribution(self):
         for state in self.states:
             state.add_soft_masking_to_distribution()
@@ -313,10 +306,10 @@ class HMM(ConfigObject):
         for state in self.states:
             newstates[state.getStateID()] = state
         self.states = newstates
-        
+
     def generateSequence(self, seq_len, generateLength=False):
         #TODO: nefunguje pre viacrozmerne a generalizovane HMM (pre silent stavy
-        #      to funguje) a ak vsetky stavy su koncove. Aby to fungovalo je 
+        #      to funguje) a ak vsetky stavy su koncove. Aby to fungovalo je
         #      treba zlozitejsi algoritmus (ak chceme specifikovat dlzku)
         if type(seq_len)==int:
             seq_len = tuple([seq_len])
@@ -336,8 +329,8 @@ class HMM(ConfigObject):
             if dim == 1:
                 gen_len = tuple([gen_len[0] + len(em)])
             else:
-                gen_len = tadd(gen_len, tuple([len(x) 
-                                               for x in em 
+                gen_len = tadd(gen_len, tuple([len(x)
+                                               for x in em
                                                if type(x) != tuple]))
             ret.append((em, state))
             state = self.sampleTransition(state)
@@ -363,7 +356,7 @@ class HMM(ConfigObject):
                 d_to[sn] = sn
                 json['states'].append(deepcopy(state))
             else:
-                states, transitions, init, end = expanded 
+                states, transitions, init, end = expanded
                 sn = state.stateName
                 d_from[sn] = init
                 d_to[sn] = end
@@ -412,7 +405,7 @@ class HMM(ConfigObject):
             )
             for f, x in model.transitions.iteritems():
                 for t, p in model.transitions[f].iteritems():
-                    edges.append(""" 
+                    edges.append("""
                     {f} -> {t} [label="{p:.5}"];
                     """.format(f=model.states[f].stateName, t=model.states[t].stateName, p=float(p)))
             dot = """digraph {{

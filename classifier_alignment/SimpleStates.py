@@ -6,8 +6,8 @@ from collections import defaultdict
 
 
 class SimpleMatchState(GeneralizedPairState):
-    def compute_emissions(self, *args):
-        return self.compute_emissions_multi([args])
+    # def compute_emissions(self, *args):
+    #     return self.compute_emissions_multi([args])
 
     def compute_emissions_multi(self, sequences):
         data = defaultdict(float)
@@ -23,7 +23,7 @@ class SimpleMatchState(GeneralizedPairState):
         for x in 'ACGT':
             for y in 'ACGT':
                 data[(x, y)] /= count
-        return data, count
+        return data
 
 
 class SimpleIndelState(GeneralizedPairState):
@@ -39,8 +39,8 @@ class SimpleIndelState(GeneralizedPairState):
                 self.durations[d][1]
             )
 
-    def compute_emissions(self, *args):
-        return self.compute_emissions_multi([args])
+    # def compute_emissions(self, *args):
+    #     return self.compute_emissions_multi([args])
 
     def compute_emissions_multi(self, sequences):
         data = defaultdict(float)
@@ -56,7 +56,7 @@ class SimpleIndelState(GeneralizedPairState):
                     data[y] += 1.0
         for x in 'ACGT':
             data[x] /= count
-        return data, count
+        return data
 
     def emission(self, X, x, dx, Y, y, dy):
         b = X[x: x + dx]
