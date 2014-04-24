@@ -7,6 +7,7 @@ from hmm.HMMLoader import getInitializerObject
 from tools.ConfigFactory import ConfigObject
 from tools.Exceptions import ParseException
 
+
 class Annotations(ConfigObject):
     def __init__(self, *p):
         self.annotations = list()
@@ -24,7 +25,11 @@ class Annotations(ConfigObject):
             self.sequences[i['name']] = dict()
             for a in i['annotations']:
                 if a['id'] in self.annotations:
-                    self.sequences[i['name']][a['id']] = a['file']
+                    if 'offset' in a:
+                        offset = a['offset']
+                    else:
+                        offset = 0
+                    self.sequences[i['name']][a['id']] = (a['file'], offset)
 
     def toJSON(self):
         ret = ConfigObject.toJSON(self)
@@ -33,14 +38,14 @@ class Annotations(ConfigObject):
         for key, value in self.sequences.iteritems():
             ann = list()
             for akey, avalue in value.iteritems():
-                ann.append({'id': akey, 'file':avalue})
-            ret["sequences"].append({"name":key, "annotations":ann})
+                ann.append({'id': akey, 'file': avalue[0], 'offset': avalue[1]})
+            ret["sequences"].append({"name": key, "annotations": ann})
         return ret
 
     def addSequences(self, names):
         for name in names:
             if name in self.sequences:
-                return False # todo: raise exception
+                return False  # todo: raise exception
             self.sequences[name] = dict()
 
     def addAnnotationFile(self, sequence, annotationId, annotationFile):

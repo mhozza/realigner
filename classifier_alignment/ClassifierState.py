@@ -42,7 +42,7 @@ class ClassifierState(GeneralizedPairState):
         else:
             c = self.emission_table.get(x, y)
 
-        return self._emission(c, seq_x, x, seq_y, y)
+        return self.mathType(self._emission(c, seq_x, x, seq_y, y))
 
     def set_emission_table(self, emission_table):
         self.emission_table = emission_table
