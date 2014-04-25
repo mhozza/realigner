@@ -5,3 +5,4 @@
 *.clf
 data/clf/*
 *.ipynb
+data/sequences/*/realigned/*
