@@ -51,7 +51,7 @@ class AnnotationLoader:
                 ann = ann.read(fields=['start', 'end'])
                 intervals = self._intervals_to_interval_map(ann, offset)
         except Exception:
-            intervals = self._intervals_to_interval_map([])
+            intervals = self._intervals_to_interval_map([], 0)
         return intervals
 
     def _get_sequence_annotations(
