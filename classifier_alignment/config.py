@@ -6,6 +6,9 @@ from classifier_alignment.FullComparingDataPreparer import FullComparingDataPrep
     FullComparingIndelDataPreparer
 from classifier_alignment.CombinedDataPreparer import CombinedDataPreparer,\
     CombinedIndelDataPreparer
+from classifier_alignment.UnionDataPreparer import UnionDataPreparer,\
+    UnionIndelDataPreparer
+
 
 classifiers = [
     (RandomForestClassifier, 'randomforest', {"n_estimators": 50, "n_jobs": 4, "max_depth": 40}),
@@ -20,6 +23,7 @@ preparers = [
     (ComparingDataPreparer, ComparingIndelDataPreparer, '_cmp_'),
     (FullComparingDataPreparer, FullComparingIndelDataPreparer, '_fullcmp_'),
     (CombinedDataPreparer, CombinedIndelDataPreparer, '_combined_'),
+    (UnionDataPreparer, UnionIndelDataPreparer, '_union_'),
 ]
 preparer_index = 3
 

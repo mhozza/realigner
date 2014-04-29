@@ -20,7 +20,7 @@ def matched(expr, name):
             return True
     return False
 
-def Maf2FastaGen(input_file, sequences):
+def Maf2FastaGen(input_file, sequences, min_size=0):
     regs = map(re.compile, sequences)
 
     with Open(input_file, 'r') as inp:
@@ -45,24 +45,24 @@ def Maf2FastaGen(input_file, sequences):
             s, src, start, size, strand, srcSize, text = line
             #if strand == '-':
             #    text = reverseStrand(text)
-            if matched(regs, src): 
+            if matched(regs, src) and size >= min_size:
                 output.append((src, aln_count, text, [start, size, strand, srcSize]))
     if len(output) > 0 and (len(regs) == 0 or (len(output) == len(regs))):
         yield output
-    
+
 
 @perf.runningTimeDecorator
 def main(input_file, output_file, sequences, output_type):
-    
+
     with Open(output_file, 'w') as out:
         for alignment in Maf2FastaGen(input_file, sequences):
             for src, aln_count, text, rest in alignment:
-                if output_type=="normal": 
+                if output_type=="normal":
                     out.write('>{0}.{1}\n{2}\n'.format(src, aln_count, text))
                 elif output_type=="params":
                     out.write('>{0}.{1} {2}\n'.format(src, aln_count, ' '.join(rest)))
-                
-                
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert MAF to FASTA')
     parser.add_argument('input', type=str, help="Input file")
