@@ -12,7 +12,7 @@ from functools import partial
 from collections import defaultdict
 
 seq_basename = 'sequence'
-overwrite = False
+overwrite = True
 
 
 def load_seq():
@@ -29,6 +29,7 @@ def checkfile(fname):
         else:
             print 'skipping existing file', fname
             return True
+
 
 def create_fasta(fname, seq_basename, sequences, rename=False):
     if rename:
@@ -54,10 +55,10 @@ def create_repeat_annotation(sequence, fname):
 
 
 def create_gene_annotation(source_fname, chromosome, fname):
-    if checkfile:
+    if checkfile(fname):
         return
     genes = pd.read_csv(source_fname, sep='\t', header=None)
-    if type(genes[0][0]) is int:
+    if 'hg19' in source_fname:
         indices = [2, 4, 5]
     else:
         indices = [1, 3, 4]
