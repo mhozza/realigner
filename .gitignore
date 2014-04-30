@@ -6,3 +6,4 @@
 data/clf/*
 *.ipynb
 data/sequences/*/realigned/*
+data/sequences/*bkp
