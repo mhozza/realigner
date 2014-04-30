@@ -139,7 +139,8 @@ class ModelTraining:
         self.load_model(fname)
         transitions, emissions = self.train(data_dirname)
         self.set_model_transitions(transitions)
-        self.set_model_emissions(emissions)
+        if emissions:
+            self.set_model_emissions(emissions)
         self.save_model()
 
 
