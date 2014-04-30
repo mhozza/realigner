@@ -136,6 +136,8 @@ class PairClassifier:
         return self.predict(prepared_data, False)
 
     def predict(self, data, memoization=None):
+        if len(data) == 0:
+            return []
         d = None
         if memoization is None:
             memoization = self.memoization
