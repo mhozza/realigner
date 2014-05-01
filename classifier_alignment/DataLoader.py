@@ -29,14 +29,14 @@ class DataLoader:
     def default_annotation_fname(fname):
         return path.splitext(fname)[0] + '.js'
 
-    def loadSequence(self, fname, configFname=None):
+    def loadSequence(self, fname, configFname=None, sequence_regexp=None):
         """
         Loads sequence with from file 'fname'
         """
         if configFname is None:
             configFname = DataLoader.default_annotation_fname(fname)
 
-        seqX, seqY = self.getSequences(fname)
+        seqX, seqY = self.getSequences(fname, sequence_regexp)
         al = AnnotationLoader(self.sequence_regexp)
         annotations, annotationsX, annotationsY = al.get_annotations(
             configFname
@@ -55,6 +55,6 @@ class DataLoader:
                 for x in range(len(sequence_regexps)-1):
                     for y in range(x+1, len(sequence_regexps)):
                         sequences.append(self.loadSequence(
-                            fname, [sequence_regexps[x], sequence_regexps[y]])
-                        )
+                            fname, sequence_regexp=[sequence_regexps[x], sequence_regexps[y]]
+                        ))
         return sequences
