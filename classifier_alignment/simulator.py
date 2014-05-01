@@ -7,6 +7,7 @@ import os
 import random
 import sys
 import track
+
 # Todo: zmena P_START_GENE
 P_START_GENE = 0.01
 P_STOP_GENE = 0.01
@@ -27,7 +28,7 @@ class BiasedCoin:
 
     def flip(self):
         r = random.random()
-        return r < self.p
+        return int(r < self.p)
 
 
 class MarkovChain:
@@ -87,10 +88,10 @@ def simulate(
     annotations_extension = ".bed"
     config_extension = ".js"
 
-    if len(sys.argv) > 1:
-        n = int(sys.argv[1])
-    if len(sys.argv) > 2:
-        fname = sys.argv[2]
+    # if len(sys.argv) > 1:
+    #     n = int(sys.argv[1])
+    # if len(sys.argv) > 2:
+    #     fname = sys.argv[2]
 
     master_gene_sequence = MarkovChain(P_START_GENE, P_STOP_GENE)
     human_delete_sequence = MarkovChain(P_START_DELETE, P_STOP_DELETE)
@@ -121,7 +122,13 @@ def simulate(
         dna_mutation_coin2 = create_dna_mutation_coin(g2 + g4)
 
         # create DNA item
-        c = c2 = c3 = DNA_CHARS[random.randint(0, 3)]
+        c = c1 = c2 = c3 = DNA_CHARS[random.randint(0, 3)]
+        if not dna_mutation_coin.flip():
+            char_index = random.randint(0, 2)
+            if DNA_CHARS[char_index] == c1:
+                char_index = 3
+            c1 = DNA_CHARS[char_index]
+
         if not dna_mutation_coin.flip():
             char_index = random.randint(0, 2)
             if DNA_CHARS[char_index] == c2:
@@ -136,7 +143,7 @@ def simulate(
 
         # delete DNA item
         if human_delete_sequence.get_state():
-            c = '-'
+            c1 = '-'
         if mouse_delete_sequence.get_state():
             c2 = '-'
         if horse_delete_sequence.get_state():
@@ -148,7 +155,7 @@ def simulate(
         mouse_gene.append(g3)
         horse_gene.append(g4)
 
-        human_dna.append(c)
+        human_dna.append(c1)
         mouse_dna.append(c2)
         horse_dna.append(c3)
 
@@ -209,11 +216,11 @@ def simulate(
         json.dump(annotations.toJSON(), f)
 
 if __name__ == "__main__":
+    simulate(1000, 'data/sequences/t')
     # simulate(10000, 'data/sequences/model_train_seq/simulated')
     # simulate(1000, 'data/sequences/simulated')
-    for i in range(5):
-         simulate(1000, 'data/sequences/simulated', fname='simulated_alignment{}'.format(i))
+    # for i in range(5):
+    #     simulate(1000, 'data/sequences/simulated', fname='simulated_alignment{}'.format(i))
     # for i in range(20):
     #     simulate(10000, fname='simulated_alignment{}'.format(i))
     # simulate(20, 'data/test_data/sequences/', fname='alignment')
-
