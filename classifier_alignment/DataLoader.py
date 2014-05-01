@@ -46,10 +46,15 @@ class DataLoader:
 
     def loadDirectory(self, dirname):
         sequences = list()
+        sequence_regexps = ["^sequence1$", "^sequence2$", "^sequence3$"]
         for fn in filter(
             lambda x: path.splitext(x)[1] == '.fa', listdir(dirname)
         ):
             fname = path.join(dirname, fn)
             if path.isfile(fname):
-                sequences.append(self.loadSequence(fname))
+                for x in range(len(sequence_regexps)-1):
+                    for y in range(x+1, len(sequence_regexps)):
+                        sequences.append(self.loadSequence(
+                            fname, [sequence_regexps[x], sequence_regexps[y]])
+                        )
         return sequences
