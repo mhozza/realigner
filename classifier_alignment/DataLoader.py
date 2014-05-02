@@ -54,7 +54,10 @@ class DataLoader:
             if path.isfile(fname):
                 for x in range(len(sequence_regexps)-1):
                     for y in range(x+1, len(sequence_regexps)):
-                        sequences.append(self.loadSequence(
-                            fname, sequence_regexp=[sequence_regexps[x], sequence_regexps[y]]
-                        ))
+                        sX = sequence_regexps[x]
+                        sY = sequence_regexps[y]
+                        if sX != sY:
+                            sequences.append(self.loadSequence(
+                                fname, sequence_regexp=[sX, sY]
+                            ))
         return sequences
