@@ -18,7 +18,7 @@ def select_sequences(inp_filename, out_filename, sequences):
 
 
 def main(base_fname, base_dir):
-    src = os.path.join(base_dir, base_fname + '.fa')
+    src = os.path.join(base_dir, base_fname)
     tmpf = os.path.join(base_dir, 'realigned/' + base_fname + '.selected.fa')
     dst = os.path.join(
         base_dir, 'realigned/' + os.path.splitext(base_fname)[0] + '.{}_{}.muscle.fa'
