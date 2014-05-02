@@ -9,8 +9,8 @@ import sys
 import track
 from classifier_alignment.simulator import *
 
-P_START_GENE = 0.001
-P_STOP_GENE = 0.005
+P_START_GENE = 0.01
+P_STOP_GENE = 0.01
 P_START_DELETE = 0.01
 P_STOP_DELETE = 0.1
 P_NOT_MUTATE_GENE = 1.0
