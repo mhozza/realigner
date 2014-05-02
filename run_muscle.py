@@ -2,6 +2,7 @@
 __author__ = 'michal'
 
 import os
+from os import path, listdir
 import argparse
 from alignment.Alignment import Alignment
 from alignment import Fasta
