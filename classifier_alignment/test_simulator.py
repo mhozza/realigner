@@ -15,9 +15,9 @@ P_START_DELETE = 0.01
 P_STOP_DELETE = 0.1
 P_NOT_MUTATE_GENE = 1.0
 
-P_MUTATE_DNA_11 = 0.99
-P_MUTATE_DNA_1 = 0.7
-P_MUTATE_DNA_00 = 0.01
+P_MUTATE_DNA_11 = 0.8
+P_MUTATE_DNA_1 = 0.65
+P_MUTATE_DNA_00 = 0.6
 
 
 def create_dna_mutation_coin(s):
@@ -26,6 +26,10 @@ def create_dna_mutation_coin(s):
     """
     p = [P_MUTATE_DNA_00, P_MUTATE_DNA_1, P_MUTATE_DNA_11]
     return BiasedCoin(p[s])
+
+
+def mutate(b, g):
+    return 3-b if g > 0 else b
 
 
 def main(n, datadir='data/train_sequences/', fname='simulated_alignment'):
@@ -72,7 +76,9 @@ def main(n, datadir='data/train_sequences/', fname='simulated_alignment'):
         dna_mutation_coin2 = create_dna_mutation_coin(g2 + g4)
 
         # create DNA item
-        c = c2 = c3 = DNA_CHARS[random.randint(0, 3)]
+        c = c2 = c3 = random.randint(0, 3)
+        c2 = mutate(c2, g2+g3)
+        c, c2, c3 = [DNA_CHARS[i] for i in (c, c2, c3)]
         if not dna_mutation_coin.flip():
             char_index = random.randint(0, 2)
             if DNA_CHARS[char_index] == c2:
@@ -135,13 +141,13 @@ def main(n, datadir='data/train_sequences/', fname='simulated_alignment'):
     annotations.addSequences([s1name, s2name, s3name])
     annotations.addAnnotationFile(s1name, annotation_name,  s1fname)
     annotations.addAnnotationFile(s2name, annotation_name,  s2fname)
-    annotations.addAnnotationFile(s3name, annotation_name,  s3fname)
+    # annotations.addAnnotationFile(s3name, annotation_name,  s3fname)
 
     Fasta.save(
         [
             (s1name, ''.join(human_dna)),
             (s2name, ''.join(mouse_dna)),
-            (s3name, ''.join(horse_dna))
+            # (s3name, ''.join(horse_dna))
         ],
         os.path.join(datadir, fname+alignment_extension)
     )
@@ -152,9 +158,9 @@ def main(n, datadir='data/train_sequences/', fname='simulated_alignment'):
     with track.new(s2fname, 'bed') as t:
         t.fields = ['start', 'end', 'name']
         t.write("chr1", intervals2)
-    with track.new(s3fname, 'bed') as t:
-        t.fields = ['start', 'end', 'name']
-        t.write("chr1", intervals3)
+    # with track.new(s3fname, 'bed') as t:
+    #     t.fields = ['start', 'end', 'name']
+    #     t.write("chr1", intervals3)
 
     with Open(os.path.join(datadir, fname+config_extension), "w") as f:
         json.dump(annotations.toJSON(), f)
