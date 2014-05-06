@@ -1,1 +1,0 @@
-{"__name__": "Annotations", "annotations": ["repeat"], "sequences": [{"name": "sequence1", "annotations": [{"id": "repeat", "file": "data/model_train_seq/bio9_sequence1.repeat.bed"}]}, {"name": "sequence2", "annotations": [{"id": "repeat", "file": "data/model_train_seq/bio9_sequence2.repeat.bed"}]}]}
